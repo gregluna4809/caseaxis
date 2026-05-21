@@ -1,0 +1,58 @@
+spring:
+  application:
+    name: caseaxis-backend
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/caseaxis}
+    username: ${DB_USERNAME:caseaxis}
+    password: ${DB_PASSWORD:caseaxis}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      pool-name: CaseAxisPool
+
+  jpa:
+    hibernate:
+      # 'none' is correct for Phase 4 — no JPA entities exist yet.
+      # Change to 'validate' once entity classes are introduced (Phase 6+).
+      ddl-auto: none
+    show-sql: false
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    # Flyway locations use a relative path from the working directory (backend/).
+    # Running 'mvn spring-boot:run' from backend/ resolves ../database/migrations correctly.
+    # Override via FLYWAY_LOCATIONS env var for CI/CD or alternate working directories.
+    locations: ${FLYWAY_LOCATIONS:filesystem:../database/migrations}
+    baseline-on-migrate: false
+    validate-on-migrate: true
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: UTC
+
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+
+application:
+  jwt:
+    secret: ${JWT_SECRET:change-this-in-production-minimum-32-bytes-required}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
+logging:
+  level:
+    root: INFO
+    com.caseaxis: DEBUG
+    org.flywaydb: INFO
+    org.springframework.security: INFO
+    org.hibernate.SQL: WARN

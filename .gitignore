@@ -1,0 +1,49 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Java
+backend/target/
+*.class
+*.jar
+*.war
+
+# Maven
+.mvn/wrapper/maven-wrapper.jar
+
+# Logs
+*.log
+logs/
+
+# Env / secrets
+.env
+.env.*
+application-local.yml
+backend/src/main/resources/application-local.yml
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Temporary
+tmp/
+temp/
+
+# Internal project governance docs
+GREG.md
+AGENTS.md
+ROADMAP.md
+.claude/
+
+# Optional if you later decide
+# PROGRESS.md
