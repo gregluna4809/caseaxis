@@ -309,9 +309,6 @@ No fake "completed" functionality.
 ## Repository Governance
 
 Project governance documents:
-
-* GREG.md
-* AGENTS.md
 * ARCHITECTURE.md
 * ROADMAP.md
 * PROGRESS.md
