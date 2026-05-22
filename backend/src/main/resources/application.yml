@@ -17,9 +17,7 @@ spring:
 
   jpa:
     hibernate:
-      # 'none' is correct for Phase 4 — no JPA entities exist yet.
-      # Change to 'validate' once entity classes are introduced (Phase 6+).
-      ddl-auto: none
+      ddl-auto: validate
     show-sql: false
     open-in-view: false
 
