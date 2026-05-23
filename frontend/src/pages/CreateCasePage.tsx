@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api, ApiError } from '../lib/apiClient';
 import { PRIORITIES, CASE_TYPES } from '../lib/lookups';
@@ -7,13 +7,11 @@ import type { OrganizationSummary, ClientSummary } from '../types/api';
 export function CreateCasePage() {
   const navigate = useNavigate();
 
-  // Lookup data
   const [organizations, setOrganizations] = useState<OrganizationSummary[]>([]);
   const [clients, setClients] = useState<ClientSummary[]>([]);
   const [lookupLoading, setLookupLoading] = useState(true);
   const [lookupError, setLookupError] = useState<string | null>(null);
 
-  // Form fields
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priorityCode, setPriorityCode] = useState('MEDIUM');
@@ -22,7 +20,6 @@ export function CreateCasePage() {
   const [clientId, setClientId] = useState('');
   const [dueDate, setDueDate] = useState('');
 
-  // Submit state
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -32,10 +29,7 @@ export function CreateCasePage() {
   useEffect(() => {
     async function loadLookups() {
       try {
-        const [orgs, cls] = await Promise.all([
-          api.organizations.list(),
-          api.clients.list(),
-        ]);
+        const [orgs, cls] = await Promise.all([api.organizations.list(), api.clients.list()]);
         setOrganizations(orgs);
         setClients(cls);
       } catch {
@@ -47,7 +41,7 @@ export function CreateCasePage() {
     void loadLookups();
   }, []);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (subjectMissing) return;
 
@@ -67,29 +61,33 @@ export function CreateCasePage() {
       });
       navigate(`/cases/${created.id}`);
     } catch (err) {
-      if (err instanceof ApiError && err.fieldErrors) {
-        setFieldErrors(err.fieldErrors);
-      }
+      if (err instanceof ApiError && err.fieldErrors) setFieldErrors(err.fieldErrors);
       setError(err instanceof Error ? err.message : 'Failed to create case.');
       setSubmitting(false);
     }
   }
 
   return (
-    <div>
-      <Link to="/cases" className="back-link">← Back to Cases</Link>
+    <div className="page-stack">
+      <Link to="/cases" className="back-link">Back to Cases</Link>
 
       <div className="page-header">
+        <p className="page-kicker">Case intake</p>
         <h1 className="page-title">New Case</h1>
-        <p className="page-subtitle">Create a new case record.</p>
+        <p className="page-subtitle">Capture the minimum operational record needed to start workflow.</p>
       </div>
 
-      <div className="card" style={{ maxWidth: 700 }}>
+      <div className="card form-card">
+        <div className="card-header">
+          <div>
+            <span className="card-title">Case details</span>
+            <p className="card-subtitle">Required fields are marked with an asterisk.</p>
+          </div>
+        </div>
         <div className="card-body">
           <form className="create-form" onSubmit={handleSubmit}>
             {error && <div className="form-error">{error}</div>}
 
-            {/* Title */}
             <div className="form-group">
               <label className="form-label" htmlFor="cf-title">Title *</label>
               <input
@@ -102,12 +100,9 @@ export function CreateCasePage() {
                 maxLength={500}
                 placeholder="Brief title for the case"
               />
-              {fieldErrors.title && (
-                <span className="field-error">{fieldErrors.title}</span>
-              )}
+              {fieldErrors.title && <span className="field-error">{fieldErrors.title}</span>}
             </div>
 
-            {/* Description */}
             <div className="form-group">
               <label className="form-label" htmlFor="cf-description">Description</label>
               <textarea
@@ -115,120 +110,65 @@ export function CreateCasePage() {
                 className="form-textarea"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                rows={4}
+                rows={5}
                 maxLength={5000}
-                placeholder="Detailed description (optional)"
+                placeholder="Detailed description"
               />
             </div>
 
-            {/* Priority + Type */}
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label" htmlFor="cf-priority">Priority</label>
-                <select
-                  id="cf-priority"
-                  className="form-select"
-                  value={priorityCode}
-                  onChange={(e) => setPriorityCode(e.target.value)}
-                >
-                  {PRIORITIES.map((p) => (
-                    <option key={p.code} value={p.code}>{p.label}</option>
-                  ))}
+                <select id="cf-priority" className="form-select" value={priorityCode} onChange={(e) => setPriorityCode(e.target.value)}>
+                  {PRIORITIES.map((p) => <option key={p.code} value={p.code}>{p.label}</option>)}
                 </select>
               </div>
 
               <div className="form-group">
                 <label className="form-label" htmlFor="cf-type">Type</label>
-                <select
-                  id="cf-type"
-                  className="form-select"
-                  value={typeCode}
-                  onChange={(e) => setTypeCode(e.target.value)}
-                >
-                  {CASE_TYPES.map((t) => (
-                    <option key={t.code} value={t.code}>{t.label}</option>
-                  ))}
+                <select id="cf-type" className="form-select" value={typeCode} onChange={(e) => setTypeCode(e.target.value)}>
+                  {CASE_TYPES.map((t) => <option key={t.code} value={t.code}>{t.label}</option>)}
                 </select>
               </div>
             </div>
 
-            {/* Organization + Client — at least one required */}
             {lookupError ? (
-              <div className="form-error" style={{ fontSize: 13 }}>{lookupError}</div>
+              <div className="form-error">{lookupError}</div>
             ) : (
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label" htmlFor="cf-org">
-                    Organization
-                    {!clientId && <span className="required-star"> *</span>}
-                  </label>
-                  <select
-                    id="cf-org"
-                    className="form-select"
-                    value={organizationId}
-                    onChange={(e) => setOrganizationId(e.target.value)}
-                    disabled={lookupLoading}
-                  >
-                    <option value="">— None —</option>
-                    {organizations.map((o) => (
-                      <option key={o.id} value={o.id}>{o.name} ({o.organizationCode})</option>
-                    ))}
+                  <label className="form-label" htmlFor="cf-org">Organization {!clientId && <span className="required-star">*</span>}</label>
+                  <select id="cf-org" className="form-select" value={organizationId} onChange={(e) => setOrganizationId(e.target.value)} disabled={lookupLoading}>
+                    <option value="">None</option>
+                    {organizations.map((o) => <option key={o.id} value={o.id}>{o.name} ({o.organizationCode})</option>)}
                   </select>
-                  {!lookupLoading && organizations.length === 0 && (
-                    <span className="form-hint">No organizations in system yet.</span>
-                  )}
+                  {!lookupLoading && organizations.length === 0 && <span className="form-hint">No organizations in system yet.</span>}
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label" htmlFor="cf-client">
-                    Client
-                    {!organizationId && <span className="required-star"> *</span>}
-                  </label>
-                  <select
-                    id="cf-client"
-                    className="form-select"
-                    value={clientId}
-                    onChange={(e) => setClientId(e.target.value)}
-                    disabled={lookupLoading}
-                  >
-                    <option value="">— None —</option>
-                    {clients.map((c) => (
-                      <option key={c.id} value={c.id}>{c.displayName} ({c.clientNumber})</option>
-                    ))}
+                  <label className="form-label" htmlFor="cf-client">Client {!organizationId && <span className="required-star">*</span>}</label>
+                  <select id="cf-client" className="form-select" value={clientId} onChange={(e) => setClientId(e.target.value)} disabled={lookupLoading}>
+                    <option value="">None</option>
+                    {clients.map((c) => <option key={c.id} value={c.id}>{c.displayName} ({c.clientNumber})</option>)}
                   </select>
-                  {!lookupLoading && clients.length === 0 && (
-                    <span className="form-hint">No clients in system yet.</span>
-                  )}
+                  {!lookupLoading && clients.length === 0 && <span className="form-hint">No clients in system yet.</span>}
                 </div>
               </div>
             )}
 
             {subjectMissing && !lookupLoading && !lookupError && (
-              <div className="field-hint-warn">
-                At least one of Organization or Client must be selected.
-              </div>
+              <div className="field-hint-warn">At least one of Organization or Client must be selected.</div>
             )}
 
-            {/* Due Date */}
-            <div className="form-group" style={{ maxWidth: 220 }}>
+            <div className="form-group due-field">
               <label className="form-label" htmlFor="cf-due">Due Date</label>
-              <input
-                id="cf-due"
-                className="form-input"
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-              />
+              <input id="cf-due" className="form-input" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
             </div>
 
             <div className="form-actions">
               <Link to="/cases" className="btn btn-secondary">Cancel</Link>
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={submitting || lookupLoading || subjectMissing}
-              >
-                {submitting ? 'Creating…' : lookupLoading ? 'Loading…' : 'Create Case'}
+              <button type="submit" className="btn btn-primary" disabled={submitting || lookupLoading || subjectMissing}>
+                {submitting ? 'Creating...' : lookupLoading ? 'Loading...' : 'Create Case'}
               </button>
             </div>
           </form>

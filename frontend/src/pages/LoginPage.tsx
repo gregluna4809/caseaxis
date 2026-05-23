@@ -12,7 +12,6 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Already authenticated → redirect to dashboard
   if (isAuthenticated) {
     navigate('/dashboard', { replace: true });
     return null;
@@ -45,16 +44,14 @@ export function LoginPage() {
         <div className="login-header">
           <div className="login-logo">CA</div>
           <h1 className="login-title">Sign in to CaseAxis</h1>
-          <p className="login-subtitle">Enterprise Case Management</p>
+          <p className="login-subtitle">Enterprise case workflow</p>
         </div>
 
         <form className="login-form" onSubmit={handleSubmit} noValidate>
           {error && <div className="form-error">{error}</div>}
 
           <div className="form-group">
-            <label className="form-label" htmlFor="username">
-              Username
-            </label>
+            <label className="form-label" htmlFor="username">Username</label>
             <input
               id="username"
               type="text"
@@ -68,9 +65,7 @@ export function LoginPage() {
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="password">
-              Password
-            </label>
+            <label className="form-label" htmlFor="password">Password</label>
             <input
               id="password"
               type="password"
@@ -82,13 +77,8 @@ export function LoginPage() {
             />
           </div>
 
-          <button
-            type="submit"
-            className="btn btn-primary w-full"
-            style={{ justifyContent: 'center', height: '40px' }}
-            disabled={loading}
-          >
-            {loading ? 'Signing in…' : 'Sign in'}
+          <button type="submit" className="btn btn-primary w-full login-submit" disabled={loading}>
+            {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
       </div>

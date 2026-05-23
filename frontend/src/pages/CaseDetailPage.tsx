@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type FormEvent, type ReactNode } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../lib/apiClient';
 import type { CaseDetail, CaseNote, CaseTask, CaseAttachment } from '../types/api';
 import { StatusBadge, PriorityBadge, TaskStatusBadge } from '../components/StatusBadge';
 import { Modal } from '../components/Modal';
 import { ALLOWED_TRANSITIONS, STATUS_LABEL, TASK_STATUSES } from '../lib/lookups';
-import { formatDate, formatDateTime, formatBytes, truncate } from '../lib/utils';
+import { displayActor, formatBytes, formatDate, formatDateTime } from '../lib/utils';
 
 type TabId = 'overview' | 'notes' | 'tasks' | 'attachments';
 type ModalId = 'note' | 'task' | 'status' | null;
@@ -14,7 +14,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'notes', label: 'Notes' },
   { id: 'tasks', label: 'Tasks' },
-  { id: 'attachments', label: 'Attachments' },
+  { id: 'attachments', label: 'Files' },
 ];
 
 export function CaseDetailPage() {
@@ -32,7 +32,6 @@ export function CaseDetailPage() {
   const [loadingNotes, setLoadingNotes] = useState(true);
   const [loadingTasks, setLoadingTasks] = useState(true);
   const [loadingAttachments, setLoadingAttachments] = useState(true);
-
   const [caseError, setCaseError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -40,12 +39,17 @@ export function CaseDetailPage() {
     let cancelled = false;
 
     async function loadAll() {
+      setLoadingCase(true);
+      setLoadingNotes(true);
+      setLoadingTasks(true);
+      setLoadingAttachments(true);
+      setCaseError(null);
+
       try {
         const detail = await api.cases.get(id!);
         if (!cancelled) setCaseDetail(detail);
       } catch (err) {
-        if (!cancelled)
-          setCaseError(err instanceof Error ? err.message : 'Failed to load case.');
+        if (!cancelled) setCaseError(err instanceof Error ? err.message : 'Failed to load case.');
       } finally {
         if (!cancelled) setLoadingCase(false);
       }
@@ -82,107 +86,79 @@ export function CaseDetailPage() {
     if (tab) setActiveTab(tab);
   }
 
-  if (loadingCase) {
-    return <div className="spinner">Loading case…</div>;
-  }
+  if (loadingCase) return <div className="spinner">Loading case...</div>;
 
   if (caseError || !caseDetail) {
     return (
-      <div>
-        <Link to="/cases" className="back-link">← Back to Cases</Link>
+      <div className="page-stack">
+        <Link to="/cases" className="back-link">Back to Cases</Link>
         <div className="form-error">{caseError ?? 'Case not found.'}</div>
       </div>
     );
   }
 
   return (
-    <div>
-      <Link to="/cases" className="back-link">← Back to Cases</Link>
+    <div className="page-stack">
+      <Link to="/cases" className="back-link">Back to Cases</Link>
 
-      {/* Case header */}
-      <div className="case-detail-header">
-        <div className="case-number">{caseDetail.caseNumber}</div>
-        <div className="case-title-large">{caseDetail.title}</div>
-        <div className="case-badges">
-          <StatusBadge code={caseDetail.statusCode} label={caseDetail.statusDisplayName} />
-          <PriorityBadge code={caseDetail.priorityCode} label={caseDetail.priorityDisplayName} />
-          <span className="badge" style={{ background: '#f1f5f9', color: '#475569' }}>
-            {caseDetail.typeDisplayName}
-          </span>
-          {caseDetail.reopenedCount > 0 && (
-            <span className="badge" style={{ background: '#fef3c7', color: '#b45309' }}>
-              Reopened ×{caseDetail.reopenedCount}
-            </span>
-          )}
+      <section className="case-hero">
+        <div className="case-hero-main">
+          <div className="case-number">{caseDetail.caseNumber}</div>
+          <h1 className="case-title-large">{caseDetail.title}</h1>
+          <div className="case-badges">
+            <StatusBadge code={caseDetail.statusCode} label={caseDetail.statusDisplayName} />
+            <PriorityBadge code={caseDetail.priorityCode} label={caseDetail.priorityDisplayName} />
+            <span className="badge badge-neutral">{caseDetail.typeDisplayName}</span>
+            {caseDetail.reopenedCount > 0 && (
+              <span className="badge badge-warning">Reopened x{caseDetail.reopenedCount}</span>
+            )}
+          </div>
         </div>
-      </div>
+        <div className="case-hero-meta">
+          <Metric label="Due" value={formatDate(caseDetail.dueDate)} />
+          <Metric label="Assignee" value={displayActor(caseDetail.assignedToId)} />
+          <Metric label="Updated" value={formatDate(caseDetail.updatedAt)} />
+        </div>
+      </section>
 
-      {/* Action bar */}
       <div className="action-bar">
-        <button className="btn btn-secondary" onClick={() => setActiveModal('note')}>
-          + Add Note
-        </button>
-        <button className="btn btn-secondary" onClick={() => setActiveModal('task')}>
-          + Add Task
-        </button>
-        <button className="btn btn-primary" onClick={() => setActiveModal('status')}>
-          Transition Status
-        </button>
+        <button className="btn btn-secondary" onClick={() => setActiveModal('note')}>Add Note</button>
+        <button className="btn btn-secondary" onClick={() => setActiveModal('task')}>Add Task</button>
+        <button className="btn btn-primary" onClick={() => setActiveModal('status')}>Transition Status</button>
       </div>
 
-      {/* Tab bar */}
-      <div className="card">
-        <div className="tabs">
+      <section className="card detail-card">
+        <div className="tabs" role="tablist" aria-label="Case sections">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
               onClick={() => setActiveTab(tab.id)}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === tab.id}
             >
               {tab.label}
-              {tab.id === 'notes' && !loadingNotes && (
-                <span className="text-muted" style={{ marginLeft: 4 }}>({notes.length})</span>
-              )}
-              {tab.id === 'tasks' && !loadingTasks && (
-                <span className="text-muted" style={{ marginLeft: 4 }}>({tasks.length})</span>
-              )}
-              {tab.id === 'attachments' && !loadingAttachments && (
-                <span className="text-muted" style={{ marginLeft: 4 }}>({attachments.length})</span>
-              )}
+              {tab.id === 'notes' && !loadingNotes && <span className="tab-count">{notes.length}</span>}
+              {tab.id === 'tasks' && !loadingTasks && <span className="tab-count">{tasks.length}</span>}
+              {tab.id === 'attachments' && !loadingAttachments && <span className="tab-count">{attachments.length}</span>}
             </button>
           ))}
         </div>
 
         <div className="tab-content">
-          {activeTab === 'overview' && (
-            <OverviewTab c={caseDetail} />
-          )}
-          {activeTab === 'notes' && (
-            <NotesTab notes={notes} loading={loadingNotes} />
-          )}
-          {activeTab === 'tasks' && (
-            <TasksTab tasks={tasks} loading={loadingTasks} />
-          )}
-          {activeTab === 'attachments' && (
-            <AttachmentsTab attachments={attachments} loading={loadingAttachments} />
-          )}
+          {activeTab === 'overview' && <OverviewTab c={caseDetail} />}
+          {activeTab === 'notes' && <NotesTab notes={notes} loading={loadingNotes} />}
+          {activeTab === 'tasks' && <TasksTab tasks={tasks} loading={loadingTasks} />}
+          {activeTab === 'attachments' && <AttachmentsTab attachments={attachments} loading={loadingAttachments} />}
         </div>
-      </div>
+      </section>
 
-      {/* Modals */}
       {activeModal === 'note' && (
-        <AddNoteModal
-          caseId={caseDetail.id}
-          onClose={() => setActiveModal(null)}
-          onDone={() => handleActionDone('notes')}
-        />
+        <AddNoteModal caseId={caseDetail.id} onClose={() => setActiveModal(null)} onDone={() => handleActionDone('notes')} />
       )}
       {activeModal === 'task' && (
-        <AddTaskModal
-          caseId={caseDetail.id}
-          onClose={() => setActiveModal(null)}
-          onDone={() => handleActionDone('tasks')}
-        />
+        <AddTaskModal caseId={caseDetail.id} onClose={() => setActiveModal(null)} onDone={() => handleActionDone('tasks')} />
       )}
       {activeModal === 'status' && (
         <TransitionStatusModal
@@ -196,174 +172,113 @@ export function CaseDetailPage() {
   );
 }
 
-/* ── Sub-tab components ──────────────────────────── */
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="metric">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
 
 function OverviewTab({ c }: { c: CaseDetail }) {
   return (
-    <div>
-      {c.description && (
-        <div style={{ marginBottom: 24 }}>
-          <div className="detail-label" style={{ marginBottom: 6 }}>Description</div>
-          <p style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--color-text)', whiteSpace: 'pre-wrap' }}>
-            {c.description}
-          </p>
+    <div className="overview-layout">
+      <div className="overview-main">
+        <div className="section-heading">
+          <span>Description</span>
         </div>
-      )}
+        <p className="description-panel">{c.description || 'No description has been added to this case.'}</p>
+      </div>
 
       <div className="detail-grid">
-        <div className="detail-field">
-          <span className="detail-label">Case Number</span>
-          <span className="detail-value mono">{c.caseNumber}</span>
-        </div>
-        <div className="detail-field">
-          <span className="detail-label">Status</span>
-          <span className="detail-value">
-            <StatusBadge code={c.statusCode} label={c.statusDisplayName} />
-          </span>
-        </div>
-        <div className="detail-field">
-          <span className="detail-label">Priority</span>
-          <span className="detail-value">
-            <PriorityBadge code={c.priorityCode} label={c.priorityDisplayName} />
-          </span>
-        </div>
-        <div className="detail-field">
-          <span className="detail-label">Type</span>
-          <span className="detail-value">{c.typeDisplayName}</span>
-        </div>
-        <div className="detail-field">
-          <span className="detail-label">Organization</span>
-          <span className="detail-value">
-            {c.organizationName && c.organizationCode
-              ? `${c.organizationName} (${c.organizationCode})`
-              : 'â€”'}
-          </span>
-        </div>
-        <div className="detail-field">
-          <span className="detail-label">Client</span>
-          <span className="detail-value">
-            {c.clientDisplayName && c.clientNumber
-              ? `${c.clientDisplayName} (${c.clientNumber})`
-              : 'â€”'}
-          </span>
-        </div>
-        <div className="detail-field">
-          <span className="detail-label">Assigned To</span>
-          <span className="detail-value mono">{truncate(c.assignedToId, 16)}</span>
-        </div>
-        <div className="detail-field">
-          <span className="detail-label">Assigned At</span>
-          <span className="detail-value">{formatDateTime(c.assignedAt)}</span>
-        </div>
-        <div className="detail-field">
-          <span className="detail-label">Due Date</span>
-          <span className="detail-value">{formatDate(c.dueDate)}</span>
-        </div>
-        <div className="detail-field">
-          <span className="detail-label">Reopened Count</span>
-          <span className="detail-value">{c.reopenedCount}</span>
-        </div>
-        <div className="detail-field">
-          <span className="detail-label">Resolved At</span>
-          <span className="detail-value">{formatDateTime(c.resolvedAt)}</span>
-        </div>
-        <div className="detail-field">
-          <span className="detail-label">Closed At</span>
-          <span className="detail-value">{formatDateTime(c.closedAt)}</span>
-        </div>
-        <div className="detail-field">
-          <span className="detail-label">Created By</span>
-          <span className="detail-value mono">{truncate(c.createdBy, 16)}</span>
-        </div>
-        <div className="detail-field">
-          <span className="detail-label">Created At</span>
-          <span className="detail-value">{formatDateTime(c.createdAt)}</span>
-        </div>
-        <div className="detail-field">
-          <span className="detail-label">Last Updated</span>
-          <span className="detail-value">{formatDateTime(c.updatedAt)}</span>
-        </div>
+        <DetailField label="Case number" value={c.caseNumber} />
+        <DetailField label="Status" value={<StatusBadge code={c.statusCode} label={c.statusDisplayName} />} />
+        <DetailField label="Priority" value={<PriorityBadge code={c.priorityCode} label={c.priorityDisplayName} />} />
+        <DetailField label="Type" value={c.typeDisplayName} />
+        <DetailField label="Organization" value={c.organizationName && c.organizationCode ? `${c.organizationName} (${c.organizationCode})` : '-'} />
+        <DetailField label="Client" value={c.clientDisplayName && c.clientNumber ? `${c.clientDisplayName} (${c.clientNumber})` : '-'} />
+        <DetailField label="Assigned to" value={displayActor(c.assignedToId)} />
+        <DetailField label="Assigned at" value={formatDateTime(c.assignedAt)} />
+        <DetailField label="Due date" value={formatDate(c.dueDate)} />
+        <DetailField label="Reopened count" value={String(c.reopenedCount)} />
+        <DetailField label="Resolved at" value={formatDateTime(c.resolvedAt)} />
+        <DetailField label="Closed at" value={formatDateTime(c.closedAt)} />
+        <DetailField label="Created by" value={displayActor(c.createdBy)} />
+        <DetailField label="Created at" value={formatDateTime(c.createdAt)} />
+        <DetailField label="Last updated" value={formatDateTime(c.updatedAt)} />
       </div>
     </div>
   );
 }
 
+function DetailField({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="detail-field">
+      <span className="detail-label">{label}</span>
+      <span className="detail-value">{value}</span>
+    </div>
+  );
+}
+
 function NotesTab({ notes, loading }: { notes: CaseNote[]; loading: boolean }) {
-  if (loading) return <div className="spinner">Loading notes…</div>;
+  if (loading) return <div className="spinner">Loading notes...</div>;
   if (notes.length === 0) return <div className="empty-state">No notes on this case yet.</div>;
 
   return (
-    <div className="note-list">
+    <div className="activity-feed">
       {notes.map((note) => (
-        <div key={note.id} className="note-card">
-          <div className="note-meta">
-            <span>{formatDateTime(note.createdAt)}</span>
-            <span className="td-mono">·</span>
-            <span className="td-mono">{truncate(note.createdBy, 16)}</span>
-            {note.internal && (
-              <span className="badge badge-internal">Internal</span>
-            )}
-            {note.supersedesNoteId && (
-              <span className="badge" style={{ background: '#fef3c7', color: '#b45309' }}>
-                Correction
-              </span>
-            )}
+        <article key={note.id} className="activity-item">
+          <div className="activity-marker" />
+          <div className="note-card">
+            <div className="note-meta">
+              <strong>{displayActor(note.createdBy)}</strong>
+              <span>{formatDateTime(note.createdAt)}</span>
+              {note.internal && <span className="badge badge-internal">Internal</span>}
+              {note.supersedesNoteId && <span className="badge badge-warning">Correction</span>}
+            </div>
+            <div className="note-body">{note.body}</div>
           </div>
-          <div className="note-body">{note.body}</div>
-        </div>
+        </article>
       ))}
     </div>
   );
 }
 
 function TasksTab({ tasks, loading }: { tasks: CaseTask[]; loading: boolean }) {
-  if (loading) return <div className="spinner">Loading tasks…</div>;
+  if (loading) return <div className="spinner">Loading tasks...</div>;
   if (tasks.length === 0) return <div className="empty-state">No tasks on this case yet.</div>;
 
   return (
-    <div className="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Status</th>
-            <th>Assigned To</th>
-            <th>Due Date</th>
-            <th>Completed</th>
-            <th>Created</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tasks.map((task) => (
-            <tr key={task.id}>
-              <td>
-                <div>{task.title}</div>
-                {task.description && (
-                  <div className="td-muted" style={{ marginTop: 2 }}>{task.description}</div>
-                )}
-              </td>
-              <td>
-                <TaskStatusBadge code={task.statusCode} label={task.statusDisplayName} />
-              </td>
-              <td className="td-mono">{truncate(task.assignedToId, 16)}</td>
-              <td className="td-muted">{formatDate(task.dueDate)}</td>
-              <td className="td-muted">{formatDateTime(task.completedAt)}</td>
-              <td className="td-muted">{formatDate(task.createdAt)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="task-list">
+      {tasks.map((task) => (
+        <article key={task.id} className="task-card">
+          <div className="task-card-main">
+            <div>
+              <h3>{task.title}</h3>
+              {task.description && <p>{task.description}</p>}
+            </div>
+            <TaskStatusBadge code={task.statusCode} label={task.statusDisplayName} />
+          </div>
+          <div className="task-meta-grid">
+            <Metric label="Assignee" value={displayActor(task.assignedToId)} />
+            <Metric label="Due" value={formatDate(task.dueDate)} />
+            <Metric label="Completed" value={formatDateTime(task.completedAt)} />
+            <Metric label="Created" value={formatDate(task.createdAt)} />
+          </div>
+        </article>
+      ))}
     </div>
   );
 }
 
 function AttachmentsTab({ attachments, loading }: { attachments: CaseAttachment[]; loading: boolean }) {
-  if (loading) return <div className="spinner">Loading attachments…</div>;
-  if (attachments.length === 0) return <div className="empty-state">No attachments on this case yet.</div>;
+  if (loading) return <div className="spinner">Loading files...</div>;
+  if (attachments.length === 0) return <div className="empty-state">No files on this case yet.</div>;
 
   return (
     <div className="table-wrapper">
-      <table>
+      <table className="data-table">
         <thead>
           <tr>
             <th>Filename</th>
@@ -376,10 +291,10 @@ function AttachmentsTab({ attachments, loading }: { attachments: CaseAttachment[
         <tbody>
           {attachments.map((att) => (
             <tr key={att.id}>
-              <td className="td-mono">{att.originalFilename}</td>
-              <td className="td-muted">{att.mimeType ?? '—'}</td>
+              <td className="filename-cell">{att.originalFilename}</td>
+              <td className="td-muted">{att.mimeType ?? '-'}</td>
               <td className="td-muted">{formatBytes(att.fileSizeBytes)}</td>
-              <td className="td-muted">{att.description ?? '—'}</td>
+              <td className="td-muted">{att.description ?? '-'}</td>
               <td className="td-muted">{formatDateTime(att.createdAt)}</td>
             </tr>
           ))}
@@ -389,15 +304,13 @@ function AttachmentsTab({ attachments, loading }: { attachments: CaseAttachment[
   );
 }
 
-/* ── Action modals ───────────────────────────────── */
-
 function AddNoteModal({ caseId, onClose, onDone }: { caseId: string; onClose: () => void; onDone: () => void }) {
   const [body, setBody] = useState('');
   const [internal, setInternal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
@@ -414,16 +327,16 @@ function AddNoteModal({ caseId, onClose, onDone }: { caseId: string; onClose: ()
     <Modal
       title="Add Note"
       onClose={onClose}
-      footer={
+      footer={(
         <>
           <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
           <button type="submit" form="add-note-form" className="btn btn-primary" disabled={submitting}>
-            {submitting ? 'Saving…' : 'Add Note'}
+            {submitting ? 'Saving...' : 'Add Note'}
           </button>
         </>
-      }
+      )}
     >
-      <form id="add-note-form" onSubmit={handleSubmit} style={{ display: 'contents' }}>
+      <form id="add-note-form" onSubmit={handleSubmit} className="modal-form">
         {error && <div className="form-error">{error}</div>}
         <div className="form-group">
           <label className="form-label" htmlFor="modal-note-body">Note *</label>
@@ -435,16 +348,12 @@ function AddNoteModal({ caseId, onClose, onDone }: { caseId: string; onClose: ()
             onChange={(e) => setBody(e.target.value)}
             required
             maxLength={10000}
-            placeholder="Enter note text…"
+            placeholder="Enter note text..."
           />
         </div>
         <label className="checkbox-row">
-          <input
-            type="checkbox"
-            checked={internal}
-            onChange={(e) => setInternal(e.target.checked)}
-          />
-          <span className="checkbox-label">Internal note (not visible to client)</span>
+          <input type="checkbox" checked={internal} onChange={(e) => setInternal(e.target.checked)} />
+          <span className="checkbox-label">Internal note</span>
         </label>
       </form>
     </Modal>
@@ -460,7 +369,7 @@ function AddTaskModal({ caseId, onClose, onDone }: { caseId: string; onClose: ()
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
@@ -483,16 +392,16 @@ function AddTaskModal({ caseId, onClose, onDone }: { caseId: string; onClose: ()
     <Modal
       title="Add Task"
       onClose={onClose}
-      footer={
+      footer={(
         <>
           <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
           <button type="submit" form="add-task-form" className="btn btn-primary" disabled={submitting}>
-            {submitting ? 'Saving…' : 'Add Task'}
+            {submitting ? 'Saving...' : 'Add Task'}
           </button>
         </>
-      }
+      )}
     >
-      <form id="add-task-form" onSubmit={handleSubmit} style={{ display: 'contents' }}>
+      <form id="add-task-form" onSubmit={handleSubmit} className="modal-form">
         {error && <div className="form-error">{error}</div>}
         <div className="form-group">
           <label className="form-label" htmlFor="modal-task-title">Title *</label>
@@ -519,40 +428,27 @@ function AddTaskModal({ caseId, onClose, onDone }: { caseId: string; onClose: ()
             placeholder="Optional description"
           />
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div className="form-row">
           <div className="form-group">
             <label className="form-label" htmlFor="modal-task-status">Status</label>
-            <select
-              id="modal-task-status"
-              className="form-select"
-              value={statusCode}
-              onChange={(e) => setStatusCode(e.target.value)}
-            >
-              {TASK_STATUSES.map((s) => (
-                <option key={s.code} value={s.code}>{s.label}</option>
-              ))}
+            <select id="modal-task-status" className="form-select" value={statusCode} onChange={(e) => setStatusCode(e.target.value)}>
+              {TASK_STATUSES.map((s) => <option key={s.code} value={s.code}>{s.label}</option>)}
             </select>
           </div>
           <div className="form-group">
             <label className="form-label" htmlFor="modal-task-due">Due Date</label>
-            <input
-              id="modal-task-due"
-              className="form-input"
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-            />
+            <input id="modal-task-due" className="form-input" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
           </div>
         </div>
         <div className="form-group">
-          <label className="form-label" htmlFor="modal-task-assigned">Assigned To (UUID)</label>
+          <label className="form-label" htmlFor="modal-task-assigned">Assignee</label>
           <input
             id="modal-task-assigned"
             className="form-input"
             type="text"
             value={assignedToId}
             onChange={(e) => setAssignedToId(e.target.value)}
-            placeholder="Optional user UUID"
+            placeholder="Leave blank for unassigned"
           />
         </div>
       </form>
@@ -579,17 +475,15 @@ function TransitionStatusModal({
 
   if (allowed.length === 0) {
     return (
-      <Modal title="Transition Status" onClose={onClose} footer={
-        <button className="btn btn-secondary" onClick={onClose}>Close</button>
-      }>
-        <p style={{ fontSize: 14, color: 'var(--color-text-muted)' }}>
+      <Modal title="Transition Status" onClose={onClose} footer={<button className="btn btn-secondary" onClick={onClose}>Close</button>}>
+        <p className="muted-copy">
           No transitions are available from <strong>{STATUS_LABEL[currentStatus] ?? currentStatus}</strong>.
         </p>
       </Modal>
     );
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
@@ -606,40 +500,25 @@ function TransitionStatusModal({
     <Modal
       title="Transition Status"
       onClose={onClose}
-      footer={
+      footer={(
         <>
           <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
           <button type="submit" form="transition-form" className="btn btn-primary" disabled={submitting}>
-            {submitting ? 'Saving…' : 'Apply Transition'}
+            {submitting ? 'Saving...' : 'Apply Transition'}
           </button>
         </>
-      }
+      )}
     >
-      <form id="transition-form" onSubmit={handleSubmit} style={{ display: 'contents' }}>
+      <form id="transition-form" onSubmit={handleSubmit} className="modal-form">
         {error && <div className="form-error">{error}</div>}
         <div className="form-group">
           <label className="form-label" htmlFor="modal-ts-current">Current Status</label>
-          <input
-            id="modal-ts-current"
-            className="form-input"
-            type="text"
-            value={STATUS_LABEL[currentStatus] ?? currentStatus}
-            disabled
-            style={{ background: 'var(--color-bg)', color: 'var(--color-text-muted)' }}
-          />
+          <input id="modal-ts-current" className="form-input" type="text" value={STATUS_LABEL[currentStatus] ?? currentStatus} disabled />
         </div>
         <div className="form-group">
           <label className="form-label" htmlFor="modal-ts-new">New Status *</label>
-          <select
-            id="modal-ts-new"
-            className="form-select"
-            value={statusCode}
-            onChange={(e) => setStatusCode(e.target.value)}
-            required
-          >
-            {allowed.map((code) => (
-              <option key={code} value={code}>{STATUS_LABEL[code] ?? code}</option>
-            ))}
+          <select id="modal-ts-new" className="form-select" value={statusCode} onChange={(e) => setStatusCode(e.target.value)} required>
+            {allowed.map((code) => <option key={code} value={code}>{STATUS_LABEL[code] ?? code}</option>)}
           </select>
         </div>
         <div className="form-group">
