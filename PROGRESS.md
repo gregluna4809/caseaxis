@@ -998,3 +998,24 @@ Human-readable business identifiers were added while preserving UUID primary key
 #### Rationale
 
 UUIDs remain the write-safe internal identifiers, but normal workflows now have stable human-readable references suitable for support, audit discussions, and operational screens.
+
+---
+
+## 2026-05-23
+### Brooklyn Insurance & Robotics Demo Seed Tool
+
+#### Milestone
+Added a Python-based synthetic enterprise demo data generator for the fictional Brooklyn Insurance & Robotics operating theme.
+
+#### Implementation Details
+
+- Created `tools/seed_bir_demo.py`.
+- Created `tools/README.md` with setup, dry-run, reset, and scale configuration instructions.
+- Uses Faker for NYC-centric synthetic data and psycopg PostgreSQL `COPY` for bulk inserts.
+- Default scale generates 250 organizations, 25,000 clients, 75,000 cases, 150,000 notes, 100,000 tasks, and 50,000 attachment metadata rows.
+- Demo rows are resettable through explicit BIR markers on organization/client external IDs and case numbers.
+- The tool does not use an ORM and does not alter schema.
+
+#### Validation
+
+Local full-scale run completed in 22.66 seconds and validated expected row counts for all generated tables.
