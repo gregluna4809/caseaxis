@@ -76,6 +76,48 @@ Each major entry should include:
 ---
 
 ## 2026-05-23
+### Phase 12 — Global Search
+
+#### Milestone
+Replaced the decorative top search bar with a real enterprise global search experience.
+
+---
+
+#### Summary
+
+Implemented end-to-end universal search across all major CaseAxis entities.
+
+**Backend:**
+- New `GET /api/search?q=` endpoint in `com.caseaxis.search` package
+- `SearchController` → `SearchService` → existing repositories
+- Added `searchGlobal(q, pageable)` to `CaseTaskRepository` for title/description matching
+- Reuses existing `searchActive` methods on `CaseRepository`, `ClientRepository`, `OrganizationRepository`
+- Returns 5 results per group: cases, clients, organizations, tasks
+- Case-insensitive substring matching via JPQL `LOWER + LIKE`
+- Empty/blank query returns empty groups immediately (no DB hit)
+
+**Frontend:**
+- New `GlobalSearch.tsx` component replacing the static placeholder in `AppShell`
+- 300ms debounce on input
+- Grouped dropdown results panel with section headers
+- Each result navigates to its detail page: `/cases/:id`, `/clients/:id`, `/organizations/:id`, `/tasks/:id`
+- Keyboard accessible: `Escape` closes, `Enter` on focused item navigates
+- Click-outside closes dropdown
+- Loading spinner while fetch is in flight
+- Empty state message when no matches
+- CSS added to `index.css` using existing design token variables
+
+---
+
+#### Validation
+
+Backend: 6/6 `SearchControllerTest` integration tests passed (empty query, unauthenticated 401, case match, org match, client match, no-match empty groups).
+
+Frontend: TypeScript compilation and Vite production build succeeded.
+
+---
+
+## 2026-05-23
 ### Record Deactivation And Archive Workflows
 
 #### Milestone

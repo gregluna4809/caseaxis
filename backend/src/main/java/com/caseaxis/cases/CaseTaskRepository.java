@@ -123,6 +123,14 @@ public interface CaseTaskRepository extends JpaRepository<CaseTask, UUID> {
         Pageable pageable
     );
 
+    @Query("""
+            SELECT t FROM CaseTask t
+            WHERE t.deleted = false
+              AND (LOWER(t.title) LIKE LOWER(CONCAT('%', :q, '%'))
+                OR LOWER(t.description) LIKE LOWER(CONCAT('%', :q, '%')))
+            """)
+    List<CaseTask> searchGlobal(@Param("q") String q, Pageable pageable);
+
     @Query(value = """
             SELECT t FROM CaseTask t
             WHERE t.deleted = false

@@ -1,6 +1,6 @@
 # CaseAxis API Contract
 
-**Version:** Phase 11  
+**Version:** Phase 12  
 **Base URL:** `http://localhost:8080` (development)  
 **Content-Type:** `application/json` (all requests and responses)
 
@@ -12,12 +12,13 @@
 2. [Error Format](#error-format)
 3. [Authentication](#authentication)
 4. [Health](#health)
-5. [Dashboard](#dashboard)
-6. [Reports](#reports)
-7. [Cases](#cases)
-8. [Case Assignments](#case-assignments)
-9. [Case Status Transitions](#case-status-transitions)
-10. [Case Notes](#case-notes)
+5. [Global Search](#global-search)
+6. [Dashboard](#dashboard)
+7. [Reports](#reports)
+8. [Cases](#cases)
+9. [Case Assignments](#case-assignments)
+10. [Case Status Transitions](#case-status-transitions)
+11. [Case Notes](#case-notes)
 11. [Case Tasks](#case-tasks)
 12. [Case Attachments](#case-attachments)
 13. [Organizations](#organizations)
@@ -149,6 +150,71 @@ Returns the service status. Used for readiness checks.
   "timestamp": "2026-05-23T02:30:00.000Z"
 }
 ```
+
+---
+
+## Global Search
+
+### GET /api/search
+
+Searches across all major entities and returns grouped results. Requires authentication.
+
+**Query Parameters:**
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `q` | string | No | Search term. Empty or blank returns empty groups. |
+
+**Response `data`:**
+
+```json
+{
+  "cases": [
+    {
+      "id": "uuid",
+      "caseNumber": "CA-000123",
+      "title": "Case title",
+      "statusCode": "NEW",
+      "statusDisplayName": "New"
+    }
+  ],
+  "clients": [
+    {
+      "id": "uuid",
+      "clientNumber": "CLT-000001",
+      "displayName": "Jane Smith",
+      "email": "jane@example.com"
+    }
+  ],
+  "organizations": [
+    {
+      "id": "uuid",
+      "organizationCode": "ORG-000000001",
+      "name": "Acme Corp"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "uuid",
+      "caseId": "uuid",
+      "title": "Follow up on intake",
+      "statusCode": "OPEN",
+      "statusDisplayName": "Open"
+    }
+  ]
+}
+```
+
+**Searchable fields:**
+
+| Entity | Fields |
+|---|---|
+| Cases | `caseNumber`, `title`, `description` (via type display name) |
+| Clients | `clientNumber`, `firstName`, `lastName`, `email` |
+| Organizations | `organizationCode`, `name` |
+| Tasks | `title`, `description` |
+
+Each group is limited to 5 results. Matching is case-insensitive substring.
 
 ---
 

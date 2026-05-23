@@ -308,6 +308,43 @@ export interface ClientDetail {
   overdueCases: number;
 }
 
+// GET /api/search?q=
+export interface CaseSearchItem {
+  id: string;
+  caseNumber: string;
+  title: string;
+  statusCode: string;
+  statusDisplayName: string;
+}
+
+export interface ClientSearchItem {
+  id: string;
+  clientNumber: string;
+  displayName: string;
+  email: string | null;
+}
+
+export interface OrganizationSearchItem {
+  id: string;
+  organizationCode: string;
+  name: string;
+}
+
+export interface TaskSearchItem {
+  id: string;
+  caseId: string;
+  title: string;
+  statusCode: string;
+  statusDisplayName: string;
+}
+
+export interface SearchResults {
+  cases: CaseSearchItem[];
+  clients: ClientSearchItem[];
+  organizations: OrganizationSearchItem[];
+  tasks: TaskSearchItem[];
+}
+
 // GET /api/cases/:id/attachments
 export interface CaseAttachment {
   id: string;

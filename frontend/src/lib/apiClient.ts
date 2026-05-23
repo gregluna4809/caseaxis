@@ -6,6 +6,7 @@ import type {
   DashboardMetrics, DashboardOverview,
   ReportFilters, ReportSummary, DistributionItem, OverdueAgingBucket,
   AssigneeWorkload, OrganizationWorkload, ClosureTrendPoint, ReportExport,
+  SearchResults,
 } from '../types/api';
 
 export class ApiError extends Error {
@@ -316,6 +317,13 @@ export const api = {
   attachments: {
     list(caseId: string) {
       return request<CaseAttachment[]>(`/api/cases/${caseId}/attachments`);
+    },
+  },
+
+  search: {
+    query(q: string) {
+      const search = new URLSearchParams({ q });
+      return request<SearchResults>(`/api/search?${search.toString()}`);
     },
   },
 };

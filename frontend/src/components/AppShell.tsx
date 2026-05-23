@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { GlobalSearch } from './GlobalSearch';
 
 export function AppShell() {
   const { username, logout } = useAuth();
@@ -21,10 +22,7 @@ export function AppShell() {
           </div>
         </div>
 
-        <div className="global-search" aria-label="Global search">
-          <span className="search-icon">Search</span>
-          <span>Search cases, clients, organizations</span>
-        </div>
+        <GlobalSearch />
 
         <div className="global-header-right">
           <span className="workspace-selector">Case Operations</span>
