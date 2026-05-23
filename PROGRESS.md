@@ -856,3 +856,122 @@ POST /api/auth/login {"username":"admin","password":"wrong"}
 
 Phase 6 — Core Case Engine: JPA entities for cases, assignments, tasks, notes;
 service layer; CRUD endpoints. All protected — valid JWT required.
+
+---
+
+## 2026-05-22
+### Phase 6 — Core Case Engine + Sub-Resources
+
+#### Milestone
+Full case CRUD, assignment workflow, status transitions, case notes, case tasks, and
+attachment metadata endpoints implemented, tested (45/45), and manually validated.
+
+#### Summary
+
+Implemented the complete Phase 6 case engine in two passes:
+
+**Pass 1 (Core Case Engine):** Cases, assignments, and status transitions.
+
+**Pass 2 (Sub-resources):** Case notes (immutable), case tasks (mutable), and attachment
+metadata registration. All three respect the schema immutability model defined in V11.
+
+#### Endpoints Implemented (17 total)
+
+| Method | Path | Feature |
+|---|---|---|
+| `GET` | `/api/health` | Health check (Phase 4) |
+| `POST` | `/api/auth/login` | JWT login (Phase 5) |
+| `POST` | `/api/cases` | Create case |
+| `GET` | `/api/cases` | List cases (paginated) |
+| `GET` | `/api/cases/{id}` | Get case detail |
+| `POST` | `/api/cases/{id}/assign` | Assign case to user |
+| `POST` | `/api/cases/{id}/status` | Transition case status |
+| `POST` | `/api/cases/{id}/notes` | Create note |
+| `GET` | `/api/cases/{id}/notes` | List notes |
+| `DELETE` | `/api/cases/{id}/notes/{noteId}` | Soft-delete note |
+| `POST` | `/api/cases/{id}/tasks` | Create task |
+| `GET` | `/api/cases/{id}/tasks` | List tasks |
+| `GET` | `/api/cases/{id}/tasks/{taskId}` | Get task |
+| `PUT` | `/api/cases/{id}/tasks/{taskId}` | Update task |
+| `DELETE` | `/api/cases/{id}/tasks/{taskId}` | Soft-delete task |
+| `POST` | `/api/cases/{id}/attachments` | Register attachment metadata |
+| `GET` | `/api/cases/{id}/attachments` | List attachments |
+| `DELETE` | `/api/cases/{id}/attachments/{attachmentId}` | Soft-delete attachment |
+
+#### Key Technical Decisions
+
+**Status machine enforced in service layer.** Transition legality is validated against
+a static `Map<String, Set<String>>` in `CaseService`. Invalid transitions return `409 Conflict`.
+
+**Notes are immutable.** `CaseNote` entity marks content columns as `updatable = false`.
+The database `trg_case_notes_immutable` trigger is the authoritative guard. Only
+`is_deleted`, `deleted_at`, and `deleted_by` can be updated — used by the soft-delete path.
+
+**Task completion metadata auto-set.** When `statusCode` transitions to `COMPLETED` for
+the first time, `completedAt` and `completedBy` are recorded by the service. Subsequent
+updates do not overwrite the original completion timestamp.
+
+**Attachment metadata only.** No file upload — the API registers metadata for files
+already written to storage by the caller. `storage_path` supports both local filesystem
+paths and future object storage keys (e.g. S3 key) without a schema change.
+
+#### Files Created (Phase 6, Pass 2)
+
+Entities: `TaskStatus`, `CaseNote`, `CaseTask`, `CaseAttachment`  
+Repositories: `TaskStatusRepository`, `CaseNoteRepository`, `CaseTaskRepository`, `CaseAttachmentRepository`  
+DTOs: `CreateCaseNoteRequest`, `CaseNoteResponse`, `CreateCaseTaskRequest`, `UpdateCaseTaskRequest`, `CaseTaskResponse`, `CreateCaseAttachmentRequest`, `CaseAttachmentResponse`  
+Services: `CaseNoteService`, `CaseTaskService`, `CaseAttachmentService`  
+Controllers: `CaseNoteController`, `CaseTaskController`, `CaseAttachmentController`  
+Tests: `CaseNoteControllerTest` (9), `CaseTaskControllerTest` (11), `CaseAttachmentControllerTest` (8)
+
+#### Test Results
+
+```
+Tests run: 45, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+#### Manual Validation
+
+Live server validated on native PostgreSQL 16 (localhost:5432):
+
+```
+POST /api/cases/{id}/notes  → 201, note body + timestamps correct
+GET  /api/cases/{id}/notes  → 200, returns note array
+POST /api/cases/{id}/tasks  → 201, IN_PROGRESS status resolved correctly
+POST /api/cases/{id}/attachments → 201, filename + mimeType + fileSizeBytes persisted
+```
+
+#### Next Steps
+
+Phase 7 — React frontend. API contract is documented in `docs/API_CONTRACT.md`.
+Seed data engine (Python + Faker) is also ready to be built now that the schema and
+service layer are stable.
+
+---
+
+## 2026-05-22
+### API Contract Documented
+
+#### Milestone
+`docs/API_CONTRACT.md` written covering all 17 implemented endpoints.
+
+#### Summary
+
+Produced the definitive API reference document before frontend development begins.
+Covers all endpoints with: method, path, auth requirements, request body field table,
+response shape with example JSON, validation notes, and error codes. Includes the full
+status transition matrix, all reference data codes, and a Known Inconsistencies section
+documenting five design tradeoffs that frontend developers should be aware of.
+
+#### Key Inconsistencies Documented
+
+1. Sub-resource list endpoints return plain arrays; `GET /api/cases` returns a Spring `Page`
+2. `CaseDetailResponse` omits `updatedBy` (field exists in DB, not yet exposed)
+3. DELETE responses return `"data": null` (Jackson `@JsonInclude(NON_NULL)` omits it on the wire)
+4. No individual GET for notes or attachments (tasks have one; notes/attachments do not)
+5. Status codes are case-insensitive on input, always uppercase on output
+
+#### Next Steps
+
+Begin frontend development (React + TypeScript + Vite) against the documented contract.
