@@ -29,8 +29,8 @@ export function formatPhoneNumber(value: string | null | undefined): string {
   if (!value?.trim()) return '-';
 
   const trimmed = value.trim();
-  const extensionMatch = trimmed.match(/\b(?:ext\.?|x|extension)\s*(\d{1,5})\b/i);
-  const extension = extensionMatch?.[1];
+  const extensionMatch = trimmed.match(/(?:\s*(?:ext\.?|extension|x|#)\s*(\d{1,6}))\s*$/i);
+  const extension = normalizeExtension(extensionMatch?.[1]);
   const withoutExtension = extensionMatch
     ? trimmed.slice(0, extensionMatch.index).trim()
     : trimmed;
@@ -44,11 +44,15 @@ export function formatPhoneNumber(value: string | null | undefined): string {
     return appendExtension(formatUsPhone(digits), extension);
   }
 
-  if (trimmed.startsWith('+') && digits.length >= 8 && digits.length <= 15) {
+  if (!withoutExtension.startsWith('+') && digits.length > 10) {
+    return appendExtension(formatUsPhone(digits.slice(-10)), extension);
+  }
+
+  if (withoutExtension.startsWith('+') && digits.length >= 8 && digits.length <= 15) {
     return appendExtension(`+${digits}`, extension);
   }
 
-  return trimmed;
+  return digits.length >= 7 ? appendExtension(digits, extension) : '-';
 }
 
 function formatUsPhone(digits: string): string {
@@ -57,6 +61,11 @@ function formatUsPhone(digits: string): string {
 
 function appendExtension(phone: string, extension: string | undefined): string {
   return extension ? `${phone} ext. ${extension}` : phone;
+}
+
+function normalizeExtension(extension: string | undefined): string | undefined {
+  if (!extension) return undefined;
+  return extension.length <= 4 ? extension : undefined;
 }
 
 export function truncate(str: string | null | undefined, len = 8): string {
