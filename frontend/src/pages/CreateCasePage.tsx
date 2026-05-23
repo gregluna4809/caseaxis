@@ -171,7 +171,7 @@ export function CreateCasePage() {
                   >
                     <option value="">— None —</option>
                     {organizations.map((o) => (
-                      <option key={o.id} value={o.id}>{o.name}</option>
+                      <option key={o.id} value={o.id}>{o.name} ({o.organizationCode})</option>
                     ))}
                   </select>
                   {!lookupLoading && organizations.length === 0 && (
@@ -193,7 +193,7 @@ export function CreateCasePage() {
                   >
                     <option value="">— None —</option>
                     {clients.map((c) => (
-                      <option key={c.id} value={c.id}>{c.displayName}</option>
+                      <option key={c.id} value={c.id}>{c.displayName} ({c.clientNumber})</option>
                     ))}
                   </select>
                   {!lookupLoading && clients.length === 0 && (

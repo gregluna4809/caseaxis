@@ -22,6 +22,9 @@ public class Client {
     @Column(name = "organization_id")
     private UUID organizationId;
 
+    @Column(name = "client_number", nullable = false)
+    private String clientNumber;
+
     @Column(name = "first_name", nullable = false)
     private String firstName;
 

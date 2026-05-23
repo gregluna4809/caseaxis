@@ -21,7 +21,7 @@ public class OrganizationController {
         List<OrganizationSummaryResponse> orgs = organizationRepository
             .findByDeletedFalseAndActiveTrueOrderByNameAsc()
             .stream()
-            .map(o -> new OrganizationSummaryResponse(o.getId(), o.getName()))
+            .map(o -> new OrganizationSummaryResponse(o.getId(), o.getOrganizationCode(), o.getName()))
             .toList();
         return ResponseEntity.ok(ApiResponse.success(orgs));
     }

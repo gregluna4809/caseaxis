@@ -91,6 +91,8 @@ class CaseControllerTest {
             .andExpect(jsonPath("$.data.statusCode").value("NEW"))
             .andExpect(jsonPath("$.data.priorityCode").value("HIGH"))
             .andExpect(jsonPath("$.data.typeCode").value("COMPLAINT"))
+            .andExpect(jsonPath("$.data.organizationCode").value(matchesPattern("ORG-\\d{9}")))
+            .andExpect(jsonPath("$.data.organizationName").isNotEmpty())
             .andExpect(jsonPath("$.data.createdAt").isNotEmpty());
     }
 
@@ -113,6 +115,7 @@ class CaseControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.id").value(caseId))
             .andExpect(jsonPath("$.data.statusCode").value("NEW"))
+            .andExpect(jsonPath("$.data.organizationCode").value(matchesPattern("ORG-\\d{9}")))
             .andExpect(jsonPath("$.data.createdAt").isNotEmpty())
             .andExpect(jsonPath("$.data.updatedAt").isNotEmpty());
     }

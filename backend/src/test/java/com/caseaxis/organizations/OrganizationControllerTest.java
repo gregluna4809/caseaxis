@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -75,7 +76,7 @@ class OrganizationControllerTest {
             .andReturn().getResponse().getContentAsString();
 
         org.assertj.core.api.Assertions.assertThat(response)
-            .contains(orgId.toString())
+            .contains("ORG-")
             .contains("Acme Corp");
     }
 
@@ -98,8 +99,9 @@ class OrganizationControllerTest {
             .andReturn().getResponse().getContentAsString();
 
         org.assertj.core.api.Assertions.assertThat(response)
-            .contains(activeId.toString())
-            .doesNotContain(deletedId.toString());
+            .contains("Active Corp")
+            .doesNotContain(deletedId.toString())
+            .doesNotContain("Deleted Corp");
     }
 
     @Test
@@ -121,8 +123,24 @@ class OrganizationControllerTest {
             .andReturn().getResponse().getContentAsString();
 
         org.assertj.core.api.Assertions.assertThat(response)
-            .contains(activeId.toString())
-            .doesNotContain(inactiveId.toString());
+            .contains("Active Org")
+            .doesNotContain(inactiveId.toString())
+            .doesNotContain("Inactive Org");
+    }
+
+    @Test
+    void listOrganizations_returnsBusinessIdentifier() throws Exception {
+        jdbcTemplate.update(
+            "INSERT INTO organizations (id, name, created_by) VALUES (?, ?, ?)",
+            UuidGenerator.generate(), "Business Id Org", adminId
+        );
+
+        mockMvc.perform(get("/api/organizations")
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data[?(@.name=='Business Id Org')].organizationCode").value(
+                org.hamcrest.Matchers.hasItem(matchesPattern("ORG-\\d{9}"))
+            ));
     }
 
     @Test

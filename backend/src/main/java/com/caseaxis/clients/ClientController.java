@@ -23,6 +23,7 @@ public class ClientController {
             .stream()
             .map(c -> new ClientSummaryResponse(
                 c.getId(),
+                c.getClientNumber(),
                 c.getLastName() + ", " + c.getFirstName(),
                 c.getOrganizationId()
             ))

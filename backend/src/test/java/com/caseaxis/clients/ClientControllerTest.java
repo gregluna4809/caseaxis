@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -75,7 +76,7 @@ class ClientControllerTest {
             .andReturn().getResponse().getContentAsString();
 
         org.assertj.core.api.Assertions.assertThat(response)
-            .contains(clientId.toString())
+            .contains("CL-")
             .contains("Smith, Jane");
     }
 
@@ -98,8 +99,9 @@ class ClientControllerTest {
             .andReturn().getResponse().getContentAsString();
 
         org.assertj.core.api.Assertions.assertThat(response)
-            .contains(activeId.toString())
-            .doesNotContain(deletedId.toString());
+            .contains("Person, Active")
+            .doesNotContain(deletedId.toString())
+            .doesNotContain("Deleted, Person");
     }
 
     @Test
@@ -121,8 +123,9 @@ class ClientControllerTest {
             .andReturn().getResponse().getContentAsString();
 
         org.assertj.core.api.Assertions.assertThat(response)
-            .contains(activeId.toString())
-            .doesNotContain(inactiveId.toString());
+            .contains("Client, Active")
+            .doesNotContain(inactiveId.toString())
+            .doesNotContain("Client, Inactive");
     }
 
     @Test
@@ -155,5 +158,20 @@ class ClientControllerTest {
 
         org.assertj.core.api.Assertions.assertThat(carolIdx).isLessThan(aliceIdx);
         org.assertj.core.api.Assertions.assertThat(aliceIdx).isLessThan(bobIdx);
+    }
+
+    @Test
+    void listClients_returnsBusinessIdentifier() throws Exception {
+        jdbcTemplate.update(
+            "INSERT INTO clients (id, first_name, last_name, created_by) VALUES (?, ?, ?, ?)",
+            UuidGenerator.generate(), "Business", "Client", adminId
+        );
+
+        mockMvc.perform(get("/api/clients")
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data[?(@.displayName=='Client, Business')].clientNumber").value(
+                org.hamcrest.Matchers.hasItem(matchesPattern("CL-\\d{9}"))
+            ));
     }
 }

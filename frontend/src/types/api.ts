@@ -54,7 +54,11 @@ export interface CaseDetail {
   typeCode: string;
   typeDisplayName: string;
   organizationId: string | null;
+  organizationCode: string | null;
+  organizationName: string | null;
   clientId: string | null;
+  clientNumber: string | null;
+  clientDisplayName: string | null;
   assignedToId: string | null;
   assignedAt: string | null;
   dueDate: string | null;
@@ -98,12 +102,14 @@ export interface CaseTask {
 // GET /api/organizations
 export interface OrganizationSummary {
   id: string;
+  organizationCode: string;
   name: string;
 }
 
 // GET /api/clients
 export interface ClientSummary {
   id: string;
+  clientNumber: string;
   displayName: string;
   organizationId: string | null;
 }

@@ -975,3 +975,26 @@ documenting five design tradeoffs that frontend developers should be aware of.
 #### Next Steps
 
 Begin frontend development (React + TypeScript + Vite) against the documented contract.
+
+---
+
+## 2026-05-23
+### Business Identifiers Added for Clients and Organizations
+
+#### Milestone
+Human-readable business identifiers were added while preserving UUID primary keys as internal database identifiers.
+
+#### Implementation Details
+
+- Added Flyway migration `V14__add_client_and_organization_business_identifiers.sql`.
+- Added `clients.client_number` in `CL-000000001` format.
+- Added `organizations.organization_code` in `ORG-000000001` format.
+- Backfilled existing rows through PostgreSQL sequences.
+- Added `NOT NULL`, unique constraints, format checks, and lookup indexes.
+- Updated backend organization/client lookup DTOs to include `organizationCode` and `clientNumber`.
+- Updated `CaseDetailResponse` with organization/client display names and business identifiers for frontend display.
+- Updated React lookup dropdowns and case detail overview to show names plus business identifiers instead of raw client/organization UUIDs.
+
+#### Rationale
+
+UUIDs remain the write-safe internal identifiers, but normal workflows now have stable human-readable references suitable for support, audit discussions, and operational screens.

@@ -22,6 +22,9 @@ public class Organization {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Column(name = "organization_code", nullable = false)
+    private String organizationCode;
+
     @Column(name = "is_active", nullable = false)
     private boolean active;
 

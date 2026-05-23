@@ -2,6 +2,10 @@ package com.caseaxis.cases;
 
 import com.caseaxis.common.exception.ResourceNotFoundException;
 import com.caseaxis.common.util.UuidGenerator;
+import com.caseaxis.clients.Client;
+import com.caseaxis.clients.ClientRepository;
+import com.caseaxis.organizations.Organization;
+import com.caseaxis.organizations.OrganizationRepository;
 import com.caseaxis.users.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +45,8 @@ public class CaseService {
     private final CaseAssignmentRepository assignmentRepository;
     private final CaseStatusHistoryRepository statusHistoryRepository;
     private final UserRepository userRepository;
+    private final OrganizationRepository organizationRepository;
+    private final ClientRepository clientRepository;
     private final JdbcTemplate jdbcTemplate;
 
     @Transactional
@@ -225,6 +231,13 @@ public class CaseService {
     }
 
     private CaseDetailResponse toDetailResponse(Case c) {
+        Organization organization = c.getOrganizationId() == null
+            ? null
+            : organizationRepository.findById(c.getOrganizationId()).orElse(null);
+        Client client = c.getClientId() == null
+            ? null
+            : clientRepository.findById(c.getClientId()).orElse(null);
+
         return new CaseDetailResponse(
             c.getId(),
             c.getCaseNumber(),
@@ -237,7 +250,11 @@ public class CaseService {
             c.getType().getCode(),
             c.getType().getDisplayName(),
             c.getOrganizationId(),
+            organization == null ? null : organization.getOrganizationCode(),
+            organization == null ? null : organization.getName(),
             c.getClientId(),
+            client == null ? null : client.getClientNumber(),
+            client == null ? null : client.getLastName() + ", " + client.getFirstName(),
             c.getAssignedToId(),
             c.getAssignedAt(),
             c.getDueDate(),

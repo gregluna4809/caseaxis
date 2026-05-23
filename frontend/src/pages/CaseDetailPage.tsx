@@ -232,12 +232,20 @@ function OverviewTab({ c }: { c: CaseDetail }) {
           <span className="detail-value">{c.typeDisplayName}</span>
         </div>
         <div className="detail-field">
-          <span className="detail-label">Organization ID</span>
-          <span className="detail-value mono">{truncate(c.organizationId, 16)}</span>
+          <span className="detail-label">Organization</span>
+          <span className="detail-value">
+            {c.organizationName && c.organizationCode
+              ? `${c.organizationName} (${c.organizationCode})`
+              : 'â€”'}
+          </span>
         </div>
         <div className="detail-field">
-          <span className="detail-label">Client ID</span>
-          <span className="detail-value mono">{truncate(c.clientId, 16)}</span>
+          <span className="detail-label">Client</span>
+          <span className="detail-value">
+            {c.clientDisplayName && c.clientNumber
+              ? `${c.clientDisplayName} (${c.clientNumber})`
+              : 'â€”'}
+          </span>
         </div>
         <div className="detail-field">
           <span className="detail-label">Assigned To</span>

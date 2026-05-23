@@ -200,7 +200,11 @@ At least one of `organizationId` or `clientId` must be non-null. A request with 
     "typeCode": "APPLICATION",
     "typeDisplayName": "Application",
     "organizationId": "019e4d65-ff59-7a8b-927c-d8a6eb4a09cd",
+    "organizationCode": "ORG-000654321",
+    "organizationName": "Acme Corp",
     "clientId": null,
+    "clientNumber": null,
+    "clientDisplayName": null,
     "assignedToId": null,
     "assignedAt": null,
     "dueDate": "2026-06-30",
@@ -296,6 +300,8 @@ Returns full detail for one case.
 **Response — 200 OK:**
 
 Returns full `CaseDetailResponse` (same shape as `POST /api/cases` response `data`).
+
+Client and organization UUID fields remain present for internal API workflows, but UI consumers should display `organizationName` + `organizationCode` and `clientDisplayName` + `clientNumber` instead of raw UUIDs.
 
 **Error responses:**
 - `404` — case not found or soft-deleted
@@ -898,6 +904,57 @@ Soft-deletes an attachment record. The physical file is not affected — storage
 ## Reference Data
 
 Reference values are seeded at migration time. Application code looks them up by `code`, never by `id` (IDs differ across environments).
+
+### Organizations
+
+### GET /api/organizations
+
+Returns active, non-deleted organizations for lookup controls, ordered by name.
+
+**Auth required:** Yes
+
+**Response â€” 200 OK:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "019e4d65-ff59-7a8b-927c-d8a6eb4a09cd",
+      "organizationCode": "ORG-000654321",
+      "name": "Acme Corp"
+    }
+  ],
+  "timestamp": "2026-05-23T02:38:00.622Z"
+}
+```
+
+`id` is retained for internal write workflows. User-facing displays should use `name` and `organizationCode`.
+
+### Clients
+
+### GET /api/clients
+
+Returns active, non-deleted clients for lookup controls, ordered by last name then first name.
+
+**Auth required:** Yes
+
+**Response â€” 200 OK:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "019e52ae-17da-7942-9752-223e532e487e",
+      "clientNumber": "CL-000123456",
+      "displayName": "Smith, Jane",
+      "organizationId": "019e4d65-ff59-7a8b-927c-d8a6eb4a09cd"
+    }
+  ],
+  "timestamp": "2026-05-23T02:38:00.622Z"
+}
+```
+
+`id` and `organizationId` are retained for internal write workflows. User-facing displays should use `displayName` and `clientNumber`.
 
 ### Case Statuses
 
