@@ -75,6 +75,46 @@ Each major entry should include:
 
 ---
 
+## 2026-05-23
+### Phase 11 Reports / Analytics Module
+
+#### Milestone
+Replaced the Reports placeholder with a backend-driven analytics workspace.
+
+---
+
+#### Summary
+
+Implemented a dedicated reporting module with authenticated aggregate APIs and a React reports workspace at `/reports`.
+
+Delivered analytics include:
+
+- KPI summary metrics for cases, overdue workload, escalations, resolution time, and tasks
+- case status distribution
+- case type distribution
+- overdue aging buckets
+- assignee workload
+- organization workload
+- closure trend
+- server-generated CSV and JSON exports
+
+---
+
+#### Notable Decisions
+
+- Reporting queries use backend SQL aggregates through `NamedParameterJdbcTemplate`.
+- The frontend consumes aggregate endpoints only and does not load full operational datasets for analytics.
+- Report filters are server-driven and shared across analytics sections.
+- Charts use lightweight CSS bars to preserve the current CRM density and avoid adding a dependency.
+
+---
+
+#### Validation
+
+Backend and frontend validation are run as part of the Phase 11 completion commit.
+
+---
+
 ## 2026-05-20
 ### Project Foundation Established
 

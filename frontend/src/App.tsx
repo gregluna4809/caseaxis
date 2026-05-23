@@ -13,17 +13,7 @@ import { OrgListPage } from './pages/OrgListPage';
 import { OrgDetailPage } from './pages/OrgDetailPage';
 import { TaskListPage } from './pages/TaskListPage';
 import { TaskDetailPage } from './pages/TaskDetailPage';
-
-function PlaceholderPage({ title }: { title: string }) {
-  return (
-    <div className="page-stack">
-      <div className="page-header">
-        <h1 className="page-title">{title}</h1>
-        <p className="page-subtitle">This module is coming soon.</p>
-      </div>
-    </div>
-  );
-}
+import { ReportsPage } from './pages/ReportsPage';
 
 export function App() {
   return (
@@ -45,7 +35,7 @@ export function App() {
               <Route path="/organizations/:id" element={<OrgDetailPage />} />
               <Route path="/tasks" element={<TaskListPage />} />
               <Route path="/tasks/:id" element={<TaskDetailPage />} />
-              <Route path="/reports" element={<PlaceholderPage title="Reports" />} />
+              <Route path="/reports" element={<ReportsPage />} />
             </Route>
           </Route>
 

@@ -4,6 +4,8 @@ import type {
   TaskSummary, TaskDetail,
   OrganizationSummary, OrganizationDetail, ClientSummary, ClientDetail,
   DashboardMetrics, DashboardOverview,
+  ReportFilters, ReportSummary, DistributionItem, OverdueAgingBucket,
+  AssigneeWorkload, OrganizationWorkload, ClosureTrendPoint, ReportExport,
 } from '../types/api';
 
 export class ApiError extends Error {
@@ -55,6 +57,43 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return body.data as T;
 }
 
+async function requestText(path: string, options: RequestInit = {}): Promise<string> {
+  const token = getToken();
+
+  const headers: Record<string, string> = {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+
+  const response = await fetch(path, { ...options, headers });
+
+  if (response.status === 401) {
+    localStorage.removeItem('caseaxis_token');
+    localStorage.removeItem('caseaxis_username');
+    window.location.href = '/login';
+    throw new ApiError('Session expired. Please log in again.');
+  }
+
+  if (!response.ok) {
+    throw new ApiError(`Request failed (HTTP ${response.status})`);
+  }
+
+  return response.text();
+}
+
+function reportQuery(params: ReportFilters & { sort?: string } = {}) {
+  const search = new URLSearchParams();
+  if (params.startDate) search.set('startDate', params.startDate);
+  if (params.endDate) search.set('endDate', params.endDate);
+  if (params.organizationId) search.set('organizationId', params.organizationId);
+  if (params.clientId) search.set('clientId', params.clientId);
+  if (params.caseType) search.set('caseType', params.caseType);
+  if (params.status) search.set('status', params.status);
+  if (params.assigneeId) search.set('assigneeId', params.assigneeId);
+  if (params.sort) search.set('sort', params.sort);
+  const query = search.toString();
+  return query ? `?${query}` : '';
+}
+
 export const api = {
   auth: {
     login(username: string, password: string) {
@@ -71,6 +110,36 @@ export const api = {
     },
     overview() {
       return request<DashboardOverview>('/api/dashboard/overview');
+    },
+  },
+
+  reports: {
+    summary(params: ReportFilters = {}) {
+      return request<ReportSummary>(`/api/reports/summary${reportQuery(params)}`);
+    },
+    statusDistribution(params: ReportFilters = {}) {
+      return request<DistributionItem[]>(`/api/reports/status-distribution${reportQuery(params)}`);
+    },
+    typeDistribution(params: ReportFilters = {}) {
+      return request<DistributionItem[]>(`/api/reports/type-distribution${reportQuery(params)}`);
+    },
+    overdueAging(params: ReportFilters = {}) {
+      return request<OverdueAgingBucket[]>(`/api/reports/overdue-aging${reportQuery(params)}`);
+    },
+    assigneeWorkload(params: ReportFilters & { sort?: string } = {}) {
+      return request<AssigneeWorkload[]>(`/api/reports/assignee-workload${reportQuery(params)}`);
+    },
+    organizationWorkload(params: ReportFilters & { sort?: string } = {}) {
+      return request<OrganizationWorkload[]>(`/api/reports/organization-workload${reportQuery(params)}`);
+    },
+    closureTrend(params: ReportFilters = {}) {
+      return request<ClosureTrendPoint[]>(`/api/reports/closure-trend${reportQuery(params)}`);
+    },
+    exportJson(params: ReportFilters = {}) {
+      return request<ReportExport>(`/api/reports/export/json${reportQuery(params)}`);
+    },
+    exportCsv(params: ReportFilters = {}) {
+      return requestText(`/api/reports/export/csv${reportQuery(params)}`);
     },
   },
 

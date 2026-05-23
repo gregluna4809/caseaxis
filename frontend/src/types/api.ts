@@ -65,6 +65,73 @@ export interface DashboardOverview {
   recentActivity: DashboardActivity[];
 }
 
+export interface ReportFilters {
+  startDate?: string;
+  endDate?: string;
+  organizationId?: string;
+  clientId?: string;
+  caseType?: string;
+  status?: string;
+  assigneeId?: string;
+}
+
+export interface ReportSummary {
+  totalCases: number;
+  openCases: number;
+  closedCases: number;
+  overdueCases: number;
+  escalatedCases: number;
+  averageResolutionHours: number | null;
+  openTasks: number;
+  completedTasks: number;
+}
+
+export interface DistributionItem {
+  code: string;
+  label: string;
+  count: number;
+}
+
+export interface OverdueAgingBucket {
+  bucket: string;
+  minDays: number;
+  maxDays: number | null;
+  count: number;
+}
+
+export interface AssigneeWorkload {
+  assigneeId: string | null;
+  assigneeName: string;
+  openCases: number;
+  overdueCases: number;
+  escalatedCases: number;
+  closedThisPeriod: number;
+}
+
+export interface OrganizationWorkload {
+  organizationId: string | null;
+  organizationCode: string | null;
+  organizationName: string;
+  totalCases: number;
+  openCases: number;
+  escalatedCases: number;
+}
+
+export interface ClosureTrendPoint {
+  date: string;
+  count: number;
+}
+
+export interface ReportExport {
+  summary: ReportSummary;
+  statusDistribution: DistributionItem[];
+  typeDistribution: DistributionItem[];
+  overdueAging: OverdueAgingBucket[];
+  assigneeWorkload: AssigneeWorkload[];
+  organizationWorkload: OrganizationWorkload[];
+  closureTrend: ClosureTrendPoint[];
+}
+
 // GET /api/cases - content items
 export interface CaseSummary {
   id: string;

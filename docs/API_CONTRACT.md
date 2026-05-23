@@ -1,6 +1,6 @@
 # CaseAxis API Contract
 
-**Version:** Phase 10  
+**Version:** Phase 11  
 **Base URL:** `http://localhost:8080` (development)  
 **Content-Type:** `application/json` (all requests and responses)
 
@@ -13,15 +13,16 @@
 3. [Authentication](#authentication)
 4. [Health](#health)
 5. [Dashboard](#dashboard)
-6. [Cases](#cases)
-7. [Case Assignments](#case-assignments)
-8. [Case Status Transitions](#case-status-transitions)
-9. [Case Notes](#case-notes)
-10. [Case Tasks](#case-tasks)
-11. [Case Attachments](#case-attachments)
-12. [Organizations](#organizations)
-13. [Clients](#clients)
-14. [Reference Data](#reference-data)
+6. [Reports](#reports)
+7. [Cases](#cases)
+8. [Case Assignments](#case-assignments)
+9. [Case Status Transitions](#case-status-transitions)
+10. [Case Notes](#case-notes)
+11. [Case Tasks](#case-tasks)
+12. [Case Attachments](#case-attachments)
+13. [Organizations](#organizations)
+14. [Clients](#clients)
+15. [Reference Data](#reference-data)
 
 ---
 
@@ -224,6 +225,95 @@ Returns dashboard metrics plus operational widgets for the authenticated service
 | `escalationWatch` | latest 5 non-deleted cases with status code `ESCALATED` |
 | `overdueQueue` | top 5 non-terminal overdue cases, oldest due dates first |
 | `recentActivity` | recent notes, status changes, and task updates across non-deleted cases |
+
+---
+
+## Reports
+
+Reporting endpoints return backend-generated aggregate analytics. They must not be implemented by loading full case/task datasets into the browser.
+
+**Auth required:** Yes
+
+**Shared query parameters:**
+
+| Param | Type | Notes |
+|---|---|---|
+| `startDate` | string | optional ISO date lower bound |
+| `endDate` | string | optional ISO date upper bound |
+| `organizationId` | UUID | optional organization filter |
+| `clientId` | UUID | optional client filter |
+| `caseType` | string | optional case type code |
+| `status` | string | optional case status code |
+| `assigneeId` | UUID | optional case/task assignee filter |
+| `sort` | string | supported by workload endpoints only |
+
+### GET /api/reports/summary
+
+Returns KPI totals for the selected filters.
+
+```json
+{
+  "success": true,
+  "data": {
+    "totalCases": 75000,
+    "openCases": 48120,
+    "closedCases": 26880,
+    "overdueCases": 912,
+    "escalatedCases": 144,
+    "averageResolutionHours": 74.5,
+    "openTasks": 8300,
+    "completedTasks": 1200
+  },
+  "timestamp": "2026-05-23T02:37:20.622Z"
+}
+```
+
+### GET /api/reports/status-distribution
+
+Returns `{ code, label, count }[]` for case statuses.
+
+### GET /api/reports/type-distribution
+
+Returns `{ code, label, count }[]` for case types.
+
+### GET /api/reports/overdue-aging
+
+Returns overdue open case buckets:
+
+```json
+[
+  { "bucket": "1-7 days", "minDays": 1, "maxDays": 7, "count": 128 },
+  { "bucket": "8-30 days", "minDays": 8, "maxDays": 30, "count": 220 },
+  { "bucket": "31-90 days", "minDays": 31, "maxDays": 90, "count": 74 },
+  { "bucket": "90+ days", "minDays": 91, "maxDays": null, "count": 12 }
+]
+```
+
+### GET /api/reports/assignee-workload
+
+Returns assignee rows with `assigneeId`, `assigneeName`, `openCases`, `overdueCases`, `escalatedCases`, and `closedThisPeriod`.
+
+Supported `sort` values: `openCases`, `overdueCases`, `escalatedCases`, `closedThisPeriod`.
+
+### GET /api/reports/organization-workload
+
+Returns organization rows with `organizationId`, `organizationCode`, `organizationName`, `totalCases`, `openCases`, and `escalatedCases`.
+
+Supported `sort` values: `totalCases`, `openCases`, `escalatedCases`.
+
+### GET /api/reports/closure-trend
+
+Returns daily closure points as `{ date, count }[]` for the selected date range.
+
+### GET /api/reports/export/csv
+
+Returns a server-generated CSV report with summary, distribution, workload, aging, and closure trend sections.
+
+**Response content type:** `text/csv`
+
+### GET /api/reports/export/json
+
+Returns a server-generated JSON report containing the same sections as the analytics workspace.
 
 ---
 
