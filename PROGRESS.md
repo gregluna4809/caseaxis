@@ -1107,3 +1107,27 @@ Restyled the React frontend toward a Salesforce Lightning-style enterprise CRM a
 #### Validation
 
 Frontend production build passed with `npm run build`.
+
+---
+
+## 2026-05-23
+### Phase 8.5 - Frontend Typography Hierarchy Refactor
+
+#### Milestone
+Centralized the CaseAxis frontend typography system and strengthened hierarchy across the enterprise console UI.
+
+#### Implementation Details
+
+- Added global font size tokens from `--font-xs` through `--font-2xl` in `frontend/src/index.css`.
+- Added global font weight tokens for regular, medium, semibold, and bold usage.
+- Standardized the frontend font stack to `Inter, Segoe UI, system-ui, sans-serif`.
+- Reworked app shell typography for stronger CaseAxis branding, muted workspace context, compact search text, and medium-weight user controls.
+- Tuned dashboard typography so page headings, KPI labels, KPI values, widget headers, helper text, and timestamps have distinct enterprise hierarchy.
+- Tightened case list typography with uppercase table headers, semibold primary case titles, muted case numbers, and smaller secondary metadata.
+- Refined case detail typography for prominent record titles, compact metadata labels, semibold values, consistent tabs, and clearer timeline hierarchy.
+- Normalized navigation, badges, buttons, forms, modal, and login typography around shared tokens instead of ad hoc values.
+- Preserved existing layouts, frontend behavior, backend APIs, and API call structure.
+
+#### Validation
+
+Frontend production build passed with `npm run build`.
