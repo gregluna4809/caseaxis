@@ -34,6 +34,37 @@ export interface DashboardMetrics {
   closedToday: number;
 }
 
+export interface DashboardCaseItem {
+  id: string;
+  caseNumber: string;
+  title: string;
+  statusCode: string;
+  statusDisplayName: string;
+  priorityCode: string;
+  priorityDisplayName: string;
+  dueDate: string | null;
+  assignedToId: string | null;
+  updatedAt: string;
+}
+
+export interface DashboardActivity {
+  type: 'NOTE' | 'TASK' | 'STATUS';
+  caseId: string;
+  caseNumber: string;
+  caseTitle: string;
+  summary: string;
+  actorId: string | null;
+  occurredAt: string;
+}
+
+export interface DashboardOverview {
+  metrics: DashboardMetrics;
+  recentAssignedCases: DashboardCaseItem[];
+  escalationWatch: DashboardCaseItem[];
+  overdueQueue: DashboardCaseItem[];
+  recentActivity: DashboardActivity[];
+}
+
 // GET /api/cases - content items
 export interface CaseSummary {
   id: string;

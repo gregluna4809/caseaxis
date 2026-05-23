@@ -182,7 +182,46 @@ Returns live operational dashboard counts for the authenticated user.
 | `assignedToMe` | non-deleted cases where `assigned_to_id` is the authenticated user |
 | `overdueCases` | non-terminal cases with `due_date` before the current UTC date |
 | `escalatedCases` | non-deleted cases with status code `ESCALATED` |
-| `closedToday` | non-deleted cases with `closed_at` during the current UTC date |
+| `closedToday` | non-deleted cases with `closed_at` or `resolved_at` during the current UTC date |
+
+---
+
+### GET /api/dashboard/overview
+
+Returns dashboard metrics plus operational widgets for the authenticated service console user.
+
+**Auth required:** Yes
+
+**Response - 200 OK:**
+```json
+{
+  "success": true,
+  "data": {
+    "metrics": {
+      "totalCases": 75000,
+      "openCases": 48120,
+      "assignedToMe": 37,
+      "overdueCases": 912,
+      "escalatedCases": 144,
+      "closedToday": 26
+    },
+    "recentAssignedCases": [],
+    "escalationWatch": [],
+    "overdueQueue": [],
+    "recentActivity": []
+  },
+  "timestamp": "2026-05-23T02:37:20.622Z"
+}
+```
+
+**Widget definitions:**
+
+| Field | Definition |
+|---|---|
+| `recentAssignedCases` | latest 5 non-deleted cases assigned to the authenticated user |
+| `escalationWatch` | latest 5 non-deleted cases with status code `ESCALATED` |
+| `overdueQueue` | top 5 non-terminal overdue cases, oldest due dates first |
+| `recentActivity` | recent notes, status changes, and task updates across non-deleted cases |
 
 ---
 

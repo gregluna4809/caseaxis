@@ -1046,6 +1046,28 @@ Frontend production build passed with `npm run build`.
 ---
 
 ## 2026-05-23
+### Dashboard Operational Widgets and Metric Audit
+
+#### Milestone
+Reworked the dashboard into a backend-driven service console with corrected closure metrics and real operational widgets.
+
+#### Implementation Details
+
+- Audited dashboard metrics and corrected `closedToday` to include both `closed_at` and `resolved_at` transitions during the current UTC day.
+- Added `GET /api/dashboard/overview` returning metrics plus recent assigned cases, escalation watch, overdue queue, and recent activity.
+- Added repository queries for latest assigned cases, latest escalated cases, top overdue cases, recent notes, recent status history, and recent task updates.
+- Replaced dashboard lower panels with clickable operational widgets populated from backend data.
+- Tightened remaining UI density across the dashboard, sidebar, global search, KPI cards, widget rows, and hover states.
+- Strengthened dashboard integration tests to assert metric deltas for assigned-to-me, overdue, open, escalated, and closed/resolved-today behavior.
+
+#### Validation
+
+- Backend tests passed with `.\mvnw.cmd test` (`66` tests, `0` failures).
+- Frontend production build passed with `npm run build`.
+
+---
+
+## 2026-05-23
 ### Enterprise Console Density and Live Reporting
 
 #### Milestone

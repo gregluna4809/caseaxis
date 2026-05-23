@@ -50,13 +50,13 @@ button, input, textarea, select {
   top: 0;
   left: 0;
   right: 0;
-  height: 52px;
+  height: 48px;
   z-index: 120;
   display: grid;
-  grid-template-columns: 260px minmax(260px, 1fr) auto;
+  grid-template-columns: 230px minmax(220px, 1fr) auto;
   align-items: center;
-  gap: 16px;
-  padding: 0 16px;
+  gap: 10px;
+  padding: 0 12px;
   background: var(--color-header);
   border-bottom: 1px solid var(--color-border);
   box-shadow: 0 1px 3px rgba(24, 24, 24, 0.08);
@@ -75,7 +75,7 @@ button, input, textarea, select {
 }
 
 .sidebar-brand {
-  gap: 10px;
+  gap: 8px;
 }
 
 .sidebar-brand-mark,
@@ -97,7 +97,7 @@ button, input, textarea, select {
 .sidebar-brand-name {
   display: block;
   color: var(--color-text);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 750;
 }
 
@@ -109,19 +109,19 @@ button, input, textarea, select {
 }
 
 .global-search {
-  height: 34px;
-  max-width: 640px;
+  height: 30px;
+  max-width: 520px;
   justify-self: center;
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 12px;
+  gap: 6px;
+  padding: 0 10px;
   border: 1px solid var(--color-border);
   border-radius: 18px;
   background: #f4f6f9;
   color: var(--color-text-muted);
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .global-header-right {
@@ -146,20 +146,20 @@ button, input, textarea, select {
 
 .sidebar {
   position: fixed;
-  top: 52px;
+  top: 48px;
   left: 0;
   bottom: 0;
-  width: 224px;
+  width: 204px;
   z-index: 80;
   background: #fff;
   border-right: 1px solid var(--color-border);
-  padding: 12px 10px;
+  padding: 8px 8px;
   overflow-y: auto;
 }
 
 .sidebar-section-label {
   display: block;
-  padding: 8px 8px 6px;
+  padding: 6px 7px 4px;
   color: var(--color-text-muted);
   font-size: 11px;
   font-weight: 800;
@@ -170,9 +170,9 @@ button, input, textarea, select {
 .workspace-card {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px;
-  margin-bottom: 10px;
+  gap: 6px;
+  padding: 6px 7px;
+  margin-bottom: 7px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-surface-subtle);
@@ -207,11 +207,11 @@ button, input, textarea, select {
 }
 
 .sidebar-nav a {
-  min-height: 34px;
+  min-height: 30px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
+  gap: 7px;
+  padding: 4px 7px;
   color: var(--color-text);
   text-decoration: none;
   border-radius: var(--radius);
@@ -230,8 +230,8 @@ button, input, textarea, select {
 }
 
 .nav-icon {
-  width: 24px;
-  height: 24px;
+  width: 21px;
+  height: 21px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -243,8 +243,8 @@ button, input, textarea, select {
 }
 
 .main-content {
-  margin-left: 224px;
-  padding-top: 52px;
+  margin-left: 204px;
+  padding-top: 48px;
   min-height: 100vh;
 }
 
@@ -336,8 +336,8 @@ button, input, textarea, select {
 }
 
 .metric-card {
-  min-height: 70px;
-  padding: 8px 10px;
+  min-height: 62px;
+  padding: 7px 9px;
   background: #fff;
   border: 1px solid var(--color-border);
   border-left: 3px solid var(--color-border-strong);
@@ -355,9 +355,9 @@ button, input, textarea, select {
 
 .metric-card strong {
   display: block;
-  margin-top: 7px;
+  margin-top: 5px;
   color: var(--color-text);
-  font-size: 24px;
+  font-size: 22px;
   line-height: 1;
   font-weight: 820;
 }
@@ -402,6 +402,132 @@ button, input, textarea, select {
 
 .dense-home-grid {
   grid-template-columns: 1.2fr 0.95fr 0.85fr;
+}
+
+.dashboard-page {
+  gap: 7px;
+}
+
+.dashboard-workspace-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.activity-widget {
+  grid-column: span 3;
+}
+
+.dashboard-widget {
+  overflow: hidden;
+}
+
+.widget-list,
+.dashboard-activity-list {
+  display: grid;
+}
+
+.widget-case-row,
+.dashboard-activity-row {
+  width: 100%;
+  min-height: 46px;
+  display: grid;
+  gap: 6px;
+  padding: 7px 9px;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  background: #fff;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.widget-case-row {
+  grid-template-columns: minmax(180px, 1fr) auto;
+  align-items: center;
+}
+
+.widget-case-row:last-child,
+.dashboard-activity-row:last-child {
+  border-bottom: none;
+}
+
+.widget-case-row:hover,
+.dashboard-activity-row:hover {
+  background: #f8fbff;
+  box-shadow: inset 3px 0 0 var(--color-primary);
+}
+
+.widget-case-main {
+  min-width: 0;
+}
+
+.widget-case-main strong {
+  display: block;
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: 12.5px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.widget-case-meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  color: var(--color-text-muted);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+.dashboard-activity-row {
+  grid-template-columns: 52px minmax(0, 1fr) 132px;
+  align-items: center;
+}
+
+.dashboard-activity-row strong,
+.dashboard-activity-row span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-activity-row strong {
+  color: var(--color-text);
+  font-size: 12.5px;
+}
+
+.dashboard-activity-row span,
+.dashboard-activity-row time {
+  color: var(--color-text-muted);
+  font-size: 11.5px;
+}
+
+.dashboard-activity-row time {
+  text-align: right;
+}
+
+.activity-type {
+  width: fit-content;
+  min-width: 42px;
+  padding: 2px 5px;
+  border-radius: 999px;
+  color: #51606f;
+  background: #eef1f6;
+  font-size: 10px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.activity-type-note { color: #6b35bc; background: #f2edff; }
+.activity-type-task { color: #0176d3; background: #eaf4ff; }
+.activity-type-status { color: #2e844a; background: #e5f6ec; }
+
+.compact-empty {
+  min-height: 70px;
 }
 
 .card-header {
@@ -1315,13 +1441,16 @@ tbody tr.clickable:hover {
   }
 
   .crm-home-grid,
+  .dashboard-workspace-grid,
   .metrics-grid,
   .overview-layout {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .crm-home-grid,
+  .activity-widget,
   .overview-layout {
+    grid-column: auto;
     grid-template-columns: 1fr;
   }
 
@@ -1401,12 +1530,28 @@ tbody tr.clickable:hover {
   }
 
   .dashboard-grid,
+  .dashboard-workspace-grid,
   .metrics-grid,
   .form-row,
   .case-hero-meta,
   .task-meta-grid,
   .detail-grid {
     grid-template-columns: 1fr;
+  }
+
+  .activity-widget {
+    grid-column: auto;
+  }
+
+  .widget-case-row,
+  .dashboard-activity-row {
+    grid-template-columns: 1fr;
+  }
+
+  .widget-case-meta,
+  .dashboard-activity-row time {
+    justify-content: flex-start;
+    text-align: left;
   }
 
   .detail-field,

@@ -1,7 +1,7 @@
 import type {
   ApiResponse, Page, LoginResponse,
   CaseSummary, CaseDetail, CaseNote, CaseTask, CaseAttachment,
-  OrganizationSummary, ClientSummary, DashboardMetrics,
+  OrganizationSummary, ClientSummary, DashboardMetrics, DashboardOverview,
 } from '../types/api';
 
 export class ApiError extends Error {
@@ -66,6 +66,9 @@ export const api = {
   dashboard: {
     metrics() {
       return request<DashboardMetrics>('/api/dashboard/metrics');
+    },
+    overview() {
+      return request<DashboardOverview>('/api/dashboard/overview');
     },
   },
 

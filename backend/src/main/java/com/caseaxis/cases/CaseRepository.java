@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -101,4 +102,36 @@ public interface CaseRepository extends JpaRepository<Case, UUID> {
 
     @Query("SELECT COUNT(c) FROM CaseRecord c WHERE c.deleted = false AND c.closedAt >= :start AND c.closedAt < :end")
     long countClosedBetween(@Param("start") Instant start, @Param("end") Instant end);
+
+    @Query("""
+            SELECT COUNT(c) FROM CaseRecord c
+            WHERE c.deleted = false
+              AND ((c.closedAt >= :start AND c.closedAt < :end)
+                OR (c.resolvedAt >= :start AND c.resolvedAt < :end))
+            """)
+    long countClosedOrResolvedBetween(@Param("start") Instant start, @Param("end") Instant end);
+
+    @Query("""
+            SELECT c FROM CaseRecord c
+            JOIN FETCH c.status JOIN FETCH c.priority JOIN FETCH c.type
+            WHERE c.deleted = false AND c.assignedToId = :userId
+            ORDER BY c.assignedAt DESC NULLS LAST, c.updatedAt DESC
+            """)
+    List<Case> findRecentlyAssignedTo(@Param("userId") UUID userId, Pageable pageable);
+
+    @Query("""
+            SELECT c FROM CaseRecord c
+            JOIN FETCH c.status JOIN FETCH c.priority JOIN FETCH c.type
+            WHERE c.deleted = false AND c.status.code = 'ESCALATED'
+            ORDER BY c.updatedAt DESC
+            """)
+    List<Case> findLatestEscalated(Pageable pageable);
+
+    @Query("""
+            SELECT c FROM CaseRecord c
+            JOIN FETCH c.status JOIN FETCH c.priority JOIN FETCH c.type
+            WHERE c.deleted = false AND c.status.terminal = false AND c.dueDate < :today
+            ORDER BY c.dueDate ASC, c.priority.sortOrder DESC, c.updatedAt DESC
+            """)
+    List<Case> findTopOverdue(@Param("today") LocalDate today, Pageable pageable);
 }

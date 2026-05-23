@@ -1,6 +1,7 @@
 package com.caseaxis.cases;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,4 +14,6 @@ public interface CaseNoteRepository extends JpaRepository<CaseNote, UUID> {
     Optional<CaseNote> findByIdAndCaseIdAndDeletedFalse(UUID id, UUID caseId);
 
     Optional<CaseNote> findByIdAndDeletedFalse(UUID id);
+
+    List<CaseNote> findByDeletedFalseOrderByCreatedAtDesc(Pageable pageable);
 }

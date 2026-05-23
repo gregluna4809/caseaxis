@@ -22,4 +22,11 @@ public class DashboardController {
         return ResponseEntity.ok(ApiResponse.success(
             dashboardService.getMetrics(principal.getUsername())));
     }
+
+    @GetMapping("/overview")
+    public ResponseEntity<ApiResponse<DashboardOverviewResponse>> getOverview(
+            @AuthenticationPrincipal UserDetails principal) {
+        return ResponseEntity.ok(ApiResponse.success(
+            dashboardService.getOverview(principal.getUsername())));
+    }
 }
