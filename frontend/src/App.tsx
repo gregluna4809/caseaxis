@@ -11,6 +11,8 @@ import { ClientListPage } from './pages/ClientListPage';
 import { ClientDetailPage } from './pages/ClientDetailPage';
 import { OrgListPage } from './pages/OrgListPage';
 import { OrgDetailPage } from './pages/OrgDetailPage';
+import { TaskListPage } from './pages/TaskListPage';
+import { TaskDetailPage } from './pages/TaskDetailPage';
 
 function PlaceholderPage({ title }: { title: string }) {
   return (
@@ -41,7 +43,8 @@ export function App() {
               <Route path="/clients/:id" element={<ClientDetailPage />} />
               <Route path="/organizations" element={<OrgListPage />} />
               <Route path="/organizations/:id" element={<OrgDetailPage />} />
-              <Route path="/tasks" element={<PlaceholderPage title="Tasks" />} />
+              <Route path="/tasks" element={<TaskListPage />} />
+              <Route path="/tasks/:id" element={<TaskDetailPage />} />
               <Route path="/reports" element={<PlaceholderPage title="Reports" />} />
             </Route>
           </Route>

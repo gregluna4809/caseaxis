@@ -140,6 +140,42 @@ export interface CaseTask {
   updatedAt: string;
 }
 
+// GET /api/tasks - content items
+export interface TaskSummary {
+  id: string;
+  title: string;
+  description: string | null;
+  statusCode: string;
+  statusDisplayName: string;
+  terminal: boolean;
+  dueDate: string | null;
+  completedAt: string | null;
+  caseId: string;
+  caseNumber: string | null;
+  caseTitle: string | null;
+  assigneeDisplayName: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// GET /api/tasks/:id
+export interface TaskDetail {
+  id: string;
+  caseId: string;
+  caseNumber: string | null;
+  caseTitle: string | null;
+  title: string;
+  description: string | null;
+  statusCode: string;
+  statusDisplayName: string;
+  terminal: boolean;
+  dueDate: string | null;
+  completedAt: string | null;
+  assigneeDisplayName: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // GET /api/organizations
 export interface OrganizationSummary {
   id: string;

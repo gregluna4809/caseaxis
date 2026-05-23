@@ -1111,6 +1111,30 @@ Frontend production build passed with `npm run build`.
 ---
 
 ## 2026-05-23
+### Phase 10 - Frontend Tasks Workspace
+
+#### Milestone
+Added a dedicated Salesforce / Service Console style task workspace backed by the completed backend task workspace endpoints.
+
+#### Implementation Details
+
+- Replaced the `/tasks` placeholder with a real task list route and added `/tasks/:id` record detail routing.
+- Added typed frontend API support for `GET /api/tasks`, `GET /api/tasks/{id}`, and `PUT /api/tasks/{id}`.
+- Built a dense task list view with server-side search, status filter, overdue-only toggle, sticky headers, clickable rows, loading/error/empty states, hover behavior, and pagination.
+- Added visual overdue emphasis for non-terminal tasks whose due date is before today.
+- Built a task record page showing title, description, status, due date, assignee display, linked case number/title, created timestamp, and updated timestamp.
+- Added task status update and mark-complete actions, followed by detail refresh after mutation.
+- Preserved the existing CRM shell, typography scale, data-table styling, badge styling, and compact enterprise density.
+- Added dashboard deep links into the overdue task queue via `/tasks?overdueOnly=true`.
+- Updated `docs/API_CONTRACT.md` to Phase 10 and documented the workspace task endpoints.
+
+#### Validation
+
+Frontend production build passed with `npm run build`.
+
+---
+
+## 2026-05-23
 ### Phase 8.6 - Enterprise Data Grid Polish
 
 #### Milestone

@@ -1,6 +1,7 @@
 import type {
   ApiResponse, Page, LoginResponse,
   CaseSummary, CaseDetail, CaseNote, CaseTask, CaseAttachment,
+  TaskSummary, TaskDetail,
   OrganizationSummary, OrganizationDetail, ClientSummary, ClientDetail,
   DashboardMetrics, DashboardOverview,
 } from '../types/api';
@@ -176,6 +177,36 @@ export const api = {
   },
 
   tasks: {
+    workspace(params: {
+      page?: number;
+      size?: number;
+      q?: string;
+      status?: string;
+      overdueOnly?: boolean;
+    } = {}) {
+      const search = new URLSearchParams();
+      search.set('page', String(params.page ?? 0));
+      search.set('size', String(params.size ?? 20));
+      if (params.q?.trim()) search.set('q', params.q.trim());
+      if (params.status) search.set('status', params.status);
+      if (params.overdueOnly) search.set('overdueOnly', 'true');
+      return request<Page<TaskSummary>>(`/api/tasks?${search.toString()}`);
+    },
+    get(id: string) {
+      return request<TaskDetail>(`/api/tasks/${id}`);
+    },
+    update(id: string, data: {
+      title: string;
+      description?: string | null;
+      statusCode: string;
+      assignedToId?: string | null;
+      dueDate?: string | null;
+    }) {
+      return request<CaseTask>(`/api/tasks/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+    },
     list(caseId: string) {
       return request<CaseTask[]>(`/api/cases/${caseId}/tasks`);
     },

@@ -1,6 +1,6 @@
 # CaseAxis API Contract
 
-**Version:** Phase 9  
+**Version:** Phase 10  
 **Base URL:** `http://localhost:8080` (development)  
 **Content-Type:** `application/json` (all requests and responses)
 
@@ -639,6 +639,121 @@ Soft-deletes a note. The note is excluded from future list responses but remains
 ## Case Tasks
 
 Tasks are **mutable work items** attached to a case. Status, title, description, assignee, and due date can all be updated. Soft deletion is supported.
+
+---
+
+### GET /api/tasks
+
+Returns a paginated task workspace list across all non-deleted cases.
+
+**Auth required:** Yes
+
+**Query parameters:**
+
+| Param | Type | Default | Notes |
+|---|---|---|---|
+| `page` | integer | `0` | zero-based page index |
+| `size` | integer | `20` | items per page |
+| `sort` | string | `updatedAt,desc` | field name + direction |
+| `q` | string | omitted | optional task title search |
+| `status` | string | omitted | optional task status code filter |
+| `assignedToId` | UUID | omitted | optional assignee filter |
+| `caseId` | UUID | omitted | optional case filter |
+| `dueBefore` | string | omitted | ISO date upper bound |
+| `dueAfter` | string | omitted | ISO date lower bound |
+| `overdueOnly` | boolean | `false` | when true, only non-terminal tasks with `dueDate` before today are returned |
+
+**Response - 200 OK:**
+
+Spring `Page` envelope with `content` array of `TaskSummaryResponse`:
+
+```json
+{
+  "success": true,
+  "data": {
+    "content": [
+      {
+        "id": "019e52b1-bd9b-70aa-9ef9-62a6d08dc460",
+        "title": "Request medical records from provider",
+        "description": "Contact provider and log confirmation number.",
+        "statusCode": "PENDING",
+        "statusDisplayName": "Pending",
+        "terminal": false,
+        "dueDate": "2026-06-15",
+        "completedAt": null,
+        "caseId": "019e4d65-ff59-7a8b-927c-d8a6eb4a09cd",
+        "caseNumber": "CA-000051",
+        "caseTitle": "Client disability benefit application",
+        "assigneeDisplayName": "CaseAxis user",
+        "createdAt": "2026-05-23T02:37:20.667Z",
+        "updatedAt": "2026-05-23T02:37:20.667Z"
+      }
+    ],
+    "totalElements": 1,
+    "totalPages": 1,
+    "first": true,
+    "last": true,
+    "empty": false
+  },
+  "timestamp": "2026-05-23T02:38:00.622Z"
+}
+```
+
+---
+
+### GET /api/tasks/{id}
+
+Returns record-style detail for one task from the workspace.
+
+**Auth required:** Yes
+
+**Path parameters:**
+
+| Param | Type | Notes |
+|---|---|---|
+| `id` | UUID | task ID |
+
+**Response - 200 OK:**
+
+Returns `TaskDetailResponse` with task fields plus linked case number/title.
+
+**Error responses:**
+- `404` - task not found or soft-deleted
+- `401` - unauthenticated
+
+---
+
+### PUT /api/tasks/{id}
+
+Updates a task from the workspace. The endpoint delegates to the case task update rules and returns `CaseTaskResponse`.
+
+**Auth required:** Yes
+
+**Request body:**
+```json
+{
+  "title": "Request medical records from provider",
+  "description": "Called provider and logged confirmation.",
+  "statusCode": "COMPLETED",
+  "assignedToId": null,
+  "dueDate": "2026-06-15"
+}
+```
+
+| Field | Type | Required | Constraints |
+|---|---|---|---|
+| `title` | string | Yes | not blank, max 500 chars |
+| `description` | string | No | - |
+| `statusCode` | string | Yes | not blank; must be a valid task status code |
+| `assignedToId` | UUID | No | - |
+| `dueDate` | string (ISO date) | No | `YYYY-MM-DD` |
+
+**Completion behavior:** When `statusCode` is set to `COMPLETED` for the first time, `completedAt` and `completedBy` are set automatically.
+
+**Error responses:**
+- `400` - validation failure or unknown status code
+- `404` - task not found or soft-deleted
+- `401` - unauthenticated
 
 ---
 

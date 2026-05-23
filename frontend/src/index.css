@@ -697,6 +697,38 @@ button, input, textarea, select {
   height: 30px;
 }
 
+.task-search-control {
+  width: 260px;
+}
+
+.toggle-control {
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 9px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--color-text);
+  font-size: var(--font-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.toggle-control:hover,
+.toggle-control.active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.toggle-control input {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--color-primary);
+}
+
 .table-wrapper {
   overflow-x: auto;
   overflow-y: auto;
@@ -786,6 +818,50 @@ tbody tr.row-selected td {
 .filename-cell {
   color: var(--color-text-muted);
   font-size: var(--font-sm);
+}
+
+.task-cell {
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.task-cell-title {
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
+}
+
+.task-cell-subtitle {
+  max-width: 520px;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: var(--font-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-case-title {
+  max-width: 360px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+tbody tr.task-row-overdue {
+  background: #fff8ee;
+  box-shadow: inset 3px 0 0 var(--color-warning);
+}
+
+tbody tr.task-row-overdue:hover {
+  background: #fff3df;
+  box-shadow: inset 3px 0 0 var(--color-warning);
+}
+
+.td-overdue {
+  color: var(--color-warning);
+  font-size: var(--font-sm);
+  font-weight: var(--weight-semibold);
 }
 
 .td-mono {
@@ -929,6 +1005,30 @@ tbody tr.row-selected td {
   font-size: var(--font-md);
   font-weight: var(--weight-semibold);
   overflow-wrap: anywhere;
+}
+
+.metric-warning {
+  background: #fff8ee;
+}
+
+.metric-warning strong {
+  color: var(--color-warning);
+}
+
+.task-record-hero {
+  grid-template-columns: auto minmax(0, 1fr) minmax(420px, auto);
+}
+
+.task-record-overdue {
+  border-left: 3px solid var(--color-warning);
+}
+
+.task-action-header {
+  align-items: center;
+}
+
+.task-detail-layout {
+  grid-template-columns: minmax(280px, 0.8fr) minmax(520px, 1.2fr);
 }
 
 .quick-actions {

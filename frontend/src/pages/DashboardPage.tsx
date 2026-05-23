@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/apiClient';
@@ -61,6 +61,7 @@ export function DashboardPage() {
           <p className="page-subtitle">Signed in as {username}. Live operational workload and activity.</p>
         </div>
         <div className="home-actions">
+          <Link to="/tasks?overdueOnly=true" className="btn btn-secondary">Overdue Tasks</Link>
           <Link to="/cases" className="btn btn-secondary">Open Cases</Link>
           <Link to="/cases/new" className="btn btn-primary">New Case</Link>
         </div>
@@ -98,6 +99,7 @@ export function DashboardPage() {
           emptyText="No overdue cases."
           cases={overview.overdueQueue}
           onOpen={(id) => navigate(`/cases/${id}`)}
+          action={<Link to="/tasks?overdueOnly=true" className="btn btn-secondary btn-sm">Task Queue</Link>}
         />
         <ActivityWidget
           activity={overview.recentActivity}
@@ -133,12 +135,14 @@ function CaseWidget({
   emptyText,
   cases,
   onOpen,
+  action,
 }: {
   title: string;
   subtitle: string;
   emptyText: string;
   cases: DashboardCaseItem[];
   onOpen: (id: string) => void;
+  action?: ReactNode;
 }) {
   return (
     <section className="card dashboard-widget">
@@ -147,6 +151,7 @@ function CaseWidget({
           <span className="card-title">{title}</span>
           <p className="card-subtitle">{subtitle}</p>
         </div>
+        {action}
       </div>
       <div className="widget-list">
         {cases.length === 0 && <div className="empty-panel compact-empty">{emptyText}</div>}
