@@ -1,11 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { api } from '../lib/apiClient';
+import { api, ApiError } from '../lib/apiClient';
 import { PRIORITIES, CASE_TYPES } from '../lib/lookups';
+import type { OrganizationSummary, ClientSummary } from '../types/api';
 
 export function CreateCasePage() {
   const navigate = useNavigate();
 
+  // Lookup data
+  const [organizations, setOrganizations] = useState<OrganizationSummary[]>([]);
+  const [clients, setClients] = useState<ClientSummary[]>([]);
+  const [lookupLoading, setLookupLoading] = useState(true);
+  const [lookupError, setLookupError] = useState<string | null>(null);
+
+  // Form fields
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priorityCode, setPriorityCode] = useState('MEDIUM');
@@ -13,13 +21,40 @@ export function CreateCasePage() {
   const [organizationId, setOrganizationId] = useState('');
   const [clientId, setClientId] = useState('');
   const [dueDate, setDueDate] = useState('');
+
+  // Submit state
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const subjectMissing = !organizationId && !clientId;
+
+  useEffect(() => {
+    async function loadLookups() {
+      try {
+        const [orgs, cls] = await Promise.all([
+          api.organizations.list(),
+          api.clients.list(),
+        ]);
+        setOrganizations(orgs);
+        setClients(cls);
+      } catch {
+        setLookupError('Could not load organizations or clients. Check your connection and try again.');
+      } finally {
+        setLookupLoading(false);
+      }
+    }
+    void loadLookups();
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (subjectMissing) return;
+
     setError(null);
+    setFieldErrors({});
     setSubmitting(true);
+
     try {
       const created = await api.cases.create({
         title,
@@ -32,6 +67,9 @@ export function CreateCasePage() {
       });
       navigate(`/cases/${created.id}`);
     } catch (err) {
+      if (err instanceof ApiError && err.fieldErrors) {
+        setFieldErrors(err.fieldErrors);
+      }
       setError(err instanceof Error ? err.message : 'Failed to create case.');
       setSubmitting(false);
     }
@@ -51,11 +89,12 @@ export function CreateCasePage() {
           <form className="create-form" onSubmit={handleSubmit}>
             {error && <div className="form-error">{error}</div>}
 
+            {/* Title */}
             <div className="form-group">
               <label className="form-label" htmlFor="cf-title">Title *</label>
               <input
                 id="cf-title"
-                className="form-input"
+                className={`form-input${fieldErrors.title ? ' form-input-error' : ''}`}
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -63,8 +102,12 @@ export function CreateCasePage() {
                 maxLength={500}
                 placeholder="Brief title for the case"
               />
+              {fieldErrors.title && (
+                <span className="field-error">{fieldErrors.title}</span>
+              )}
             </div>
 
+            {/* Description */}
             <div className="form-group">
               <label className="form-label" htmlFor="cf-description">Description</label>
               <textarea
@@ -78,6 +121,7 @@ export function CreateCasePage() {
               />
             </div>
 
+            {/* Priority + Type */}
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label" htmlFor="cf-priority">Priority</label>
@@ -108,34 +152,64 @@ export function CreateCasePage() {
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label" htmlFor="cf-org">Organization ID</label>
-                <input
-                  id="cf-org"
-                  className="form-input"
-                  type="text"
-                  value={organizationId}
-                  onChange={(e) => setOrganizationId(e.target.value)}
-                  placeholder="UUID (optional)"
-                />
-                <span className="form-hint">e.g. 018e1234-0000-7000-8000-000000000001</span>
-              </div>
+            {/* Organization + Client — at least one required */}
+            {lookupError ? (
+              <div className="form-error" style={{ fontSize: 13 }}>{lookupError}</div>
+            ) : (
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="cf-org">
+                    Organization
+                    {!clientId && <span className="required-star"> *</span>}
+                  </label>
+                  <select
+                    id="cf-org"
+                    className="form-select"
+                    value={organizationId}
+                    onChange={(e) => setOrganizationId(e.target.value)}
+                    disabled={lookupLoading}
+                  >
+                    <option value="">— None —</option>
+                    {organizations.map((o) => (
+                      <option key={o.id} value={o.id}>{o.name}</option>
+                    ))}
+                  </select>
+                  {!lookupLoading && organizations.length === 0 && (
+                    <span className="form-hint">No organizations in system yet.</span>
+                  )}
+                </div>
 
-              <div className="form-group">
-                <label className="form-label" htmlFor="cf-client">Client ID</label>
-                <input
-                  id="cf-client"
-                  className="form-input"
-                  type="text"
-                  value={clientId}
-                  onChange={(e) => setClientId(e.target.value)}
-                  placeholder="UUID (optional)"
-                />
-                <span className="form-hint">e.g. 018e1234-0000-7000-8000-000000000002</span>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="cf-client">
+                    Client
+                    {!organizationId && <span className="required-star"> *</span>}
+                  </label>
+                  <select
+                    id="cf-client"
+                    className="form-select"
+                    value={clientId}
+                    onChange={(e) => setClientId(e.target.value)}
+                    disabled={lookupLoading}
+                  >
+                    <option value="">— None —</option>
+                    {clients.map((c) => (
+                      <option key={c.id} value={c.id}>{c.displayName}</option>
+                    ))}
+                  </select>
+                  {!lookupLoading && clients.length === 0 && (
+                    <span className="form-hint">No clients in system yet.</span>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
+            {subjectMissing && !lookupLoading && !lookupError && (
+              <div className="field-hint-warn">
+                At least one of Organization or Client must be selected.
+              </div>
+            )}
+
+            {/* Due Date */}
             <div className="form-group" style={{ maxWidth: 220 }}>
               <label className="form-label" htmlFor="cf-due">Due Date</label>
               <input
@@ -149,8 +223,12 @@ export function CreateCasePage() {
 
             <div className="form-actions">
               <Link to="/cases" className="btn btn-secondary">Cancel</Link>
-              <button type="submit" className="btn btn-primary" disabled={submitting}>
-                {submitting ? 'Creating…' : 'Create Case'}
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={submitting || lookupLoading || subjectMissing}
+              >
+                {submitting ? 'Creating…' : lookupLoading ? 'Loading…' : 'Create Case'}
               </button>
             </div>
           </form>

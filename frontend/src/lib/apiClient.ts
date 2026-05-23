@@ -1,4 +1,18 @@
-import type { ApiResponse, Page, LoginResponse, CaseSummary, CaseDetail, CaseNote, CaseTask, CaseAttachment } from '../types/api';
+import type {
+  ApiResponse, Page, LoginResponse,
+  CaseSummary, CaseDetail, CaseNote, CaseTask, CaseAttachment,
+  OrganizationSummary, ClientSummary,
+} from '../types/api';
+
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly fieldErrors?: Record<string, string>,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
 
 function getToken(): string | null {
   return localStorage.getItem('caseaxis_token');
@@ -18,13 +32,22 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     localStorage.removeItem('caseaxis_token');
     localStorage.removeItem('caseaxis_username');
     window.location.href = '/login';
-    throw new Error('Session expired. Please log in again.');
+    throw new ApiError('Session expired. Please log in again.');
   }
 
   const body: ApiResponse<T> = await response.json();
 
   if (!body.success) {
-    throw new Error(body.message ?? `Request failed (HTTP ${response.status})`);
+    // Validation failures include field errors in body.data
+    const rawData = body.data as unknown;
+    let fieldErrors: Record<string, string> | undefined;
+    if (rawData && typeof rawData === 'object' && !Array.isArray(rawData)) {
+      fieldErrors = rawData as Record<string, string>;
+    }
+    throw new ApiError(
+      body.message ?? `Request failed (HTTP ${response.status})`,
+      fieldErrors,
+    );
   }
 
   return body.data as T;
@@ -37,6 +60,18 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ username, password }),
       });
+    },
+  },
+
+  organizations: {
+    list() {
+      return request<OrganizationSummary[]>('/api/organizations');
+    },
+  },
+
+  clients: {
+    list() {
+      return request<ClientSummary[]>('/api/clients');
     },
   },
 

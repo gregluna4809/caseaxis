@@ -95,6 +95,19 @@ export interface CaseTask {
   updatedAt: string;
 }
 
+// GET /api/organizations
+export interface OrganizationSummary {
+  id: string;
+  name: string;
+}
+
+// GET /api/clients
+export interface ClientSummary {
+  id: string;
+  displayName: string;
+  organizationId: string | null;
+}
+
 // GET /api/cases/:id/attachments
 export interface CaseAttachment {
   id: string;
