@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api } from '../lib/apiClient';
 import type { ClientDetail, CaseSummary, Page } from '../types/api';
 import { StatusBadge, PriorityBadge } from '../components/StatusBadge';
-import { formatDate, formatDateTime } from '../lib/utils';
+import { formatDate, formatDateTime, formatPhoneNumber } from '../lib/utils';
 
 type TabId = 'overview' | 'cases';
 
@@ -140,7 +140,7 @@ function OverviewTab({ client }: { client: ClientDetail }) {
       <DetailField label="First name" value={client.firstName} />
       <DetailField label="Last name" value={client.lastName} />
       <DetailField label="Email" value={client.email ?? '-'} />
-      <DetailField label="Phone" value={client.phone ?? '-'} />
+      <DetailField label="Phone" value={formatPhoneNumber(client.phone)} />
       <DetailField
         label="Organization"
         value={

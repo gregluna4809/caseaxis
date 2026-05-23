@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/apiClient';
 import type { ClientSummary, Page } from '../types/api';
-import { formatDate } from '../lib/utils';
+import { formatDate, formatPhoneNumber } from '../lib/utils';
 
 const PAGE_SIZE = 20;
 
@@ -135,7 +135,7 @@ export function ClientListPage() {
                       <td><strong>{c.displayName}</strong></td>
                       <td className="td-muted">{c.organizationName ?? <span className="td-null">—</span>}</td>
                       <td className="td-muted">{c.email ?? <span className="td-null">—</span>}</td>
-                      <td className="td-muted">{c.phone ?? <span className="td-null">—</span>}</td>
+                      <td className="td-muted">{c.phone ? formatPhoneNumber(c.phone) : <span className="td-null">—</span>}</td>
                       <td>
                         <span className={`badge ${c.active ? 'badge-status-ASSIGNED' : 'badge-neutral'}`}>
                           {c.active ? 'Active' : 'Inactive'}

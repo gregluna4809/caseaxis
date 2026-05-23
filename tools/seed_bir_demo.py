@@ -115,6 +115,10 @@ STATUS_WEIGHTS = {
 
 PRIORITY_WEIGHTS = {"LOW": 18, "MEDIUM": 52, "HIGH": 24, "CRITICAL": 6}
 TASK_STATUS_WEIGHTS = {"PENDING": 35, "IN_PROGRESS": 30, "COMPLETED": 28, "CANCELLED": 7}
+AREA_CODES_BY_STATE = {
+    "NY": ["212", "315", "347", "516", "518", "585", "607", "631", "646", "718", "845", "914", "917", "929"],
+    "NJ": ["201", "551", "609", "732", "848", "856", "862", "908", "973"],
+}
 
 
 @dataclass(frozen=True)
@@ -152,6 +156,16 @@ def weighted_choice(mapping: dict[str, int]) -> str:
 def weighted_area() -> tuple[str, str, str]:
     area = random.choices(NYC_AREAS, weights=[item[3] for item in NYC_AREAS], k=1)[0]
     return area[0], area[1], random.choice(area[2])
+
+
+def realistic_us_phone(state: str, include_extension: bool = False) -> str:
+    area_code = random.choice(AREA_CODES_BY_STATE.get(state, ["212"]))
+    exchange = random.randint(200, 999)
+    line = random.randint(0, 9999)
+    phone = f"({area_code}) {exchange:03d}-{line:04d}"
+    if include_extension and random.random() < 0.03:
+        phone = f"{phone} ext. {random.randint(100, 999)}"
+    return phone
 
 
 def copy_rows(
@@ -244,7 +258,7 @@ def organization_rows(fake: Faker, scale: Scale, admin_id: str) -> tuple[list[st
         created_at = fake.date_time_between(start_date="-4y", end_date="-30d", tzinfo=timezone.utc).isoformat()
         rows.append((
             org_id, name[:255], f"{DEMO_EXTERNAL_PREFIX}-ORG-{i + 1:06d}", fake.street_address(), city, state,
-            postal, "USA", fake.phone_number()[:50], f"ops-{i + 1}@bir-demo.example",
+            postal, "USA", realistic_us_phone(state, include_extension=True), f"ops-{i + 1}@bir-demo.example",
             "Synthetic BIR demo organization", True, False, created_at, created_at, admin_id,
         ))
     return ids, rows
@@ -270,7 +284,7 @@ def client_rows(fake: Faker, scale: Scale, admin_id: str, org_ids: list[str]) ->
             client_id, org_id, first, last, fake.first_name() if random.random() < 0.18 else "",
             fake.date_of_birth(minimum_age=18, maximum_age=88).isoformat(),
             f"{first}.{last}.{i + 1}@bir-demo.example".lower().replace("'", ""),
-            fake.phone_number()[:50], fake.street_address(), city, state, postal, "USA",
+            realistic_us_phone(state), fake.street_address(), city, state, postal, "USA",
             f"{DEMO_EXTERNAL_PREFIX}-CLIENT-{i + 1:08d}", "Synthetic BIR demo client",
             True, False, created_at, created_at, admin_id,
         ))

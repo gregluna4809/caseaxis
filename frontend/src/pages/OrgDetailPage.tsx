@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api } from '../lib/apiClient';
 import type { OrganizationDetail, ClientSummary, CaseSummary, Page } from '../types/api';
 import { StatusBadge, PriorityBadge } from '../components/StatusBadge';
-import { formatDate, formatDateTime } from '../lib/utils';
+import { formatDate, formatDateTime, formatPhoneNumber } from '../lib/utils';
 
 type TabId = 'overview' | 'clients' | 'cases';
 
@@ -163,7 +163,7 @@ function OverviewTab({ org }: { org: OrganizationDetail }) {
     <div className="detail-grid">
       <DetailField label="Org code" value={org.organizationCode} />
       <DetailField label="Name" value={org.name} />
-      <DetailField label="Phone" value={org.phone ?? '-'} />
+      <DetailField label="Phone" value={formatPhoneNumber(org.phone)} />
       <DetailField label="Email" value={org.email ?? '-'} />
       <DetailField label="Notes" value={org.notes ?? '-'} />
       <DetailField label="Status" value={
@@ -231,7 +231,7 @@ function ClientsTab({
                 <td className="td-mono">{c.clientNumber}</td>
                 <td><strong>{c.displayName}</strong></td>
                 <td className="td-muted">{c.email ?? <span className="td-null">—</span>}</td>
-                <td className="td-muted">{c.phone ?? <span className="td-null">—</span>}</td>
+                <td className="td-muted">{c.phone ? formatPhoneNumber(c.phone) : <span className="td-null">—</span>}</td>
                 <td>
                   <span className={`badge ${c.active ? 'badge-status-ASSIGNED' : 'badge-neutral'}`}>
                     {c.active ? 'Active' : 'Inactive'}
