@@ -47,17 +47,55 @@ export const api = {
     get(id: string) {
       return request<CaseDetail>(`/api/cases/${id}`);
     },
+    create(data: {
+      title: string;
+      description?: string;
+      priorityCode: string;
+      typeCode: string;
+      organizationId?: string;
+      clientId?: string;
+      dueDate?: string;
+    }) {
+      return request<CaseDetail>('/api/cases', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+    transitionStatus(id: string, statusCode: string, reason?: string) {
+      return request<CaseDetail>(`/api/cases/${id}/status`, {
+        method: 'POST',
+        body: JSON.stringify({ statusCode, reason }),
+      });
+    },
   },
 
   notes: {
     list(caseId: string) {
       return request<CaseNote[]>(`/api/cases/${caseId}/notes`);
     },
+    create(caseId: string, body: string, internal: boolean) {
+      return request<CaseNote>(`/api/cases/${caseId}/notes`, {
+        method: 'POST',
+        body: JSON.stringify({ body, internal }),
+      });
+    },
   },
 
   tasks: {
     list(caseId: string) {
       return request<CaseTask[]>(`/api/cases/${caseId}/tasks`);
+    },
+    create(caseId: string, data: {
+      title: string;
+      description?: string;
+      statusCode?: string;
+      assignedToId?: string;
+      dueDate?: string;
+    }) {
+      return request<CaseTask>(`/api/cases/${caseId}/tasks`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
     },
   },
 

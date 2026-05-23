@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../lib/apiClient';
 import type { CaseSummary, Page } from '../types/api';
 import { StatusBadge, PriorityBadge } from '../components/StatusBadge';
@@ -39,11 +39,14 @@ export function CaseListPage() {
 
   return (
     <div>
-      <div className="page-header">
-        <h1 className="page-title">Cases</h1>
-        <p className="page-subtitle">
-          {loading ? 'Loading…' : `${totalElements.toLocaleString()} total cases`}
-        </p>
+      <div className="page-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+        <div>
+          <h1 className="page-title">Cases</h1>
+          <p className="page-subtitle">
+            {loading ? 'Loading…' : `${totalElements.toLocaleString()} total cases`}
+          </p>
+        </div>
+        <Link to="/cases/new" className="btn btn-primary">+ New Case</Link>
       </div>
 
       <div className="card">
