@@ -1043,3 +1043,23 @@ Refactored the React frontend into a denser, professional enterprise case manage
 
 Frontend production build passed with `npm run build`.
 Local Vite dev server responded with HTTP 200 at `http://127.0.0.1:5173`.
+
+---
+
+## 2026-05-23
+### Salesforce-Inspired Frontend Restyle
+
+#### Milestone
+Restyled the React frontend toward a Salesforce Lightning-style enterprise CRM and case management workspace without changing backend APIs or adding a heavy UI framework.
+
+#### Implementation Details
+
+- Replaced the dark-heavy shell with a light global header, workspace selector feel, global search surface, compact left object navigation, and right-aligned user controls.
+- Reworked the dashboard as an operations home page with CRM-style cards, work shortcuts, service control sections, and placeholder metric cards where backend reporting APIs do not exist.
+- Restyled the cases page as an object list view with object header, list view title, search/filter toolbar, dense rows, status pills, priority pills, and a compact `New` action.
+- Reworked the case detail page into a record page with highlights panel, case object icon, key fields, quick actions, compact tabs, details section, activity timeline, task related-list cards, and files related list.
+- Preserved login, case list, case creation, case detail, notes, tasks, attachments, and status transition behavior.
+
+#### Validation
+
+Frontend production build passed with `npm run build`.

@@ -6,58 +6,67 @@ export function DashboardPage() {
 
   return (
     <div className="page-stack">
-      <div className="page-header page-header-row">
+      <section className="home-hero">
         <div>
-          <p className="page-kicker">Operations overview</p>
-          <h1 className="page-title">Dashboard</h1>
-          <p className="page-subtitle">Welcome back, {username}. Monitor the active case workspace.</p>
+          <p className="page-kicker">Operations Home</p>
+          <h1 className="page-title">Good to see you, {username}</h1>
+          <p className="page-subtitle">Review case workload, service posture, and high-frequency actions.</p>
         </div>
-        <Link to="/cases/new" className="btn btn-primary">New Case</Link>
-      </div>
+        <div className="home-actions">
+          <Link to="/cases" className="btn btn-secondary">Open Cases</Link>
+          <Link to="/cases/new" className="btn btn-primary">New Case</Link>
+        </div>
+      </section>
 
       <div className="dashboard-grid">
         <div className="stat-card">
           <div className="stat-card-topline">
-            <span className="stat-card-label">Total cases</span>
-            <span className="trend-chip">Live</span>
+            <span className="stat-card-label">Case Volume</span>
+            <span className="trend-chip neutral">List API</span>
           </div>
           <div className="stat-card-value">-</div>
-          <div className="stat-card-sub">Open the case queue for paged operational totals.</div>
+          <div className="stat-card-sub">Totals are available from the case list endpoint.</div>
         </div>
         <div className="stat-card">
           <div className="stat-card-topline">
-            <span className="stat-card-label">Open workload</span>
-            <span className="trend-chip neutral">Queue</span>
+            <span className="stat-card-label">Open Workload</span>
+            <span className="trend-chip">Active</span>
           </div>
           <div className="stat-card-value">-</div>
-          <div className="stat-card-sub">Aggregate reporting is intentionally backend-driven.</div>
+          <div className="stat-card-sub">Operational rollups require backend reporting endpoints.</div>
         </div>
         <div className="stat-card">
           <div className="stat-card-topline">
-            <span className="stat-card-label">Escalations</span>
-            <span className="trend-chip warning">Watch</span>
+            <span className="stat-card-label">Escalation Watch</span>
+            <span className="trend-chip warning">Monitor</span>
           </div>
           <div className="stat-card-value">-</div>
-          <div className="stat-card-sub">Escalation metrics will surface from reporting APIs.</div>
+          <div className="stat-card-sub">Escalated case metrics remain backend-owned.</div>
         </div>
       </div>
 
-      <div className="split-grid">
+      <div className="crm-home-grid">
         <section className="card">
           <div className="card-header">
             <div>
-              <span className="card-title">Primary workflow</span>
-              <p className="card-subtitle">High-frequency case operations.</p>
+              <span className="card-title">My Work</span>
+              <p className="card-subtitle">Service console shortcuts for case operators.</p>
             </div>
           </div>
-          <div className="action-list">
-            <Link to="/cases" className="action-list-item">
-              <span>Review case queue</span>
-              <strong>View all cases</strong>
+          <div className="work-list">
+            <Link to="/cases" className="work-list-row">
+              <span className="object-icon">C</span>
+              <div>
+                <strong>All Cases</strong>
+                <span>Browse the current object list view</span>
+              </div>
             </Link>
-            <Link to="/cases/new" className="action-list-item">
-              <span>Intake new work</span>
-              <strong>Create case</strong>
+            <Link to="/cases/new" className="work-list-row">
+              <span className="object-icon">+</span>
+              <div>
+                <strong>Case Intake</strong>
+                <span>Create a new operational record</span>
+              </div>
             </Link>
           </div>
         </section>
@@ -65,15 +74,25 @@ export function DashboardPage() {
         <section className="card">
           <div className="card-header">
             <div>
-              <span className="card-title">Operating posture</span>
-              <p className="card-subtitle">Controls preserved in the Spring backend.</p>
+              <span className="card-title">Service Controls</span>
+              <p className="card-subtitle">Backend-enforced governance remains unchanged.</p>
             </div>
           </div>
           <div className="health-list">
             <div><span>Authentication</span><strong>JWT protected</strong></div>
-            <div><span>Workflow</span><strong>Controlled transitions</strong></div>
-            <div><span>Auditability</span><strong>Server enforced</strong></div>
+            <div><span>Workflow</span><strong>Controlled status transitions</strong></div>
+            <div><span>Auditability</span><strong>Critical actions tracked server-side</strong></div>
           </div>
+        </section>
+
+        <section className="card">
+          <div className="card-header">
+            <div>
+              <span className="card-title">Recent Activity</span>
+              <p className="card-subtitle">Activity cards will populate when reporting APIs exist.</p>
+            </div>
+          </div>
+          <div className="empty-panel">No activity summary endpoint is currently exposed.</div>
         </section>
       </div>
     </div>

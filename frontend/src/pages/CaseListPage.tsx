@@ -56,44 +56,51 @@ export function CaseListPage() {
 
   return (
     <div className="page-stack">
-      <div className="page-header page-header-row">
-        <div>
-          <p className="page-kicker">Case queue</p>
-          <h1 className="page-title">Cases</h1>
-          <p className="page-subtitle">
-            {loading ? 'Loading...' : `${totalElements.toLocaleString()} total cases across the workspace`}
-          </p>
+      <section className="object-header">
+        <div className="object-header-main">
+          <span className="object-icon">C</span>
+          <div>
+            <p className="page-kicker">Cases</p>
+            <h1 className="page-title">All Cases</h1>
+            <p className="page-subtitle">
+              {loading ? 'Loading...' : `${totalElements.toLocaleString()} records in this object list`}
+            </p>
+          </div>
         </div>
-        <Link to="/cases/new" className="btn btn-primary">New Case</Link>
-      </div>
+        <Link to="/cases/new" className="btn btn-primary">New</Link>
+      </section>
 
-      <div className="toolbar">
-        <div className="search-control">
-          <span className="search-icon">/</span>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search current page by case number, title, or type"
-            aria-label="Search cases"
-          />
+      <div className="list-view-card">
+        <div className="list-view-toolbar">
+          <div>
+            <span className="list-view-title">All Open and Closed Cases</span>
+            <span className="list-view-subtitle">Sorted by server pagination</span>
+          </div>
+          <div className="toolbar-controls">
+            <div className="search-control">
+              <span className="search-icon">Search</span>
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search this list"
+                aria-label="Search cases"
+              />
+            </div>
+            <select
+              className="form-select compact-select"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              aria-label="Filter by status"
+            >
+              {STATUS_FILTERS.map((status) => (
+                <option key={status} value={status}>
+                  {status === 'ALL' ? 'All statuses' : status.replace(/_/g, ' ')}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-        <div className="toolbar-controls">
-          <select
-            className="form-select compact-select"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            aria-label="Filter by status"
-          >
-            {STATUS_FILTERS.map((status) => (
-              <option key={status} value={status}>
-                {status === 'ALL' ? 'All statuses' : status.replace(/_/g, ' ')}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
 
-      <div className="card data-card">
         {error && <div className="form-error surface-error">{error}</div>}
 
         {loading && <div className="spinner">Loading cases...</div>}

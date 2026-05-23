@@ -12,32 +12,45 @@ export function AppShell() {
 
   return (
     <div className="app-layout">
-      <nav className="sidebar" aria-label="Primary navigation">
+      <header className="global-header">
         <div className="sidebar-brand">
           <div className="sidebar-brand-mark">CA</div>
           <div>
             <span className="sidebar-brand-name">CaseAxis</span>
-            <span className="sidebar-brand-subtitle">Case operations</span>
+            <span className="sidebar-brand-subtitle">Operations Workspace</span>
           </div>
         </div>
 
-        <div className="sidebar-workspace">
-          <span className="sidebar-section-label">Workspace</span>
-          <div className="workspace-card">
-            <span className="workspace-dot" />
-            <div>
-              <strong>Operations</strong>
-              <span>Production queue</span>
-            </div>
+        <div className="global-search" aria-label="Global search">
+          <span className="search-icon">Search</span>
+          <span>Search cases, clients, organizations</span>
+        </div>
+
+        <div className="global-header-right">
+          <span className="workspace-selector">Case Operations</span>
+          <span className="username-chip">{username}</span>
+          <button className="btn btn-secondary btn-sm" onClick={handleLogout}>
+            Sign out
+          </button>
+        </div>
+      </header>
+
+      <nav className="sidebar" aria-label="Primary navigation">
+        <span className="sidebar-section-label">Apps</span>
+        <div className="workspace-card">
+          <span className="workspace-dot" />
+          <div>
+            <strong>Service Console</strong>
+            <span>Case management</span>
           </div>
         </div>
 
-        <span className="sidebar-section-label">Navigation</span>
+        <span className="sidebar-section-label">Objects</span>
         <ul className="sidebar-nav">
           <li>
             <NavLink to="/dashboard" className={({ isActive }) => (isActive ? 'active' : '')}>
-              <span className="nav-icon">D</span>
-              <span>Dashboard</span>
+              <span className="nav-icon">H</span>
+              <span>Home</span>
             </NavLink>
           </li>
           <li>
@@ -47,30 +60,9 @@ export function AppShell() {
             </NavLink>
           </li>
         </ul>
-
-        <div className="sidebar-user">
-          <div className="user-avatar">{username?.slice(0, 1).toUpperCase() ?? 'U'}</div>
-          <div className="sidebar-user-meta">
-            <strong>{username}</strong>
-            <span>Authenticated</span>
-          </div>
-        </div>
       </nav>
 
       <div className="main-content">
-        <header className="app-header">
-          <div>
-            <span className="app-header-title">Enterprise case management</span>
-            <span className="app-header-subtitle">Workflow, tasks, notes, and decisions</span>
-          </div>
-          <div className="app-header-right">
-            <span className="username-chip">{username}</span>
-            <button className="btn btn-secondary btn-sm" onClick={handleLogout}>
-              Sign out
-            </button>
-          </div>
-        </header>
-
         <main className="page-content">
           <Outlet />
         </main>

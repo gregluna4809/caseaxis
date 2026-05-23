@@ -11,8 +11,8 @@ type TabId = 'overview' | 'notes' | 'tasks' | 'attachments';
 type ModalId = 'note' | 'task' | 'status' | null;
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'notes', label: 'Notes' },
+  { id: 'overview', label: 'Details' },
+  { id: 'notes', label: 'Activity' },
   { id: 'tasks', label: 'Tasks' },
   { id: 'attachments', label: 'Files' },
 ];
@@ -101,9 +101,10 @@ export function CaseDetailPage() {
     <div className="page-stack">
       <Link to="/cases" className="back-link">Back to Cases</Link>
 
-      <section className="case-hero">
+      <section className="case-hero record-highlights">
+        <div className="object-icon record-icon">C</div>
         <div className="case-hero-main">
-          <div className="case-number">{caseDetail.caseNumber}</div>
+          <div className="case-number">Case {caseDetail.caseNumber}</div>
           <h1 className="case-title-large">{caseDetail.title}</h1>
           <div className="case-badges">
             <StatusBadge code={caseDetail.statusCode} label={caseDetail.statusDisplayName} />
@@ -114,14 +115,14 @@ export function CaseDetailPage() {
             )}
           </div>
         </div>
-        <div className="case-hero-meta">
+        <div className="case-hero-meta highlights-fields">
           <Metric label="Due" value={formatDate(caseDetail.dueDate)} />
           <Metric label="Assignee" value={displayActor(caseDetail.assignedToId)} />
           <Metric label="Updated" value={formatDate(caseDetail.updatedAt)} />
         </div>
       </section>
 
-      <div className="action-bar">
+      <div className="action-bar quick-actions">
         <button className="btn btn-secondary" onClick={() => setActiveModal('note')}>Add Note</button>
         <button className="btn btn-secondary" onClick={() => setActiveModal('task')}>Add Task</button>
         <button className="btn btn-primary" onClick={() => setActiveModal('status')}>Transition Status</button>
