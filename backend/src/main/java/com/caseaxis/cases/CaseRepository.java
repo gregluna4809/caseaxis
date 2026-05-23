@@ -134,4 +134,47 @@ public interface CaseRepository extends JpaRepository<Case, UUID> {
             ORDER BY c.dueDate ASC, c.priority.sortOrder DESC, c.updatedAt DESC
             """)
     List<Case> findTopOverdue(@Param("today") LocalDate today, Pageable pageable);
+
+    // Per-client counts
+    @Query("SELECT COUNT(c) FROM CaseRecord c WHERE c.deleted = false AND c.clientId = :clientId")
+    long countByClientId(@Param("clientId") UUID clientId);
+
+    @Query("SELECT COUNT(c) FROM CaseRecord c WHERE c.deleted = false AND c.clientId = :clientId AND c.status.terminal = false")
+    long countOpenByClientId(@Param("clientId") UUID clientId);
+
+    @Query("SELECT COUNT(c) FROM CaseRecord c WHERE c.deleted = false AND c.clientId = :clientId AND c.status.code = 'ESCALATED'")
+    long countEscalatedByClientId(@Param("clientId") UUID clientId);
+
+    @Query("SELECT COUNT(c) FROM CaseRecord c WHERE c.deleted = false AND c.clientId = :clientId AND c.status.terminal = false AND c.dueDate < :today")
+    long countOverdueByClientId(@Param("clientId") UUID clientId, @Param("today") LocalDate today);
+
+    // Per-org counts
+    @Query("SELECT COUNT(c) FROM CaseRecord c WHERE c.deleted = false AND c.organizationId = :orgId")
+    long countByOrganizationId(@Param("orgId") UUID orgId);
+
+    @Query("SELECT COUNT(c) FROM CaseRecord c WHERE c.deleted = false AND c.organizationId = :orgId AND c.status.terminal = false")
+    long countOpenByOrganizationId(@Param("orgId") UUID orgId);
+
+    @Query("SELECT COUNT(c) FROM CaseRecord c WHERE c.deleted = false AND c.organizationId = :orgId AND c.status.code = 'ESCALATED'")
+    long countEscalatedByOrganizationId(@Param("orgId") UUID orgId);
+
+    @Query("SELECT COUNT(c) FROM CaseRecord c WHERE c.deleted = false AND c.organizationId = :orgId AND c.status.terminal = false AND c.dueDate < :today")
+    long countOverdueByOrganizationId(@Param("orgId") UUID orgId, @Param("today") LocalDate today);
+
+    // Paginated related cases
+    @Query(value = """
+            SELECT c FROM CaseRecord c
+            JOIN FETCH c.status JOIN FETCH c.priority JOIN FETCH c.type
+            WHERE c.deleted = false AND c.clientId = :clientId
+            """,
+           countQuery = "SELECT COUNT(c) FROM CaseRecord c WHERE c.deleted = false AND c.clientId = :clientId")
+    Page<Case> findByClientId(@Param("clientId") UUID clientId, Pageable pageable);
+
+    @Query(value = """
+            SELECT c FROM CaseRecord c
+            JOIN FETCH c.status JOIN FETCH c.priority JOIN FETCH c.type
+            WHERE c.deleted = false AND c.organizationId = :orgId
+            """,
+           countQuery = "SELECT COUNT(c) FROM CaseRecord c WHERE c.deleted = false AND c.organizationId = :orgId")
+    Page<Case> findByOrganizationId(@Param("orgId") UUID orgId, Pageable pageable);
 }

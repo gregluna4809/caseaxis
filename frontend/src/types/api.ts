@@ -145,6 +145,29 @@ export interface OrganizationSummary {
   id: string;
   organizationCode: string;
   name: string;
+  active: boolean;
+  createdAt: string;
+  clientCount: number;
+  caseCount: number;
+  openCaseCount: number;
+}
+
+// GET /api/organizations/:id
+export interface OrganizationDetail {
+  id: string;
+  organizationCode: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  notes: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+  clientCount: number;
+  caseCount: number;
+  openCaseCount: number;
+  escalatedCases: number;
+  overdueCases: number;
 }
 
 // GET /api/clients
@@ -152,7 +175,34 @@ export interface ClientSummary {
   id: string;
   clientNumber: string;
   displayName: string;
+  email: string | null;
+  phone: string | null;
   organizationId: string | null;
+  organizationCode: string | null;
+  organizationName: string | null;
+  active: boolean;
+  createdAt: string;
+}
+
+// GET /api/clients/:id
+export interface ClientDetail {
+  id: string;
+  clientNumber: string;
+  displayName: string;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+  phone: string | null;
+  organizationId: string | null;
+  organizationCode: string | null;
+  organizationName: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+  totalCases: number;
+  openCases: number;
+  escalatedCases: number;
+  overdueCases: number;
 }
 
 // GET /api/cases/:id/attachments

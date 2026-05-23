@@ -54,12 +54,13 @@ class ClientControllerTest {
     }
 
     @Test
-    void listClients_authenticated_returnsSuccessWithArray() throws Exception {
+    void listClients_authenticated_returnsPaginatedPage() throws Exception {
         mockMvc.perform(get("/api/clients")
                 .header("Authorization", "Bearer " + token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data").isArray());
+            .andExpect(jsonPath("$.data.content").isArray())
+            .andExpect(jsonPath("$.data.totalElements").isNumber());
     }
 
     @Test
@@ -67,17 +68,17 @@ class ClientControllerTest {
         UUID clientId = UuidGenerator.generate();
         jdbcTemplate.update(
             "INSERT INTO clients (id, first_name, last_name, created_by) VALUES (?, ?, ?, ?)",
-            clientId, "Jane", "Smith", adminId
+            clientId, "Jane", "Zxqtest", adminId
         );
 
-        String response = mockMvc.perform(get("/api/clients")
+        String response = mockMvc.perform(get("/api/clients?q=Zxqtest")
                 .header("Authorization", "Bearer " + token))
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString();
 
         org.assertj.core.api.Assertions.assertThat(response)
             .contains("CL-")
-            .contains("Smith, Jane");
+            .contains("Zxqtest, Jane");
     }
 
     @Test
@@ -85,93 +86,148 @@ class ClientControllerTest {
         UUID activeId = UuidGenerator.generate();
         jdbcTemplate.update(
             "INSERT INTO clients (id, first_name, last_name, created_by) VALUES (?, ?, ?, ?)",
-            activeId, "Active", "Person", adminId
+            activeId, "Active", "Zxqperson", adminId
         );
         UUID deletedId = UuidGenerator.generate();
         jdbcTemplate.update(
             "INSERT INTO clients (id, first_name, last_name, is_deleted, created_by) VALUES (?, ?, ?, true, ?)",
-            deletedId, "Deleted", "Person", adminId
+            deletedId, "Deleted", "Zxqperson", adminId
         );
 
-        String response = mockMvc.perform(get("/api/clients")
+        String response = mockMvc.perform(get("/api/clients?q=Zxqperson")
                 .header("Authorization", "Bearer " + token))
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString();
 
         org.assertj.core.api.Assertions.assertThat(response)
-            .contains("Person, Active")
+            .contains("Zxqperson, Active")
             .doesNotContain(deletedId.toString())
-            .doesNotContain("Deleted, Person");
+            .doesNotContain("Deleted, Zxqperson");
     }
 
     @Test
-    void listClients_inactiveClient_isExcludedFromResponse() throws Exception {
-        UUID activeId = UuidGenerator.generate();
+    void listClients_searchByName_filtersResults() throws Exception {
+        UUID targetId = UuidGenerator.generate();
         jdbcTemplate.update(
             "INSERT INTO clients (id, first_name, last_name, created_by) VALUES (?, ?, ?, ?)",
-            activeId, "Active", "Client", adminId
+            targetId, "Alice", "Wonderland", adminId
         );
-        UUID inactiveId = UuidGenerator.generate();
+        UUID otherId = UuidGenerator.generate();
         jdbcTemplate.update(
-            "INSERT INTO clients (id, first_name, last_name, is_active, created_by) VALUES (?, ?, ?, false, ?)",
-            inactiveId, "Inactive", "Client", adminId
+            "INSERT INTO clients (id, first_name, last_name, created_by) VALUES (?, ?, ?, ?)",
+            otherId, "Bob", "Builder", adminId
         );
 
-        String response = mockMvc.perform(get("/api/clients")
+        String response = mockMvc.perform(get("/api/clients?q=Wonderland")
                 .header("Authorization", "Bearer " + token))
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString();
 
         org.assertj.core.api.Assertions.assertThat(response)
-            .contains("Client, Active")
-            .doesNotContain(inactiveId.toString())
-            .doesNotContain("Client, Inactive");
+            .contains("Wonderland, Alice")
+            .doesNotContain("Builder, Bob");
     }
 
     @Test
-    void listClients_multipleClients_returnedSortedByLastNameThenFirstName() throws Exception {
-        UUID bobId = UuidGenerator.generate();
-        UUID aliceId = UuidGenerator.generate();
-        UUID carolId = UuidGenerator.generate();
+    void listClients_filterByOrganization_returnsOnlyMatchingClients() throws Exception {
+        UUID orgId = UuidGenerator.generate();
         jdbcTemplate.update(
-            "INSERT INTO clients (id, first_name, last_name, created_by) VALUES (?, ?, ?, ?)",
-            bobId, "Bob", "Smith", adminId
+            "INSERT INTO organizations (id, name, created_by) VALUES (?, ?, ?)",
+            orgId, "Filter Test Org", adminId
         );
+        UUID orgClientId = UuidGenerator.generate();
         jdbcTemplate.update(
-            "INSERT INTO clients (id, first_name, last_name, created_by) VALUES (?, ?, ?, ?)",
-            aliceId, "Alice", "Smith", adminId
+            "INSERT INTO clients (id, organization_id, first_name, last_name, created_by) VALUES (?, ?, ?, ?, ?)",
+            orgClientId, orgId, "Org", "Member", adminId
         );
+        UUID otherClientId = UuidGenerator.generate();
         jdbcTemplate.update(
             "INSERT INTO clients (id, first_name, last_name, created_by) VALUES (?, ?, ?, ?)",
-            carolId, "Carol", "Adams", adminId
+            otherClientId, "No", "Org", adminId
         );
 
-        String response = mockMvc.perform(get("/api/clients")
+        String response = mockMvc.perform(get("/api/clients?organizationId=" + orgId)
                 .header("Authorization", "Bearer " + token))
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString();
 
-        // Adams, Carol must appear before Smith, Alice; Smith, Alice before Smith, Bob
-        int carolIdx = response.indexOf(carolId.toString());
-        int aliceIdx = response.indexOf(aliceId.toString());
-        int bobIdx   = response.indexOf(bobId.toString());
-
-        org.assertj.core.api.Assertions.assertThat(carolIdx).isLessThan(aliceIdx);
-        org.assertj.core.api.Assertions.assertThat(aliceIdx).isLessThan(bobIdx);
+        org.assertj.core.api.Assertions.assertThat(response)
+            .contains("Member, Org")
+            .doesNotContain("Org, No");
     }
 
     @Test
     void listClients_returnsBusinessIdentifier() throws Exception {
         jdbcTemplate.update(
             "INSERT INTO clients (id, first_name, last_name, created_by) VALUES (?, ?, ?, ?)",
-            UuidGenerator.generate(), "Business", "Client", adminId
+            UuidGenerator.generate(), "Business", "Zxqclient", adminId
         );
 
-        mockMvc.perform(get("/api/clients")
+        mockMvc.perform(get("/api/clients?q=Zxqclient")
                 .header("Authorization", "Bearer " + token))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.data[?(@.displayName=='Client, Business')].clientNumber").value(
+            .andExpect(jsonPath("$.data.content[?(@.displayName=='Zxqclient, Business')].clientNumber").value(
                 org.hamcrest.Matchers.hasItem(matchesPattern("CL-\\d{9}"))
             ));
+    }
+
+    @Test
+    void getClientById_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(get("/api/clients/" + UUID.randomUUID()))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getClientById_notFound_returns404() throws Exception {
+        mockMvc.perform(get("/api/clients/" + UUID.randomUUID())
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getClientById_existingClient_returnsDetailWithStats() throws Exception {
+        UUID clientId = UuidGenerator.generate();
+        jdbcTemplate.update(
+            "INSERT INTO clients (id, first_name, last_name, created_by) VALUES (?, ?, ?, ?)",
+            clientId, "Detail", "Test", adminId
+        );
+
+        mockMvc.perform(get("/api/clients/" + clientId)
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.displayName").value("Test, Detail"))
+            .andExpect(jsonPath("$.data.totalCases").isNumber())
+            .andExpect(jsonPath("$.data.openCases").isNumber())
+            .andExpect(jsonPath("$.data.escalatedCases").isNumber())
+            .andExpect(jsonPath("$.data.overdueCases").isNumber());
+    }
+
+    @Test
+    void listClientCases_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(get("/api/clients/" + UUID.randomUUID() + "/cases"))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void listClientCases_notFoundClient_returns404() throws Exception {
+        mockMvc.perform(get("/api/clients/" + UUID.randomUUID() + "/cases")
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void listClientCases_existingClient_returnsPaginatedCases() throws Exception {
+        UUID clientId = UuidGenerator.generate();
+        jdbcTemplate.update(
+            "INSERT INTO clients (id, first_name, last_name, created_by) VALUES (?, ?, ?, ?)",
+            clientId, "Cases", "Owner", adminId
+        );
+
+        mockMvc.perform(get("/api/clients/" + clientId + "/cases")
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.content").isArray());
     }
 }

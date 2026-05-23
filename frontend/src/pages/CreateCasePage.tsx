@@ -29,9 +29,12 @@ export function CreateCasePage() {
   useEffect(() => {
     async function loadLookups() {
       try {
-        const [orgs, cls] = await Promise.all([api.organizations.list(), api.clients.list()]);
-        setOrganizations(orgs);
-        setClients(cls);
+        const [orgsPage, clsPage] = await Promise.all([
+          api.organizations.list({ size: 500, active: true }),
+          api.clients.list({ size: 500, active: true }),
+        ]);
+        setOrganizations(orgsPage.content);
+        setClients(clsPage.content);
       } catch {
         setLookupError('Could not load organizations or clients. Check your connection and try again.');
       } finally {

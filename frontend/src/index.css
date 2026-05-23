@@ -788,6 +788,16 @@ tbody tr.row-selected td {
   font-size: var(--font-sm);
 }
 
+.td-mono {
+  font-family: "SF Mono", "Fira Code", Consolas, monospace;
+  font-size: var(--font-sm);
+  color: var(--color-text-muted);
+}
+
+.td-null {
+  color: var(--color-text-subtle, #9ca3af);
+}
+
 .filename-cell {
   color: var(--color-text);
   font-weight: var(--weight-semibold);

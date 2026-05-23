@@ -59,6 +59,30 @@ export function AppShell() {
               <span>Cases</span>
             </NavLink>
           </li>
+          <li>
+            <NavLink to="/clients" className={({ isActive }) => (isActive ? 'active' : '')}>
+              <span className="nav-icon">P</span>
+              <span>Clients</span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/organizations" className={({ isActive }) => (isActive ? 'active' : '')}>
+              <span className="nav-icon">O</span>
+              <span>Organizations</span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/tasks" className={({ isActive }) => (isActive ? 'active' : '')}>
+              <span className="nav-icon">T</span>
+              <span>Tasks</span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/reports" className={({ isActive }) => (isActive ? 'active' : '')}>
+              <span className="nav-icon">R</span>
+              <span>Reports</span>
+            </NavLink>
+          </li>
         </ul>
       </nav>
 

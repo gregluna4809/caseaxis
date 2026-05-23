@@ -1140,6 +1140,58 @@ Frontend production build passed with `npm run build`.
 ---
 
 ## 2026-05-23
+### Phase 9 — Client & Organization CRM Module
+
+#### Milestone
+Transformed CaseAxis from a case tracker into a multi-entity CRM operations platform with full Client and Organization list/detail screens, paginated search, and per-entity case metrics.
+
+#### Backend Changes
+
+**New endpoints (7 total):**
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/organizations` | Paginated org list (search, active filter) |
+| `GET` | `/api/organizations/{id}` | Org detail with 5 case metrics |
+| `GET` | `/api/organizations/{id}/clients` | Paginated clients for org |
+| `GET` | `/api/organizations/{id}/cases` | Paginated cases for org |
+| `GET` | `/api/clients` | Paginated client list (search, org filter, active filter) |
+| `GET` | `/api/clients/{id}` | Client detail with 4 case metrics |
+| `GET` | `/api/clients/{id}/cases` | Paginated cases for client |
+
+**Key design decisions:**
+
+- `OrganizationSummary` extended with `clientCount`, `caseCount`, `openCaseCount`, `active`, `createdAt`.
+- `ClientSummary` extended with `email`, `phone`, `organizationCode`, `organizationName`, `active`, `createdAt`.
+- New `OrganizationDetailResponse` and `ClientDetailResponse` records for detail endpoints.
+- Split repository queries (`filterActive` / `searchActive`) to avoid `lower(bytea)` null type inference bug in PostgreSQL when LOWER() is applied to a null JDBC parameter.
+- Batch org lookup in `ClientService.listClients()` to avoid N+1: collect unique orgIds, one `findAllById` call, O(1) Map lookup per client.
+- `CaseRepository` extended with 10 new count/find queries scoped to client and organization.
+
+**Test changes:**
+- `OrganizationControllerTest` updated: paginated assertions (`$.data.content`), 6 new tests for detail and related-resource endpoints.
+- `ClientControllerTest` updated: paginated assertions, 6 new tests. Tests that insert specific named records now use `?q=<unique>` search filters and unique names (e.g., "Zxqtest") to avoid BIR seed data flooding page 0 of alphabetically sorted results.
+
+#### Frontend Changes
+
+- **`types/api.ts`**: Added `OrganizationDetail`, `ClientDetail`; expanded `OrganizationSummary` and `ClientSummary` with new fields.
+- **`lib/apiClient.ts`**: `organizations.list()` and `clients.list()` now return `Page<T>` with params; added `.get()`, `.clients()`, `.cases()` methods for both.
+- **`components/AppShell.tsx`**: Added Clients, Organizations, Tasks (placeholder), Reports (placeholder) nav entries.
+- **`App.tsx`**: Added routes `/clients`, `/clients/:id`, `/organizations`, `/organizations/:id`, `/tasks` (placeholder), `/reports` (placeholder).
+- **`pages/CreateCasePage.tsx`**: Updated to extract `.content` from paginated list responses; uses `size=500` for dropdown population.
+- **`pages/ClientListPage.tsx`** (new): Server-side search, active filter, dense CRM grid, pagination.
+- **`pages/ClientDetailPage.tsx`** (new): Record page with highlights panel, case metrics, tabs (Overview, Cases).
+- **`pages/OrgListPage.tsx`** (new): Server-side search, active filter, org grid with client/case counts.
+- **`pages/OrgDetailPage.tsx`** (new): Record page with 5 metrics, tabs (Overview, Clients, Cases).
+
+#### Validation
+
+- Backend: `78` tests, `0` failures.
+- Frontend: `npm run build` passed.
+
+---
+
+## 2026-05-23
 ### Phase 8.5 - Frontend Typography Hierarchy Refactor
 
 #### Milestone

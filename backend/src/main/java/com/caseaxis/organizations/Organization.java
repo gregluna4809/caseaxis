@@ -7,6 +7,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -25,9 +26,24 @@ public class Organization {
     @Column(name = "organization_code", nullable = false)
     private String organizationCode;
 
+    @Column(name = "phone")
+    private String phone;
+
+    @Column(name = "email")
+    private String email;
+
+    @Column(name = "notes")
+    private String notes;
+
     @Column(name = "is_active", nullable = false)
     private boolean active;
 
     @Column(name = "is_deleted", nullable = false)
     private boolean deleted;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 }

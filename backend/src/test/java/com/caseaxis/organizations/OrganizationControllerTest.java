@@ -54,12 +54,13 @@ class OrganizationControllerTest {
     }
 
     @Test
-    void listOrganizations_authenticated_returnsSuccessWithArray() throws Exception {
+    void listOrganizations_authenticated_returnsPaginatedPage() throws Exception {
         mockMvc.perform(get("/api/organizations")
                 .header("Authorization", "Bearer " + token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data").isArray());
+            .andExpect(jsonPath("$.data.content").isArray())
+            .andExpect(jsonPath("$.data.totalElements").isNumber());
     }
 
     @Test
@@ -105,7 +106,7 @@ class OrganizationControllerTest {
     }
 
     @Test
-    void listOrganizations_inactiveOrg_isExcludedFromResponse() throws Exception {
+    void listOrganizations_inactiveOrg_isExcludedByDefault() throws Exception {
         UUID activeId = UuidGenerator.generate();
         jdbcTemplate.update(
             "INSERT INTO organizations (id, name, created_by) VALUES (?, ?, ?)",
@@ -117,7 +118,7 @@ class OrganizationControllerTest {
             inactiveId, "Inactive Org", adminId
         );
 
-        String response = mockMvc.perform(get("/api/organizations")
+        String response = mockMvc.perform(get("/api/organizations?active=true")
                 .header("Authorization", "Bearer " + token))
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString();
@@ -132,40 +133,102 @@ class OrganizationControllerTest {
     void listOrganizations_returnsBusinessIdentifier() throws Exception {
         jdbcTemplate.update(
             "INSERT INTO organizations (id, name, created_by) VALUES (?, ?, ?)",
-            UuidGenerator.generate(), "Business Id Org", adminId
+            UuidGenerator.generate(), "Zxqbusiness Org", adminId
         );
 
-        mockMvc.perform(get("/api/organizations")
+        mockMvc.perform(get("/api/organizations?q=Zxqbusiness")
                 .header("Authorization", "Bearer " + token))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.data[?(@.name=='Business Id Org')].organizationCode").value(
+            .andExpect(jsonPath("$.data.content[?(@.name=='Zxqbusiness Org')].organizationCode").value(
                 org.hamcrest.Matchers.hasItem(matchesPattern("ORG-\\d{9}"))
             ));
     }
 
     @Test
-    void listOrganizations_multipleOrgs_returnedInAlphabeticalOrder() throws Exception {
-        UUID zId = UuidGenerator.generate();
-        UUID aId = UuidGenerator.generate();
+    void listOrganizations_searchByName_filtersResults() throws Exception {
+        UUID targetId = UuidGenerator.generate();
         jdbcTemplate.update(
             "INSERT INTO organizations (id, name, created_by) VALUES (?, ?, ?)",
-            zId, "Zephyr Inc", adminId
+            targetId, "Zenith Industries", adminId
         );
+        UUID otherId = UuidGenerator.generate();
         jdbcTemplate.update(
             "INSERT INTO organizations (id, name, created_by) VALUES (?, ?, ?)",
-            aId, "Alpha Ltd", adminId
+            otherId, "Alpha Corp", adminId
         );
 
-        String response = mockMvc.perform(get("/api/organizations")
+        String response = mockMvc.perform(get("/api/organizations?q=Zenith")
                 .header("Authorization", "Bearer " + token))
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString();
 
-        // Alpha Ltd must appear before Zephyr Inc in the JSON string
-        int alphaIdx = response.indexOf("Alpha Ltd");
-        int zephyrIdx = response.indexOf("Zephyr Inc");
-        org.assertj.core.api.Assertions.assertThat(alphaIdx)
-            .isGreaterThanOrEqualTo(0)
-            .isLessThan(zephyrIdx);
+        org.assertj.core.api.Assertions.assertThat(response)
+            .contains("Zenith Industries")
+            .doesNotContain("Alpha Corp");
+    }
+
+    @Test
+    void getOrganizationById_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(get("/api/organizations/" + UUID.randomUUID()))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getOrganizationById_notFound_returns404() throws Exception {
+        mockMvc.perform(get("/api/organizations/" + UUID.randomUUID())
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getOrganizationById_existingOrg_returnsDetailWithMetrics() throws Exception {
+        UUID orgId = UuidGenerator.generate();
+        jdbcTemplate.update(
+            "INSERT INTO organizations (id, name, created_by) VALUES (?, ?, ?)",
+            orgId, "Detail Org", adminId
+        );
+
+        mockMvc.perform(get("/api/organizations/" + orgId)
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.name").value("Detail Org"))
+            .andExpect(jsonPath("$.data.clientCount").isNumber())
+            .andExpect(jsonPath("$.data.caseCount").isNumber())
+            .andExpect(jsonPath("$.data.openCaseCount").isNumber());
+    }
+
+    @Test
+    void listOrganizationClients_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(get("/api/organizations/" + UUID.randomUUID() + "/clients"))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void listOrganizationClients_notFoundOrg_returns404() throws Exception {
+        mockMvc.perform(get("/api/organizations/" + UUID.randomUUID() + "/clients")
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void listOrganizationClients_returnsPagedClientsForOrg() throws Exception {
+        UUID orgId = UuidGenerator.generate();
+        jdbcTemplate.update(
+            "INSERT INTO organizations (id, name, created_by) VALUES (?, ?, ?)",
+            orgId, "Clients Test Org", adminId
+        );
+        UUID clientId = UuidGenerator.generate();
+        jdbcTemplate.update(
+            "INSERT INTO clients (id, organization_id, first_name, last_name, created_by) VALUES (?, ?, ?, ?, ?)",
+            clientId, orgId, "Test", "Client", adminId
+        );
+
+        mockMvc.perform(get("/api/organizations/" + orgId + "/clients")
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.content").isArray())
+            .andExpect(jsonPath("$.data.content[0].displayName").value("Client, Test"));
     }
 }

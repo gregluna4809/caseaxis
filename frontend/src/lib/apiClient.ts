@@ -1,7 +1,8 @@
 import type {
   ApiResponse, Page, LoginResponse,
   CaseSummary, CaseDetail, CaseNote, CaseTask, CaseAttachment,
-  OrganizationSummary, ClientSummary, DashboardMetrics, DashboardOverview,
+  OrganizationSummary, OrganizationDetail, ClientSummary, ClientDetail,
+  DashboardMetrics, DashboardOverview,
 } from '../types/api';
 
 export class ApiError extends Error {
@@ -73,14 +74,49 @@ export const api = {
   },
 
   organizations: {
-    list() {
-      return request<OrganizationSummary[]>('/api/organizations');
+    list(params: { page?: number; size?: number; q?: string; active?: boolean } = {}) {
+      const search = new URLSearchParams();
+      search.set('page', String(params.page ?? 0));
+      search.set('size', String(params.size ?? 20));
+      if (params.q?.trim()) search.set('q', params.q.trim());
+      if (params.active !== undefined) search.set('active', String(params.active));
+      return request<Page<OrganizationSummary>>(`/api/organizations?${search.toString()}`);
+    },
+    get(id: string) {
+      return request<OrganizationDetail>(`/api/organizations/${id}`);
+    },
+    clients(id: string, params: { page?: number; size?: number } = {}) {
+      const search = new URLSearchParams();
+      search.set('page', String(params.page ?? 0));
+      search.set('size', String(params.size ?? 20));
+      return request<Page<ClientSummary>>(`/api/organizations/${id}/clients?${search.toString()}`);
+    },
+    cases(id: string, params: { page?: number; size?: number } = {}) {
+      const search = new URLSearchParams();
+      search.set('page', String(params.page ?? 0));
+      search.set('size', String(params.size ?? 20));
+      return request<Page<CaseSummary>>(`/api/organizations/${id}/cases?${search.toString()}`);
     },
   },
 
   clients: {
-    list() {
-      return request<ClientSummary[]>('/api/clients');
+    list(params: { page?: number; size?: number; q?: string; organizationId?: string; active?: boolean } = {}) {
+      const search = new URLSearchParams();
+      search.set('page', String(params.page ?? 0));
+      search.set('size', String(params.size ?? 20));
+      if (params.q?.trim()) search.set('q', params.q.trim());
+      if (params.organizationId) search.set('organizationId', params.organizationId);
+      if (params.active !== undefined) search.set('active', String(params.active));
+      return request<Page<ClientSummary>>(`/api/clients?${search.toString()}`);
+    },
+    get(id: string) {
+      return request<ClientDetail>(`/api/clients/${id}`);
+    },
+    cases(id: string, params: { page?: number; size?: number } = {}) {
+      const search = new URLSearchParams();
+      search.set('page', String(params.page ?? 0));
+      search.set('size', String(params.size ?? 20));
+      return request<Page<CaseSummary>>(`/api/clients/${id}/cases?${search.toString()}`);
     },
   },
 

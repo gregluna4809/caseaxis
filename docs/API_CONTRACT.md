@@ -1,6 +1,6 @@
 # CaseAxis API Contract
 
-**Version:** Phase 6  
+**Version:** Phase 9  
 **Base URL:** `http://localhost:8080` (development)  
 **Content-Type:** `application/json` (all requests and responses)
 
@@ -19,7 +19,9 @@
 9. [Case Notes](#case-notes)
 10. [Case Tasks](#case-tasks)
 11. [Case Attachments](#case-attachments)
-12. [Reference Data](#reference-data)
+12. [Organizations](#organizations)
+13. [Clients](#clients)
+14. [Reference Data](#reference-data)
 
 ---
 
@@ -979,6 +981,202 @@ Soft-deletes an attachment record. The physical file is not affected — storage
 **Error responses:**
 - `404` — case or attachment not found
 - `401` — unauthenticated
+
+---
+
+## Organizations
+
+All endpoints require a valid JWT `Authorization: Bearer <token>` header.
+
+### GET /api/organizations
+
+List organizations with pagination, optional search, and optional active filter.
+
+**Query parameters:**
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `page` | integer | No | Zero-based page number (default: 0) |
+| `size` | integer | No | Page size (default: 20) |
+| `q` | string | No | Search by name or org code (case-insensitive LIKE) |
+| `active` | boolean | No | `true` = active only, `false` = inactive only, omit = all |
+
+**Response:** `200 OK` with `Page<OrganizationSummary>`
+
+```json
+{
+  "success": true,
+  "data": {
+    "content": [
+      {
+        "id": "...",
+        "organizationCode": "ORG-000000001",
+        "name": "Atlantic Risk Partners",
+        "active": true,
+        "createdAt": "2024-01-01T00:00:00Z",
+        "clientCount": 35,
+        "caseCount": 146,
+        "openCaseCount": 104
+      }
+    ],
+    "totalElements": 250,
+    "totalPages": 13,
+    "first": true,
+    "last": false
+  }
+}
+```
+
+---
+
+### GET /api/organizations/{id}
+
+Get organization detail with full metrics.
+
+**Response:** `200 OK` with `OrganizationDetailResponse`
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "...",
+    "organizationCode": "ORG-000000001",
+    "name": "Atlantic Risk Partners",
+    "phone": "212-555-0100",
+    "email": "info@atlanticrisk.example",
+    "notes": null,
+    "active": true,
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-06-01T00:00:00Z",
+    "clientCount": 35,
+    "caseCount": 146,
+    "openCaseCount": 104,
+    "escalatedCases": 12,
+    "overdueCases": 7
+  }
+}
+```
+
+**Error:** `404 Not Found` if organization does not exist or is soft-deleted.
+
+---
+
+### GET /api/organizations/{id}/clients
+
+List active clients for an organization (paginated).
+
+**Query parameters:** `page`, `size` (both default to 0/20 respectively, sort by `lastName`)
+
+**Response:** `200 OK` with `Page<ClientSummaryResponse>` — same shape as `GET /api/clients` content items.
+
+**Error:** `404 Not Found` if organization not found.
+
+---
+
+### GET /api/organizations/{id}/cases
+
+List cases for an organization (paginated).
+
+**Query parameters:** `page`, `size` (default sort: `createdAt DESC`)
+
+**Response:** `200 OK` with `Page<CaseSummaryResponse>` — same shape as `GET /api/cases` content items.
+
+**Error:** `404 Not Found` if organization not found.
+
+---
+
+## Clients
+
+All endpoints require a valid JWT `Authorization: Bearer <token>` header.
+
+### GET /api/clients
+
+List clients with pagination, optional search, optional organization filter, and optional active filter.
+
+**Query parameters:**
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `page` | integer | No | Zero-based page number (default: 0) |
+| `size` | integer | No | Page size (default: 20) |
+| `q` | string | No | Search by last name, first name, or client number (case-insensitive LIKE) |
+| `organizationId` | UUID | No | Filter by organization |
+| `active` | boolean | No | `true` = active only, `false` = inactive only, omit = all |
+
+**Response:** `200 OK` with `Page<ClientSummaryResponse>`
+
+```json
+{
+  "success": true,
+  "data": {
+    "content": [
+      {
+        "id": "...",
+        "clientNumber": "CL-000000001",
+        "displayName": "Abbott, Darlene",
+        "email": "darlene.abbott@example.com",
+        "phone": "212-555-0101",
+        "organizationId": "...",
+        "organizationCode": "ORG-000000001",
+        "organizationName": "Atlantic Risk Partners",
+        "active": true,
+        "createdAt": "2024-01-01T00:00:00Z"
+      }
+    ],
+    "totalElements": 25001,
+    "totalPages": 1251,
+    "first": true,
+    "last": false
+  }
+}
+```
+
+---
+
+### GET /api/clients/{id}
+
+Get client detail with full case statistics.
+
+**Response:** `200 OK` with `ClientDetailResponse`
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "...",
+    "clientNumber": "CL-000000001",
+    "displayName": "Abbott, Darlene",
+    "firstName": "Darlene",
+    "lastName": "Abbott",
+    "email": "darlene.abbott@example.com",
+    "phone": "212-555-0101",
+    "organizationId": "...",
+    "organizationCode": "ORG-000000001",
+    "organizationName": "Atlantic Risk Partners",
+    "active": true,
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-06-01T00:00:00Z",
+    "totalCases": 5,
+    "openCases": 3,
+    "escalatedCases": 1,
+    "overdueCases": 0
+  }
+}
+```
+
+**Error:** `404 Not Found` if client does not exist or is soft-deleted.
+
+---
+
+### GET /api/clients/{id}/cases
+
+List cases for a client (paginated).
+
+**Query parameters:** `page`, `size` (default sort: `createdAt DESC`)
+
+**Response:** `200 OK` with `Page<CaseSummaryResponse>` — same shape as `GET /api/cases` content items.
+
+**Error:** `404 Not Found` if client not found.
 
 ---
 
