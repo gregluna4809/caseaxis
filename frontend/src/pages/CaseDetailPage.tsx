@@ -224,7 +224,14 @@ function DetailField({ label, value }: { label: string; value: ReactNode }) {
 
 function NotesTab({ notes, loading }: { notes: CaseNote[]; loading: boolean }) {
   if (loading) return <div className="spinner">Loading notes...</div>;
-  if (notes.length === 0) return <div className="empty-state">No notes on this case yet.</div>;
+  if (notes.length === 0) return (
+    <div className="empty-state-panel">
+      <div className="empty-state-title">No activity recorded</div>
+      <div className="empty-state-body">
+        This case has no notes yet. Add the first note to begin documenting case activity and decisions.
+      </div>
+    </div>
+  );
 
   return (
     <div className="activity-feed">
@@ -248,7 +255,14 @@ function NotesTab({ notes, loading }: { notes: CaseNote[]; loading: boolean }) {
 
 function TasksTab({ tasks, loading }: { tasks: CaseTask[]; loading: boolean }) {
   if (loading) return <div className="spinner">Loading tasks...</div>;
-  if (tasks.length === 0) return <div className="empty-state">No tasks on this case yet.</div>;
+  if (tasks.length === 0) return (
+    <div className="empty-state-panel">
+      <div className="empty-state-title">No tasks assigned</div>
+      <div className="empty-state-body">
+        This case has no tasks yet. Use Add Task to create work items and track progress toward resolution.
+      </div>
+    </div>
+  );
 
   return (
     <div className="task-list">
@@ -275,7 +289,14 @@ function TasksTab({ tasks, loading }: { tasks: CaseTask[]; loading: boolean }) {
 
 function AttachmentsTab({ attachments, loading }: { attachments: CaseAttachment[]; loading: boolean }) {
   if (loading) return <div className="spinner">Loading files...</div>;
-  if (attachments.length === 0) return <div className="empty-state">No files on this case yet.</div>;
+  if (attachments.length === 0) return (
+    <div className="empty-state-panel">
+      <div className="empty-state-title">No files attached</div>
+      <div className="empty-state-body">
+        No file metadata has been registered for this case. Register attachment records via the API to track case documents.
+      </div>
+    </div>
+  );
 
   return (
     <div className="table-wrapper">

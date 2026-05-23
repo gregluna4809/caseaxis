@@ -1111,6 +1111,35 @@ Frontend production build passed with `npm run build`.
 ---
 
 ## 2026-05-23
+### Phase 8.6 - Enterprise Data Grid Polish
+
+#### Milestone
+Refactored CaseAxis table UX to enterprise CRM data grid standards (Salesforce / ServiceNow style).
+
+#### Implementation Details
+
+- Added smooth `transition: background 0.1s` to all table rows for polished hover response.
+- Added zebra striping (`#fafbfc` on even rows) for improved large-dataset scanability.
+- Implemented sticky table headers via `position: sticky; top: 0; z-index: 2` with `overflow-y: auto; max-height: 70vh` on `.table-wrapper`, making all tables self-contained scroll containers.
+- Changed `.list-view-card` and `.detail-card` from `overflow: hidden` to `overflow: clip` to unblock sticky header behavior without breaking rounded corner clipping.
+- Strengthened column headers: bolder font weight, tighter `letter-spacing: 0.06em`, `2px` bottom border for stronger visual separation.
+- Added `.row-selected` CSS class with left border accent and subtle blue highlight for future selection state wiring.
+- Normalized all status/priority/task badges to a fixed `height: 20px`, `padding: 0 7px`, `border-radius: 3px` for consistent enterprise badge sizing across the UI.
+- Improved pagination controls: record count on left, page info centered between navigation buttons, arrow symbol labels (`«` `‹` `›` `»`) with `title` attributes for accessibility.
+- Added `.pagination-page-info` and `.pagination-summary` as distinct styled elements for a cleaner CRM-grade pagination strip.
+- Replaced all generic `.empty-state` text in table/feed contexts with structured `.empty-state-panel` components (title + body) using professional enterprise copy:
+  - Case list: "No cases found" / filter guidance
+  - Activity tab: "No activity recorded" / note guidance
+  - Tasks tab: "No tasks assigned" / task workflow guidance
+  - Files tab: "No files attached" / attachment API guidance
+
+#### Validation
+
+Frontend production build passed with `npm run build`.
+
+---
+
+## 2026-05-23
 ### Phase 8.5 - Frontend Typography Hierarchy Refactor
 
 #### Milestone

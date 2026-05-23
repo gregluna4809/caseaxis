@@ -151,8 +151,13 @@ export function CaseListPage() {
                 <tbody>
                   {cases.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="empty-state">
-                        No cases match the current filters.
+                      <td colSpan={7}>
+                        <div className="empty-state-panel">
+                          <div className="empty-state-title">No cases found</div>
+                          <div className="empty-state-body">
+                            No cases match the current filters. Try adjusting your search terms or clearing one of the active filters.
+                          </div>
+                        </div>
                       </td>
                     </tr>
                   )}
@@ -182,37 +187,44 @@ export function CaseListPage() {
             </div>
 
             <div className="pagination">
-              <span>
-                Page {page + 1} of {Math.max(totalPages, 1)} - {totalElements.toLocaleString()} records
+              <span className="pagination-summary">
+                {totalElements.toLocaleString()} record{totalElements !== 1 ? 's' : ''}
               </span>
               <div className="pagination-controls">
                 <button
                   className="btn btn-secondary btn-sm"
                   onClick={() => setPage(0)}
                   disabled={result.first}
+                  title="First page"
                 >
-                  First
+                  «
                 </button>
                 <button
                   className="btn btn-secondary btn-sm"
                   onClick={() => setPage((p) => Math.max(0, p - 1))}
                   disabled={result.first}
+                  title="Previous page"
                 >
-                  Prev
+                  ‹
                 </button>
+                <span className="pagination-page-info">
+                  Page {page + 1} of {Math.max(totalPages, 1)}
+                </span>
                 <button
                   className="btn btn-secondary btn-sm"
                   onClick={() => setPage((p) => p + 1)}
                   disabled={result.last}
+                  title="Next page"
                 >
-                  Next
+                  ›
                 </button>
                 <button
                   className="btn btn-secondary btn-sm"
                   onClick={() => setPage(Math.max(0, totalPages - 1))}
                   disabled={result.last}
+                  title="Last page"
                 >
-                  Last
+                  »
                 </button>
               </div>
             </div>

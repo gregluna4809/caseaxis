@@ -619,8 +619,32 @@ button, input, textarea, select {
   text-align: center;
 }
 
+.empty-state-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.empty-state-title {
+  color: var(--color-text);
+  font-size: var(--font-lg);
+  font-weight: var(--weight-semibold);
+}
+
+.empty-state-body {
+  color: var(--color-text-muted);
+  font-size: var(--font-sm);
+  max-width: 380px;
+  line-height: 1.5;
+  margin-top: 1px;
+}
+
 .list-view-card {
-  overflow: hidden;
+  overflow: clip;
 }
 
 .list-view-toolbar {
@@ -675,6 +699,8 @@ button, input, textarea, select {
 
 .table-wrapper {
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: 70vh;
 }
 
 table {
@@ -686,14 +712,17 @@ table {
 thead th {
   padding: 6px 8px;
   text-align: left;
-  color: #3e4a59;
+  color: #374151;
   background: #f3f5f8;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 2px solid var(--color-border-strong);
   font-size: var(--font-xs);
-  font-weight: var(--weight-semibold);
+  font-weight: var(--weight-bold);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 tbody td {
@@ -707,14 +736,31 @@ tbody tr:last-child td {
   border-bottom: none;
 }
 
+tbody tr {
+  transition: background 0.1s;
+}
+
+tbody tr:nth-child(even) {
+  background: #fafbfc;
+}
+
 tbody tr.clickable {
   cursor: pointer;
 }
 
 tbody tr:hover,
 tbody tr.clickable:hover {
-  background: #f8fbff;
+  background: #eef5ff;
   box-shadow: inset 3px 0 0 var(--color-primary);
+}
+
+tbody tr.row-selected {
+  background: #e8f0fe;
+  box-shadow: inset 3px 0 0 var(--color-primary);
+}
+
+tbody tr.row-selected td {
+  border-bottom-color: #d0dff8;
 }
 
 .case-cell {
@@ -748,16 +794,30 @@ tbody tr.clickable:hover {
 }
 
 .pagination {
-  min-height: 34px;
+  min-height: 36px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 6px 8px;
+  padding: 6px 10px;
   background: var(--color-surface-subtle);
   border-top: 1px solid var(--color-border);
   color: var(--color-text-muted);
   font-size: var(--font-sm);
+  flex-shrink: 0;
+}
+
+.pagination-summary {
+  color: var(--color-text-muted);
+  font-size: var(--font-sm);
+}
+
+.pagination-page-info {
+  padding: 0 6px;
+  color: var(--color-text);
+  font-size: var(--font-sm);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
 }
 
 .pagination-controls,
@@ -769,15 +829,17 @@ tbody tr.clickable:hover {
 
 .trend-chip,
 .badge {
-  min-height: 20px;
+  height: 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 2px 8px;
-  border-radius: 999px;
+  padding: 0 7px;
+  border-radius: 3px;
   font-size: var(--font-xs);
   font-weight: var(--weight-semibold);
+  line-height: 1;
   white-space: nowrap;
+  letter-spacing: 0.01em;
 }
 
 .trend-chip { color: var(--color-success); background: #e5f6ec; }
@@ -864,7 +926,7 @@ tbody tr.clickable:hover {
 }
 
 .detail-card {
-  overflow: hidden;
+  overflow: clip;
 }
 
 .tabs {
@@ -1118,7 +1180,9 @@ tbody tr.clickable:hover {
 
 .btn-sm {
   min-height: 26px;
+  min-width: 26px;
   padding: 3px 8px;
+  font-size: var(--font-sm);
 }
 
 .btn-primary {
