@@ -14,6 +14,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.matchesPattern;
@@ -61,6 +62,28 @@ class ClientControllerTest {
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.content").isArray())
             .andExpect(jsonPath("$.data.totalElements").isNumber());
+    }
+
+    @Test
+    void listClients_defaultSort_returnsNewestCreatedFirst() throws Exception {
+        UUID olderId = UuidGenerator.generate();
+        UUID newerId = UuidGenerator.generate();
+        OffsetDateTime olderCreated = OffsetDateTime.now().minusDays(10);
+        OffsetDateTime newerCreated = OffsetDateTime.now().minusDays(1);
+
+        jdbcTemplate.update(
+            "INSERT INTO clients (id, first_name, last_name, created_at, updated_at, created_by) VALUES (?, ?, ?, ?, ?, ?)",
+            olderId, "Older", "Aardvark", olderCreated, olderCreated, adminId
+        );
+        jdbcTemplate.update(
+            "INSERT INTO clients (id, first_name, last_name, created_at, updated_at, created_by) VALUES (?, ?, ?, ?, ?, ?)",
+            newerId, "Newer", "Zulu", newerCreated, newerCreated, adminId
+        );
+
+        mockMvc.perform(get("/api/clients?page=0&size=1")
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.content[0].displayName").value("Zulu, Newer"));
     }
 
     @Test

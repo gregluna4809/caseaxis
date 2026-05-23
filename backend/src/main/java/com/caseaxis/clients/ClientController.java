@@ -25,7 +25,7 @@ public class ClientController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<ClientSummaryResponse>>> listClients(
-            @PageableDefault(size = 20, sort = "lastName", direction = Sort.Direction.ASC) Pageable pageable,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
             @RequestParam(required = false) String q,
             @RequestParam(required = false) UUID organizationId,
             @RequestParam(required = false) Boolean active) {
