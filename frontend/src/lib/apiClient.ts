@@ -155,6 +155,11 @@ export const api = {
     get(id: string) {
       return request<OrganizationDetail>(`/api/organizations/${id}`);
     },
+    deactivate(id: string) {
+      return request<OrganizationDetail>(`/api/organizations/${id}/deactivate`, {
+        method: 'POST',
+      });
+    },
     clients(id: string, params: { page?: number; size?: number } = {}) {
       const search = new URLSearchParams();
       search.set('page', String(params.page ?? 0));
@@ -181,6 +186,11 @@ export const api = {
     },
     get(id: string) {
       return request<ClientDetail>(`/api/clients/${id}`);
+    },
+    deactivate(id: string) {
+      return request<ClientDetail>(`/api/clients/${id}/deactivate`, {
+        method: 'POST',
+      });
     },
     cases(id: string, params: { page?: number; size?: number } = {}) {
       const search = new URLSearchParams();
@@ -228,7 +238,12 @@ export const api = {
     transitionStatus(id: string, statusCode: string, reason?: string) {
       return request<CaseDetail>(`/api/cases/${id}/status`, {
         method: 'POST',
-        body: JSON.stringify({ statusCode, reason }),
+        body: JSON.stringify({ targetStatusCode: statusCode, reason }),
+      });
+    },
+    archive(id: string) {
+      return request<CaseDetail>(`/api/cases/${id}/archive`, {
+        method: 'POST',
       });
     },
   },
@@ -274,6 +289,11 @@ export const api = {
       return request<CaseTask>(`/api/tasks/${id}`, {
         method: 'PUT',
         body: JSON.stringify(data),
+      });
+    },
+    delete(id: string) {
+      return request<void>(`/api/tasks/${id}`, {
+        method: 'DELETE',
       });
     },
     list(caseId: string) {

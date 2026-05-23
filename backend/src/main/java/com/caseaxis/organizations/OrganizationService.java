@@ -7,12 +7,14 @@ import com.caseaxis.clients.Client;
 import com.caseaxis.clients.ClientRepository;
 import com.caseaxis.clients.ClientSummaryResponse;
 import com.caseaxis.common.exception.ResourceNotFoundException;
+import com.caseaxis.users.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -24,6 +26,7 @@ public class OrganizationService {
     private final OrganizationRepository orgRepository;
     private final ClientRepository clientRepository;
     private final CaseRepository caseRepository;
+    private final UserRepository userRepository;
 
     public Page<OrganizationSummaryResponse> listOrganizations(Pageable pageable, String q, Boolean active) {
         String normalizedQ = normalizeText(q);
@@ -54,6 +57,26 @@ public class OrganizationService {
             caseRepository.countEscalatedByOrganizationId(id),
             caseRepository.countOverdueByOrganizationId(id, today)
         );
+    }
+
+    @Transactional
+    public OrganizationDetailResponse deactivateOrganization(UUID id, String currentUsername) {
+        Organization org = orgRepository.findByIdAndDeletedFalse(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Organization", id));
+
+        long activeClients = clientRepository.countActiveByOrganizationId(id);
+        long openCases = caseRepository.countOpenByOrganizationId(id);
+        if (activeClients > 0 || openCases > 0) {
+            throw new IllegalStateException(
+                "Organization cannot be deactivated while active clients or open cases are linked to it");
+        }
+
+        UUID currentUserId = resolveUserId(currentUsername);
+        Instant now = Instant.now();
+        org.setActive(false);
+        org.setUpdatedBy(currentUserId);
+        org.setUpdatedAt(now);
+        return getOrganizationById(orgRepository.save(org).getId());
     }
 
     public Page<ClientSummaryResponse> listOrganizationClients(UUID orgId, Pageable pageable) {
@@ -113,5 +136,11 @@ public class OrganizationService {
     private String normalizeText(String value) {
         if (value == null || value.isBlank()) return null;
         return value.trim();
+    }
+
+    private UUID resolveUserId(String username) {
+        return userRepository.findByUsernameAndDeletedFalse(username)
+            .orElseThrow(() -> new ResourceNotFoundException("User", username))
+            .getId();
     }
 }

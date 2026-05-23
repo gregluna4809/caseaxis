@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../lib/apiClient';
 import type { TaskDetail } from '../types/api';
 import { TaskStatusBadge } from '../components/StatusBadge';
+import { Modal } from '../components/Modal';
 import { TASK_STATUSES } from '../lib/lookups';
 import { formatDate, formatDateTime } from '../lib/utils';
 
@@ -17,6 +18,7 @@ export function TaskDetailPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const loadTask = useCallback(async () => {
     if (!id) return;
@@ -58,6 +60,19 @@ export function TaskDetailPage() {
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Failed to update task.');
     } finally {
+      setSaving(false);
+    }
+  }
+
+  async function deleteTask() {
+    if (!id) return;
+    setSaving(true);
+    setActionError(null);
+    try {
+      await api.tasks.delete(id);
+      navigate('/tasks');
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to delete task.');
       setSaving(false);
     }
   }
@@ -175,7 +190,29 @@ export function TaskDetailPage() {
         <button className="btn btn-secondary btn-sm" onClick={() => void loadTask()} disabled={saving}>
           Refresh
         </button>
+        <button className="btn btn-secondary btn-sm" onClick={() => setConfirmDelete(true)} disabled={saving}>
+          Delete Task
+        </button>
       </div>
+
+      {confirmDelete && (
+        <Modal
+          title="Delete Task"
+          onClose={() => setConfirmDelete(false)}
+          footer={(
+            <>
+              <button type="button" className="btn btn-secondary" onClick={() => setConfirmDelete(false)} disabled={saving}>Cancel</button>
+              <button type="button" className="btn btn-primary" onClick={() => void deleteTask()} disabled={saving}>
+                {saving ? 'Deleting...' : 'Delete Task'}
+              </button>
+            </>
+          )}
+        >
+          <div className="field-hint-warn">
+            This task will be removed from active task views. The linked case and historical task metadata remain preserved.
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

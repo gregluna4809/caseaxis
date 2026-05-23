@@ -41,9 +41,18 @@ public class Organization {
     @Column(name = "is_deleted", nullable = false)
     private boolean deleted;
 
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
+    @Column(name = "deleted_by")
+    private UUID deletedBy;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    @Column(name = "updated_by")
+    private UUID updatedBy;
 }

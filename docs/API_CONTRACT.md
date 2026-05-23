@@ -594,6 +594,20 @@ When transitioning to `REOPENED`: `reopenedCount` is incremented; `resolvedAt` a
 
 ---
 
+### POST /api/cases/{id}/archive
+
+Archives a case by closing it through a non-destructive workflow. This does **not** hard-delete the case. Notes, tasks, attachments, related client/organization links, and status history remain preserved.
+
+**Auth required:** Yes
+
+**Response — 200 OK:** updated `CaseDetailResponse` with `statusCode = CLOSED` and `closedAt` populated.
+
+**Error responses:**
+- `404` — case not found
+- `401` — unauthenticated
+
+---
+
 ## Case Notes
 
 Notes are **immutable evidence records**. The body, case association, and authorship cannot be changed after creation. The database enforces this via a trigger (`trg_case_notes_immutable`). The only permitted post-creation operation is soft deletion.
@@ -843,6 +857,26 @@ Updates a task from the workspace. The endpoint delegates to the case task updat
 **Error responses:**
 - `400` - validation failure or unknown status code
 - `404` - task not found or soft-deleted
+- `401` - unauthenticated
+
+---
+
+### DELETE /api/tasks/{id}
+
+Soft-deletes a task from the workspace. The task is removed from active task list/detail views while preserving historical task metadata and the linked case record.
+
+**Auth required:** Yes
+
+**Response - 200 OK:**
+```json
+{
+  "success": true,
+  "timestamp": "2026-05-23T02:39:00.000Z"
+}
+```
+
+**Error responses:**
+- `404` - task not found or already soft-deleted
 - `401` - unauthenticated
 
 ---
@@ -1266,6 +1300,18 @@ Get organization detail with full metrics.
 
 ---
 
+### POST /api/organizations/{id}/deactivate
+
+Deactivates an organization without deleting its history. The organization is removed from active lookup/list workflows. Deactivation is blocked while active clients or open cases are linked.
+
+**Response:** `200 OK` with updated `OrganizationDetailResponse`.
+
+**Errors:**
+- `404 Not Found` if organization does not exist or is soft-deleted
+- `409 Conflict` if active clients or open cases are linked
+
+---
+
 ### GET /api/organizations/{id}/clients
 
 List active clients for an organization (paginated).
@@ -1368,6 +1414,16 @@ Get client detail with full case statistics.
   }
 }
 ```
+
+**Error:** `404 Not Found` if client does not exist or is soft-deleted.
+
+---
+
+### POST /api/clients/{id}/deactivate
+
+Deactivates a client without deleting case history. The client is removed from active lookup/list workflows, while related cases remain linked for audit and historical review.
+
+**Response:** `200 OK` with updated `ClientDetailResponse`.
 
 **Error:** `404 Not Found` if client does not exist or is soft-deleted.
 

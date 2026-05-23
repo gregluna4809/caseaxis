@@ -18,8 +18,8 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.matchesPattern;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -224,6 +224,26 @@ class ClientControllerTest {
             .andExpect(jsonPath("$.data.openCases").isNumber())
             .andExpect(jsonPath("$.data.escalatedCases").isNumber())
             .andExpect(jsonPath("$.data.overdueCases").isNumber());
+    }
+
+    @Test
+    void deactivateClient_marksClientInactiveAndPreservesDetail() throws Exception {
+        UUID clientId = UuidGenerator.generate();
+        jdbcTemplate.update(
+            "INSERT INTO clients (id, first_name, last_name, created_by) VALUES (?, ?, ?, ?)",
+            clientId, "Deactivate", "Client", adminId
+        );
+
+        mockMvc.perform(post("/api/clients/" + clientId + "/deactivate")
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.active").value(false))
+            .andExpect(jsonPath("$.data.displayName").value("Client, Deactivate"));
+
+        mockMvc.perform(get("/api/clients?active=true&q=Client")
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.content[?(@.id=='" + clientId + "')]").isEmpty());
     }
 
     @Test

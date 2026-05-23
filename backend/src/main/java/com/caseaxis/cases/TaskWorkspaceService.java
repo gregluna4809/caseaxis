@@ -82,6 +82,13 @@ public class TaskWorkspaceService {
         return caseTaskService.updateTask(task.getCaseId(), taskId, req, username);
     }
 
+    @Transactional
+    public void deleteTask(UUID taskId, String username) {
+        CaseTask task = taskRepository.findByIdAndDeletedFalse(taskId)
+            .orElseThrow(() -> new ResourceNotFoundException("CaseTask", taskId));
+        caseTaskService.deleteTask(task.getCaseId(), taskId, username);
+    }
+
     private TaskSummaryResponse toSummaryResponse(CaseTask task, Case c) {
         return new TaskSummaryResponse(
             task.getId(),

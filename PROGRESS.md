@@ -76,6 +76,33 @@ Each major entry should include:
 ---
 
 ## 2026-05-23
+### Record Deactivation And Archive Workflows
+
+#### Milestone
+Added enterprise record lifecycle actions for clients, organizations, tasks, and cases.
+
+---
+
+#### Summary
+
+Implemented non-destructive record lifecycle operations:
+
+- client deactivation
+- organization deactivation with dependency protection
+- task workspace soft delete
+- case archive workflow that closes rather than hard-deletes
+
+Frontend detail pages now expose confirmation-gated contextual actions for these workflows.
+
+---
+
+#### Validation
+
+Backend tests and frontend production build were run for this change.
+
+---
+
+## 2026-05-23
 ### Phase 11 Reports / Analytics Module
 
 #### Milestone

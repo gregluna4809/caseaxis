@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -227,6 +228,21 @@ class TaskControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deleteTask_softDeletesFromWorkspace() throws Exception {
+        String caseId = createTestCase("Workspace Delete Case");
+        String taskId = createTask(caseId, "Zxqtaskdelete Delete Task");
+
+        mockMvc.perform(delete("/api/tasks/" + taskId)
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/tasks?q=Zxqtaskdelete")
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.totalElements").value(0));
     }
 
     // --- Helpers ---

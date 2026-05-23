@@ -8,7 +8,7 @@ import { ALLOWED_TRANSITIONS, STATUS_LABEL, TASK_STATUSES } from '../lib/lookups
 import { displayActor, formatBytes, formatDate, formatDateTime } from '../lib/utils';
 
 type TabId = 'overview' | 'notes' | 'tasks' | 'attachments';
-type ModalId = 'note' | 'task' | 'status' | null;
+type ModalId = 'note' | 'task' | 'status' | 'archive' | null;
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'overview', label: 'Details' },
@@ -33,6 +33,8 @@ export function CaseDetailPage() {
   const [loadingTasks, setLoadingTasks] = useState(true);
   const [loadingAttachments, setLoadingAttachments] = useState(true);
   const [caseError, setCaseError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [submittingAction, setSubmittingAction] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -44,6 +46,7 @@ export function CaseDetailPage() {
       setLoadingTasks(true);
       setLoadingAttachments(true);
       setCaseError(null);
+      setActionError(null);
 
       try {
         const detail = await api.cases.get(id!);
@@ -126,7 +129,16 @@ export function CaseDetailPage() {
         <button className="btn btn-secondary" onClick={() => setActiveModal('note')}>Add Note</button>
         <button className="btn btn-secondary" onClick={() => setActiveModal('task')}>Add Task</button>
         <button className="btn btn-primary" onClick={() => setActiveModal('status')}>Transition Status</button>
+        <button
+          className="btn btn-secondary"
+          onClick={() => setActiveModal('archive')}
+          disabled={caseDetail.statusCode === 'CLOSED'}
+        >
+          Archive Case
+        </button>
       </div>
+
+      {actionError && <div className="form-error">{actionError}</div>}
 
       <section className="card detail-card">
         <div className="tabs" role="tablist" aria-label="Case sections">
@@ -168,6 +180,40 @@ export function CaseDetailPage() {
           onClose={() => setActiveModal(null)}
           onDone={() => handleActionDone()}
         />
+      )}
+      {activeModal === 'archive' && (
+        <Modal
+          title="Archive Case"
+          onClose={() => setActiveModal(null)}
+          footer={(
+            <>
+              <button type="button" className="btn btn-secondary" onClick={() => setActiveModal(null)} disabled={submittingAction}>Cancel</button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={submittingAction}
+                onClick={async () => {
+                  setSubmittingAction(true);
+                  setActionError(null);
+                  try {
+                    await api.cases.archive(caseDetail.id);
+                    handleActionDone();
+                  } catch (err) {
+                    setActionError(err instanceof Error ? err.message : 'Failed to archive case.');
+                  } finally {
+                    setSubmittingAction(false);
+                  }
+                }}
+              >
+                {submittingAction ? 'Archiving...' : 'Archive Case'}
+              </button>
+            </>
+          )}
+        >
+          <div className="field-hint-warn">
+            This will close the case through the archive workflow. The case record, notes, tasks, attachments, and status history remain preserved.
+          </div>
+        </Modal>
       )}
     </div>
   );

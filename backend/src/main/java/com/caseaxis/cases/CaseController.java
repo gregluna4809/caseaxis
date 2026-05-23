@@ -74,4 +74,12 @@ public class CaseController {
         return ResponseEntity.ok(ApiResponse.success(
             caseService.transitionStatus(id, req, principal.getUsername())));
     }
+
+    @PostMapping("/{id}/archive")
+    public ResponseEntity<ApiResponse<CaseDetailResponse>> archiveCase(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserDetails principal) {
+        return ResponseEntity.ok(ApiResponse.success(
+            caseService.archiveCase(id, principal.getUsername())));
+    }
 }

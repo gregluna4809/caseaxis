@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api } from '../lib/apiClient';
 import type { OrganizationDetail, ClientSummary, CaseSummary, Page } from '../types/api';
 import { StatusBadge, PriorityBadge } from '../components/StatusBadge';
+import { Modal } from '../components/Modal';
 import { formatDate, formatDateTime, formatPhoneNumber } from '../lib/utils';
 
 type TabId = 'overview' | 'clients' | 'cases';
@@ -15,6 +16,9 @@ export function OrgDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [confirmDeactivate, setConfirmDeactivate] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [submittingAction, setSubmittingAction] = useState(false);
 
   const [clientsPage, setClientsPage] = useState(0);
   const [clientsResult, setClientsResult] = useState<Page<ClientSummary> | null>(null);
@@ -93,6 +97,18 @@ export function OrgDetailPage() {
         </div>
       </section>
 
+      <div className="action-bar quick-actions">
+        <button
+          className="btn btn-secondary"
+          onClick={() => setConfirmDeactivate(true)}
+          disabled={!org.active}
+        >
+          Deactivate Organization
+        </button>
+      </div>
+
+      {actionError && <div className="form-error">{actionError}</div>}
+
       <section className="card detail-card">
         <div className="tabs" role="tablist" aria-label="Organization sections">
           <button
@@ -145,6 +161,30 @@ export function OrgDetailPage() {
           )}
         </div>
       </section>
+
+      {confirmDeactivate && (
+        <ConfirmActionModal
+          title="Deactivate Organization"
+          message="This organization will be removed from active organization lists and lookup workflows. Deactivation is blocked while active clients or open cases remain linked."
+          confirmLabel="Deactivate Organization"
+          submitting={submittingAction}
+          onClose={() => setConfirmDeactivate(false)}
+          onConfirm={async () => {
+            if (!id) return;
+            setSubmittingAction(true);
+            setActionError(null);
+            try {
+              const updated = await api.organizations.deactivate(id);
+              setOrg(updated);
+              setConfirmDeactivate(false);
+            } catch (err) {
+              setActionError(err instanceof Error ? err.message : 'Failed to deactivate organization.');
+            } finally {
+              setSubmittingAction(false);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -183,6 +223,39 @@ function DetailField({ label, value }: { label: string; value: ReactNode }) {
       <span className="detail-label">{label}</span>
       <span className="detail-value">{value}</span>
     </div>
+  );
+}
+
+function ConfirmActionModal({
+  title,
+  message,
+  confirmLabel,
+  submitting,
+  onClose,
+  onConfirm,
+}: {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  submitting: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <Modal
+      title={title}
+      onClose={onClose}
+      footer={(
+        <>
+          <button type="button" className="btn btn-secondary" onClick={onClose} disabled={submitting}>Cancel</button>
+          <button type="button" className="btn btn-primary" onClick={onConfirm} disabled={submitting}>
+            {submitting ? 'Saving...' : confirmLabel}
+          </button>
+        </>
+      )}
+    >
+      <div className="field-hint-warn">{message}</div>
+    </Modal>
   );
 }
 

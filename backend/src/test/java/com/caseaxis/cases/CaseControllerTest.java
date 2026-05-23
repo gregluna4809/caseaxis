@@ -236,6 +236,23 @@ class CaseControllerTest {
             .andExpect(jsonPath("$.data.reopenedCount").value(1));
     }
 
+    @Test
+    void archiveCase_closesCaseWithoutHardDelete() throws Exception {
+        String caseId = createTestCase("Archive Workflow Test", "MEDIUM", "GENERAL");
+
+        mockMvc.perform(post("/api/cases/" + caseId + "/archive")
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.id").value(caseId))
+            .andExpect(jsonPath("$.data.statusCode").value("CLOSED"))
+            .andExpect(jsonPath("$.data.closedAt").isNotEmpty());
+
+        mockMvc.perform(get("/api/cases/" + caseId)
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.id").value(caseId));
+    }
+
     // --- Test helpers ---
 
     private String createTestCase(String title, String priorityCode, String typeCode) throws Exception {

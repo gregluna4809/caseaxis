@@ -199,6 +199,38 @@ class OrganizationControllerTest {
     }
 
     @Test
+    void deactivateOrganization_withoutActiveDependencies_marksInactive() throws Exception {
+        UUID orgId = UuidGenerator.generate();
+        jdbcTemplate.update(
+            "INSERT INTO organizations (id, name, created_by) VALUES (?, ?, ?)",
+            orgId, "Deactivate Org", adminId
+        );
+
+        mockMvc.perform(post("/api/organizations/" + orgId + "/deactivate")
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.active").value(false))
+            .andExpect(jsonPath("$.data.name").value("Deactivate Org"));
+    }
+
+    @Test
+    void deactivateOrganization_withActiveClient_returns409() throws Exception {
+        UUID orgId = UuidGenerator.generate();
+        jdbcTemplate.update(
+            "INSERT INTO organizations (id, name, created_by) VALUES (?, ?, ?)",
+            orgId, "Protected Org", adminId
+        );
+        jdbcTemplate.update(
+            "INSERT INTO clients (id, organization_id, first_name, last_name, created_by) VALUES (?, ?, ?, ?, ?)",
+            UuidGenerator.generate(), orgId, "Active", "Dependency", adminId
+        );
+
+        mockMvc.perform(post("/api/organizations/" + orgId + "/deactivate")
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isConflict());
+    }
+
+    @Test
     void listOrganizationClients_unauthenticated_returns401() throws Exception {
         mockMvc.perform(get("/api/organizations/" + UUID.randomUUID() + "/clients"))
             .andExpect(status().isUnauthorized());

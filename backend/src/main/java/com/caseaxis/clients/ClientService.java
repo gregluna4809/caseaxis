@@ -6,12 +6,14 @@ import com.caseaxis.cases.CaseSummaryResponse;
 import com.caseaxis.common.exception.ResourceNotFoundException;
 import com.caseaxis.organizations.Organization;
 import com.caseaxis.organizations.OrganizationRepository;
+import com.caseaxis.users.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +29,7 @@ public class ClientService {
     private final ClientRepository clientRepository;
     private final OrganizationRepository orgRepository;
     private final CaseRepository caseRepository;
+    private final UserRepository userRepository;
 
     public Page<ClientSummaryResponse> listClients(Pageable pageable, String q, UUID organizationId, Boolean active) {
         String normalizedQ = normalizeText(q);
@@ -81,6 +84,19 @@ public class ClientService {
         );
     }
 
+    @Transactional
+    public ClientDetailResponse deactivateClient(UUID id, String currentUsername) {
+        Client client = clientRepository.findByIdAndDeletedFalse(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Client", id));
+
+        UUID currentUserId = resolveUserId(currentUsername);
+        Instant now = Instant.now();
+        client.setActive(false);
+        client.setUpdatedBy(currentUserId);
+        client.setUpdatedAt(now);
+        return getClientById(clientRepository.save(client).getId());
+    }
+
     public Page<CaseSummaryResponse> listClientCases(UUID clientId, Pageable pageable) {
         clientRepository.findByIdAndDeletedFalse(clientId)
             .orElseThrow(() -> new ResourceNotFoundException("Client", clientId));
@@ -117,5 +133,11 @@ public class ClientService {
     private String normalizeText(String value) {
         if (value == null || value.isBlank()) return null;
         return value.trim();
+    }
+
+    private UUID resolveUserId(String username) {
+        return userRepository.findByUsernameAndDeletedFalse(username)
+            .orElseThrow(() -> new ResourceNotFoundException("User", username))
+            .getId();
     }
 }

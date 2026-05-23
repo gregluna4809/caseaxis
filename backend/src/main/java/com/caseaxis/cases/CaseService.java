@@ -234,6 +234,42 @@ public class CaseService {
         return toDetailResponse(saved);
     }
 
+    @Transactional
+    public CaseDetailResponse archiveCase(UUID caseId, String currentUsername) {
+        UUID currentUserId = resolveUserId(currentUsername);
+
+        Case c = caseRepository.findByIdAndDeletedFalse(caseId)
+            .orElseThrow(() -> new ResourceNotFoundException("Case", caseId));
+
+        if ("CLOSED".equals(c.getStatus().getCode())) {
+            return toDetailResponse(c);
+        }
+
+        CaseStatus closedStatus = statusRepository.findByCodeAndActiveTrue("CLOSED")
+            .orElseThrow(() -> new IllegalStateException("CLOSED status is not configured"));
+
+        UUID previousStatusId = c.getStatus().getId();
+        Instant now = Instant.now();
+        c.setStatus(closedStatus);
+        c.setClosedAt(now);
+        c.setUpdatedBy(currentUserId);
+        c.setUpdatedAt(now);
+        Case saved = caseRepository.save(c);
+
+        CaseStatusHistory history = new CaseStatusHistory();
+        history.setId(UuidGenerator.generate());
+        history.setCaseId(caseId);
+        history.setFromStatusId(previousStatusId);
+        history.setToStatusId(closedStatus.getId());
+        history.setChangedBy(currentUserId);
+        history.setChangedAt(now);
+        history.setReason("Case archived from detail workspace");
+        statusHistoryRepository.save(history);
+
+        log.debug("Archived case {} as CLOSED", caseId);
+        return toDetailResponse(saved);
+    }
+
     // --- Private helpers ---
 
     private UUID resolveUserId(String username) {
