@@ -70,6 +70,27 @@ class CaseControllerTest {
     }
 
     @Test
+    void listCases_withQueryAndFilters_returnsMatchingPage() throws Exception {
+        String uniqueTitle = "Searchable Filter Case " + UUID.randomUUID();
+        createTestCase(uniqueTitle, "HIGH", "COMPLAINT");
+
+        mockMvc.perform(get("/api/cases")
+                .param("page", "0")
+                .param("size", "50")
+                .param("q", uniqueTitle)
+                .param("status", "NEW")
+                .param("priority", "HIGH")
+                .param("type", "COMPLAINT")
+                .header("Authorization", "Bearer " + token))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.content[0].title").value(uniqueTitle))
+            .andExpect(jsonPath("$.data.content[0].statusCode").value("NEW"))
+            .andExpect(jsonPath("$.data.content[0].priorityCode").value("HIGH"))
+            .andExpect(jsonPath("$.data.content[0].typeCode").value("COMPLAINT"));
+    }
+
+    @Test
     void listCases_unauthenticated_returns401() throws Exception {
         mockMvc.perform(get("/api/cases"))
             .andExpect(status().isUnauthorized());

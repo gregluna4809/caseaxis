@@ -114,6 +114,36 @@ public class CaseService {
         return caseRepository.findAllActive(pageable).map(this::toSummaryResponse);
     }
 
+    @Transactional(readOnly = true)
+    public Page<CaseSummaryResponse> listCases(
+            Pageable pageable,
+            String q,
+            String status,
+            String priority,
+            String type) {
+        String normalizedQuery = normalizeText(q);
+        String normalizedStatus = normalizeCode(status);
+        String normalizedPriority = normalizeCode(priority);
+        String normalizedType = normalizeCode(type);
+
+        if (normalizedQuery == null) {
+            return caseRepository.filterActive(
+                normalizedStatus,
+                normalizedPriority,
+                normalizedType,
+                pageable
+            ).map(this::toSummaryResponse);
+        }
+
+        return caseRepository.searchActive(
+            normalizedQuery,
+            normalizedStatus,
+            normalizedPriority,
+            normalizedType,
+            pageable
+        ).map(this::toSummaryResponse);
+    }
+
     @Transactional
     public CaseDetailResponse assignCase(UUID caseId, AssignCaseRequest req, String currentUsername) {
         UUID currentUserId = resolveUserId(currentUsername);
@@ -210,6 +240,20 @@ public class CaseService {
         return userRepository.findByUsernameAndDeletedFalse(username)
             .orElseThrow(() -> new ResourceNotFoundException("User", username))
             .getId();
+    }
+
+    private String normalizeText(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
+    }
+
+    private String normalizeCode(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim().toUpperCase();
     }
 
     private CaseSummaryResponse toSummaryResponse(Case c) {

@@ -12,13 +12,14 @@
 2. [Error Format](#error-format)
 3. [Authentication](#authentication)
 4. [Health](#health)
-5. [Cases](#cases)
-6. [Case Assignments](#case-assignments)
-7. [Case Status Transitions](#case-status-transitions)
-8. [Case Notes](#case-notes)
-9. [Case Tasks](#case-tasks)
-10. [Case Attachments](#case-attachments)
-11. [Reference Data](#reference-data)
+5. [Dashboard](#dashboard)
+6. [Cases](#cases)
+7. [Case Assignments](#case-assignments)
+8. [Case Status Transitions](#case-status-transitions)
+9. [Case Notes](#case-notes)
+10. [Case Tasks](#case-tasks)
+11. [Case Attachments](#case-attachments)
+12. [Reference Data](#reference-data)
 
 ---
 
@@ -148,6 +149,43 @@ Returns the service status. Used for readiness checks.
 
 ---
 
+## Dashboard
+
+### GET /api/dashboard/metrics
+
+Returns live operational dashboard counts for the authenticated user.
+
+**Auth required:** Yes
+
+**Response — 200 OK:**
+```json
+{
+  "success": true,
+  "data": {
+    "totalCases": 75000,
+    "openCases": 48120,
+    "assignedToMe": 37,
+    "overdueCases": 912,
+    "escalatedCases": 144,
+    "closedToday": 26
+  },
+  "timestamp": "2026-05-23T02:37:20.622Z"
+}
+```
+
+**Metric definitions:**
+
+| Field | Definition |
+|---|---|
+| `totalCases` | non-deleted cases |
+| `openCases` | non-deleted cases whose status is not terminal |
+| `assignedToMe` | non-deleted cases where `assigned_to_id` is the authenticated user |
+| `overdueCases` | non-terminal cases with `due_date` before the current UTC date |
+| `escalatedCases` | non-deleted cases with status code `ESCALATED` |
+| `closedToday` | non-deleted cases with `closed_at` during the current UTC date |
+
+---
+
 ## Cases
 
 ### POST /api/cases
@@ -238,6 +276,10 @@ Lists all non-deleted cases. Paginated and sorted.
 | `page` | integer | `0` | zero-based page index |
 | `size` | integer | `20` | items per page |
 | `sort` | string | `createdAt,desc` | field name + direction |
+| `q` | string | omitted | optional case number/title/type display search |
+| `status` | string | omitted | optional status code filter |
+| `priority` | string | omitted | optional priority code filter |
+| `type` | string | omitted | optional case type code filter |
 
 **Response — 200 OK:**
 
@@ -913,7 +955,7 @@ Returns active, non-deleted organizations for lookup controls, ordered by name.
 
 **Auth required:** Yes
 
-**Response â€” 200 OK:**
+**Response - 200 OK:**
 ```json
 {
   "success": true,
@@ -938,7 +980,7 @@ Returns active, non-deleted clients for lookup controls, ordered by last name th
 
 **Auth required:** Yes
 
-**Response â€” 200 OK:**
+**Response - 200 OK:**
 ```json
 {
   "success": true,

@@ -24,7 +24,17 @@ export interface LoginResponse {
   token: string;
 }
 
-// GET /api/cases — content items
+// GET /api/dashboard/metrics
+export interface DashboardMetrics {
+  totalCases: number;
+  openCases: number;
+  assignedToMe: number;
+  overdueCases: number;
+  escalatedCases: number;
+  closedToday: number;
+}
+
+// GET /api/cases - content items
 export interface CaseSummary {
   id: string;
   caseNumber: string;

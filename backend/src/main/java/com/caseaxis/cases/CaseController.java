@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
@@ -40,8 +41,13 @@ public class CaseController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<CaseSummaryResponse>>> listCases(
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority,
+            @RequestParam(required = false) String type,
             @AuthenticationPrincipal UserDetails principal) {
-        return ResponseEntity.ok(ApiResponse.success(caseService.listCases(pageable)));
+        return ResponseEntity.ok(ApiResponse.success(
+            caseService.listCases(pageable, q, status, priority, type)));
     }
 
     @GetMapping("/{id}")

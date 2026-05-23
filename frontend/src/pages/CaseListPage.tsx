@@ -1,21 +1,26 @@
-import { useMemo, useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/apiClient';
 import type { CaseSummary, Page } from '../types/api';
 import { StatusBadge, PriorityBadge } from '../components/StatusBadge';
 import { displayActor, formatDate } from '../lib/utils';
+import { CASE_TYPES, PRIORITIES } from '../lib/lookups';
 
 const STATUS_FILTERS = ['ALL', 'NEW', 'ASSIGNED', 'IN_REVIEW', 'PENDING_INFO', 'ESCALATED', 'APPROVED', 'DENIED', 'CLOSED', 'REOPENED'];
+const PAGE_SIZE = 50;
 
 export function CaseListPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [page, setPage] = useState(0);
   const [result, setResult] = useState<Page<CaseSummary> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [query, setQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [query, setQuery] = useState(searchParams.get('q') ?? '');
+  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') ?? 'ALL');
+  const [priorityFilter, setPriorityFilter] = useState(searchParams.get('priority') ?? 'ALL');
+  const [typeFilter, setTypeFilter] = useState(searchParams.get('type') ?? 'ALL');
 
   useEffect(() => {
     let cancelled = false;
@@ -24,7 +29,14 @@ export function CaseListPage() {
       setLoading(true);
       setError(null);
       try {
-        const data = await api.cases.list(page, 20);
+        const data = await api.cases.list({
+          page,
+          size: PAGE_SIZE,
+          q: query,
+          status: statusFilter === 'ALL' ? undefined : statusFilter,
+          priority: priorityFilter === 'ALL' ? undefined : priorityFilter,
+          type: typeFilter === 'ALL' ? undefined : typeFilter,
+        });
         if (!cancelled) setResult(data);
       } catch (err) {
         if (!cancelled) {
@@ -37,22 +49,16 @@ export function CaseListPage() {
 
     void load();
     return () => { cancelled = true; };
-  }, [page]);
+  }, [page, priorityFilter, query, statusFilter, typeFilter]);
+
+  function resetPageAnd(run: () => void) {
+    setPage(0);
+    run();
+  }
 
   const totalPages = result?.totalPages ?? 0;
   const totalElements = result?.totalElements ?? 0;
-
-  const filteredCases = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-    return (result?.content ?? []).filter((c) => {
-      const matchesStatus = statusFilter === 'ALL' || c.statusCode === statusFilter;
-      const matchesQuery = !normalizedQuery
-        || c.caseNumber.toLowerCase().includes(normalizedQuery)
-        || c.title.toLowerCase().includes(normalizedQuery)
-        || c.typeDisplayName.toLowerCase().includes(normalizedQuery);
-      return matchesStatus && matchesQuery;
-    });
-  }, [query, result?.content, statusFilter]);
+  const cases = result?.content ?? [];
 
   return (
     <div className="page-stack">
@@ -63,7 +69,7 @@ export function CaseListPage() {
             <p className="page-kicker">Cases</p>
             <h1 className="page-title">All Cases</h1>
             <p className="page-subtitle">
-              {loading ? 'Loading...' : `${totalElements.toLocaleString()} records in this object list`}
+              {loading ? 'Loading...' : `${totalElements.toLocaleString()} records matching current filters`}
             </p>
           </div>
         </div>
@@ -73,29 +79,51 @@ export function CaseListPage() {
       <div className="list-view-card">
         <div className="list-view-toolbar">
           <div>
-            <span className="list-view-title">All Open and Closed Cases</span>
-            <span className="list-view-subtitle">Sorted by server pagination</span>
+            <span className="list-view-title">Case List View</span>
+            <span className="list-view-subtitle">Server-side search, filters, and pagination</span>
           </div>
           <div className="toolbar-controls">
             <div className="search-control">
               <span className="search-icon">Search</span>
               <input
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search this list"
+                onChange={(e) => resetPageAnd(() => setQuery(e.target.value))}
+                placeholder="Case #, title, or type"
                 aria-label="Search cases"
               />
             </div>
             <select
               className="form-select compact-select"
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => resetPageAnd(() => setStatusFilter(e.target.value))}
               aria-label="Filter by status"
             >
               {STATUS_FILTERS.map((status) => (
                 <option key={status} value={status}>
                   {status === 'ALL' ? 'All statuses' : status.replace(/_/g, ' ')}
                 </option>
+              ))}
+            </select>
+            <select
+              className="form-select compact-select"
+              value={priorityFilter}
+              onChange={(e) => resetPageAnd(() => setPriorityFilter(e.target.value))}
+              aria-label="Filter by priority"
+            >
+              <option value="ALL">All priorities</option>
+              {PRIORITIES.map((priority) => (
+                <option key={priority.code} value={priority.code}>{priority.label}</option>
+              ))}
+            </select>
+            <select
+              className="form-select compact-select"
+              value={typeFilter}
+              onChange={(e) => resetPageAnd(() => setTypeFilter(e.target.value))}
+              aria-label="Filter by type"
+            >
+              <option value="ALL">All types</option>
+              {CASE_TYPES.map((type) => (
+                <option key={type.code} value={type.code}>{type.label}</option>
               ))}
             </select>
           </div>
@@ -121,17 +149,18 @@ export function CaseListPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredCases.length === 0 && (
+                  {cases.length === 0 && (
                     <tr>
                       <td colSpan={7} className="empty-state">
                         No cases match the current filters.
                       </td>
                     </tr>
                   )}
-                  {filteredCases.map((c) => (
+                  {cases.map((c) => (
                     <tr
                       key={c.id}
                       className="clickable"
+                      title="Open case record"
                       onClick={() => navigate(`/cases/${c.id}`)}
                     >
                       <td>
@@ -140,12 +169,8 @@ export function CaseListPage() {
                           <span className="case-cell-title">{c.title}</span>
                         </div>
                       </td>
-                      <td>
-                        <StatusBadge code={c.statusCode} label={c.statusDisplayName} />
-                      </td>
-                      <td>
-                        <PriorityBadge code={c.priorityCode} label={c.priorityDisplayName} />
-                      </td>
+                      <td><StatusBadge code={c.statusCode} label={c.statusDisplayName} /></td>
+                      <td><PriorityBadge code={c.priorityCode} label={c.priorityDisplayName} /></td>
                       <td className="td-muted">{c.typeDisplayName}</td>
                       <td className="td-muted">{displayActor(c.assignedToId)}</td>
                       <td className="td-muted">{formatDate(c.dueDate)}</td>
@@ -156,29 +181,41 @@ export function CaseListPage() {
               </table>
             </div>
 
-            {totalPages > 1 && (
-              <div className="pagination">
-                <span>
-                  Page {page + 1} of {totalPages} - {totalElements.toLocaleString()} cases
-                </span>
-                <div className="pagination-controls">
-                  <button
-                    className="btn btn-secondary btn-sm"
-                    onClick={() => setPage((p) => Math.max(0, p - 1))}
-                    disabled={result.first}
-                  >
-                    Prev
-                  </button>
-                  <button
-                    className="btn btn-secondary btn-sm"
-                    onClick={() => setPage((p) => p + 1)}
-                    disabled={result.last}
-                  >
-                    Next
-                  </button>
-                </div>
+            <div className="pagination">
+              <span>
+                Page {page + 1} of {Math.max(totalPages, 1)} - {totalElements.toLocaleString()} records
+              </span>
+              <div className="pagination-controls">
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => setPage(0)}
+                  disabled={result.first}
+                >
+                  First
+                </button>
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  disabled={result.first}
+                >
+                  Prev
+                </button>
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => setPage((p) => p + 1)}
+                  disabled={result.last}
+                >
+                  Next
+                </button>
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => setPage(Math.max(0, totalPages - 1))}
+                  disabled={result.last}
+                >
+                  Last
+                </button>
               </div>
-            )}
+            </div>
           </>
         )}
       </div>

@@ -22,7 +22,7 @@
   --color-danger: #ba0517;
   --color-danger-light: #fff1f2;
   --radius: 4px;
-  --shadow-sm: 0 1px 2px rgba(24, 24, 24, 0.08);
+  --shadow-sm: 0 1px 1px rgba(24, 24, 24, 0.07);
   --shadow-md: 0 8px 24px rgba(24, 24, 24, 0.14);
   font-family: "Segoe UI", Arial, Helvetica, sans-serif;
   font-size: 14px;
@@ -251,13 +251,13 @@ button, input, textarea, select {
 .page-content {
   width: 100%;
   max-width: 1480px;
-  padding: 14px 18px 32px;
+  padding: 10px 12px 24px;
 }
 
 .page-stack {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .page-header-row,
@@ -266,7 +266,7 @@ button, input, textarea, select {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 14px;
+  gap: 10px;
 }
 
 .page-kicker {
@@ -279,7 +279,7 @@ button, input, textarea, select {
 
 .page-title {
   color: var(--color-text);
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1.18;
   font-weight: 760;
 }
@@ -303,7 +303,7 @@ button, input, textarea, select {
 
 .home-hero,
 .object-header {
-  padding: 14px 16px;
+  padding: 9px 12px;
 }
 
 .home-actions,
@@ -311,10 +311,15 @@ button, input, textarea, select {
   gap: 10px;
 }
 
-.dashboard-grid {
+.dashboard-grid,
+.metrics-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  gap: 8px;
+}
+
+.metrics-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
 .stat-card,
@@ -327,8 +332,40 @@ button, input, textarea, select {
 }
 
 .stat-card {
-  padding: 12px 14px;
+  padding: 9px 11px;
 }
+
+.metric-card {
+  min-height: 70px;
+  padding: 8px 10px;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.metric-card span {
+  display: block;
+  color: var(--color-text-muted);
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.metric-card strong {
+  display: block;
+  margin-top: 7px;
+  color: var(--color-text);
+  font-size: 24px;
+  line-height: 1;
+  font-weight: 820;
+}
+
+.metric-card-active { border-left-color: var(--color-primary); }
+.metric-card-warning { border-left-color: var(--color-warning); }
+.metric-card-danger { border-left-color: var(--color-danger); }
+.metric-card-success { border-left-color: var(--color-success); }
 
 .stat-card-topline {
   display: flex;
@@ -360,12 +397,16 @@ button, input, textarea, select {
 .crm-home-grid {
   display: grid;
   grid-template-columns: 1.1fr 1fr 1fr;
-  gap: 12px;
+  gap: 8px;
+}
+
+.dense-home-grid {
+  grid-template-columns: 1.2fr 0.95fr 0.85fr;
 }
 
 .card-header {
-  min-height: 48px;
-  padding: 10px 12px;
+  min-height: 40px;
+  padding: 7px 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -382,7 +423,7 @@ button, input, textarea, select {
 }
 
 .card-body {
-  padding: 14px;
+  padding: 10px;
 }
 
 .work-list,
@@ -392,12 +433,12 @@ button, input, textarea, select {
 
 .work-list-row,
 .health-list div {
-  min-height: 54px;
+  min-height: 42px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 7px 10px;
   border-bottom: 1px solid var(--color-border);
   color: inherit;
   text-decoration: none;
@@ -430,11 +471,11 @@ button, input, textarea, select {
 }
 
 .empty-panel {
-  min-height: 130px;
+  min-height: 82px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 18px;
+  padding: 12px;
   color: var(--color-text-muted);
   font-size: 13px;
   text-align: center;
@@ -445,12 +486,12 @@ button, input, textarea, select {
 }
 
 .list-view-toolbar {
-  min-height: 54px;
+  min-height: 42px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 7px 9px;
   border-bottom: 1px solid var(--color-border);
   background: var(--color-surface-subtle);
 }
@@ -462,8 +503,8 @@ button, input, textarea, select {
 }
 
 .search-control {
-  width: 260px;
-  height: 32px;
+  width: 220px;
+  height: 30px;
   display: flex;
   align-items: center;
   gap: 7px;
@@ -490,8 +531,8 @@ button, input, textarea, select {
 }
 
 .compact-select {
-  width: 170px;
-  height: 32px;
+  width: 138px;
+  height: 30px;
 }
 
 .table-wrapper {
@@ -505,7 +546,7 @@ table {
 }
 
 thead th {
-  padding: 7px 10px;
+  padding: 6px 8px;
   text-align: left;
   color: #3e4a59;
   background: #f3f5f8;
@@ -517,7 +558,7 @@ thead th {
 }
 
 tbody td {
-  padding: 8px 10px;
+  padding: 6px 8px;
   color: var(--color-text);
   border-bottom: 1px solid var(--color-border);
   vertical-align: middle;
@@ -534,6 +575,7 @@ tbody tr.clickable {
 tbody tr:hover,
 tbody tr.clickable:hover {
   background: #f8fbff;
+  box-shadow: inset 3px 0 0 var(--color-primary);
 }
 
 .case-cell {
@@ -567,12 +609,12 @@ tbody tr.clickable:hover {
 }
 
 .pagination {
-  min-height: 40px;
+  min-height: 34px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 8px 10px;
+  padding: 6px 8px;
   background: var(--color-surface-subtle);
   border-top: 1px solid var(--color-border);
   color: var(--color-text-muted);
@@ -624,9 +666,9 @@ tbody tr.clickable:hover {
 .case-hero {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) minmax(340px, auto);
-  gap: 12px;
+  gap: 9px;
   align-items: start;
-  padding: 12px;
+  padding: 8px 10px;
 }
 
 .record-icon {
@@ -634,9 +676,9 @@ tbody tr.clickable:hover {
 }
 
 .case-title-large {
-  margin: 2px 0 8px;
+  margin: 1px 0 6px;
   color: var(--color-text);
-  font-size: 21px;
+  font-size: 19px;
   line-height: 1.22;
   font-weight: 760;
 }
@@ -651,7 +693,7 @@ tbody tr.clickable:hover {
 
 .metric {
   min-width: 110px;
-  padding: 8px 10px;
+  padding: 6px 8px;
   background: var(--color-surface-subtle);
   border-right: 1px solid var(--color-border);
 }
@@ -688,18 +730,18 @@ tbody tr.clickable:hover {
   display: flex;
   align-items: flex-end;
   gap: 2px;
-  padding: 0 10px;
+  padding: 0 8px;
   background: #fff;
   border-bottom: 1px solid var(--color-border);
   overflow-x: auto;
 }
 
 .tab-btn {
-  min-height: 38px;
+  min-height: 32px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border: none;
   border-bottom: 3px solid transparent;
   background: transparent;
@@ -733,13 +775,13 @@ tbody tr.clickable:hover {
 }
 
 .tab-content {
-  padding: 12px;
+  padding: 8px;
 }
 
 .overview-layout {
   display: grid;
   grid-template-columns: minmax(280px, 0.85fr) minmax(460px, 1.15fr);
-  gap: 12px;
+  gap: 8px;
 }
 
 .section-heading {
@@ -750,8 +792,8 @@ tbody tr.clickable:hover {
 }
 
 .description-panel {
-  min-height: 150px;
-  padding: 12px;
+  min-height: 96px;
+  padding: 8px 10px;
   color: var(--color-text);
   background: var(--color-surface-subtle);
   border: 1px solid var(--color-border);
@@ -768,8 +810,8 @@ tbody tr.clickable:hover {
 }
 
 .detail-field {
-  min-height: 58px;
-  padding: 8px 10px;
+  min-height: 48px;
+  padding: 6px 8px;
   background: #fff;
   border-right: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
@@ -798,19 +840,30 @@ tbody tr.clickable:hover {
 .activity-feed {
   position: relative;
   display: grid;
-  gap: 10px;
+  gap: 7px;
+}
+
+.activity-feed::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 9px;
+  width: 2px;
+  background: #d8e6f8;
 }
 
 .activity-item {
+  position: relative;
   display: grid;
   grid-template-columns: 20px 1fr;
-  gap: 8px;
+  gap: 6px;
 }
 
 .activity-marker {
-  width: 10px;
-  height: 10px;
-  margin: 14px 0 0 5px;
+  width: 9px;
+  height: 9px;
+  margin: 12px 0 0 5px;
   border-radius: 999px;
   background: var(--color-primary);
   box-shadow: 0 0 0 4px var(--color-primary-light);
@@ -818,7 +871,7 @@ tbody tr.clickable:hover {
 
 .note-card,
 .task-card {
-  padding: 10px 12px;
+  padding: 7px 9px;
   background: #fff;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
@@ -828,8 +881,8 @@ tbody tr.clickable:hover {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 7px;
-  margin-bottom: 7px;
+  gap: 6px;
+  margin-bottom: 5px;
   color: var(--color-text-muted);
   font-size: 12px;
 }
@@ -848,15 +901,15 @@ tbody tr.clickable:hover {
 
 .task-list {
   display: grid;
-  gap: 10px;
+  gap: 7px;
 }
 
 .task-card-main {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 9px;
+  gap: 8px;
+  margin-bottom: 7px;
 }
 
 .task-card h3 {
@@ -879,13 +932,35 @@ tbody tr.clickable:hover {
   overflow: hidden;
 }
 
+.throughput-panel {
+  min-height: 126px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.throughput-panel strong {
+  color: var(--color-primary-hover);
+  font-size: 32px;
+  line-height: 1;
+}
+
+.throughput-panel span {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 .btn {
-  min-height: 32px;
+  min-height: 30px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 5px 12px;
+  padding: 4px 10px;
   border: 1px solid transparent;
   border-radius: var(--radius);
   cursor: pointer;
@@ -896,8 +971,8 @@ tbody tr.clickable:hover {
 }
 
 .btn-sm {
-  min-height: 28px;
-  padding: 4px 10px;
+  min-height: 26px;
+  padding: 3px 8px;
 }
 
 .btn-primary {
@@ -945,7 +1020,7 @@ tbody tr.clickable:hover {
 
 .create-form,
 .modal-form {
-  gap: 13px;
+  gap: 10px;
 }
 
 .form-label {
@@ -968,7 +1043,7 @@ tbody tr.clickable:hover {
 
 .form-input,
 .form-select {
-  height: 32px;
+  height: 30px;
   padding: 0 9px;
 }
 
@@ -981,7 +1056,7 @@ tbody tr.clickable:hover {
 }
 
 .form-textarea {
-  min-height: 86px;
+  min-height: 72px;
   padding: 8px 9px;
   resize: vertical;
   line-height: 1.45;
@@ -1002,7 +1077,7 @@ tbody tr.clickable:hover {
 .form-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 9px;
 }
 
 .due-field {
@@ -1050,7 +1125,7 @@ tbody tr.clickable:hover {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  padding-top: 12px;
+  padding-top: 9px;
   border-top: 1px solid var(--color-border);
 }
 
@@ -1149,7 +1224,7 @@ tbody tr.clickable:hover {
 
 .spinner,
 .empty-state {
-  min-height: 150px;
+  min-height: 86px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1240,6 +1315,12 @@ tbody tr.clickable:hover {
   }
 
   .crm-home-grid,
+  .metrics-grid,
+  .overview-layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .crm-home-grid,
   .overview-layout {
     grid-template-columns: 1fr;
   }
@@ -1320,6 +1401,7 @@ tbody tr.clickable:hover {
   }
 
   .dashboard-grid,
+  .metrics-grid,
   .form-row,
   .case-hero-meta,
   .task-meta-grid,

@@ -1042,6 +1042,28 @@ Refactored the React frontend into a denser, professional enterprise case manage
 #### Validation
 
 Frontend production build passed with `npm run build`.
+
+---
+
+## 2026-05-23
+### Enterprise Console Density and Live Reporting
+
+#### Milestone
+Added live dashboard reporting and server-side case list filtering while tightening the frontend into a denser operations-console experience.
+
+#### Implementation Details
+
+- Added `GET /api/dashboard/metrics` with total, open, assigned-to-me, overdue, escalated, and closed-today case counts.
+- Added backend case list filtering for `q`, `status`, `priority`, and `type` on `GET /api/cases`.
+- Wired the dashboard to live metrics and removed placeholder dashboard copy.
+- Wired the case list toolbar to server-side search and filters with 50-row pagination controls.
+- Tightened frontend density globally: smaller gutters, compact cards, denser tables, tighter record highlights, reduced empty states, compact tabs, richer activity timeline, and stronger task work item presentation.
+- Updated `docs/API_CONTRACT.md` for dashboard metrics and case list query parameters.
+
+#### Validation
+
+- Backend tests passed with `.\mvnw.cmd test` (`65` tests, `0` failures).
+- Frontend production build passed with `npm run build`.
 Local Vite dev server responded with HTTP 200 at `http://127.0.0.1:5173`.
 
 ---

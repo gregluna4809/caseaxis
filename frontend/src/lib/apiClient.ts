@@ -1,7 +1,7 @@
 import type {
   ApiResponse, Page, LoginResponse,
   CaseSummary, CaseDetail, CaseNote, CaseTask, CaseAttachment,
-  OrganizationSummary, ClientSummary,
+  OrganizationSummary, ClientSummary, DashboardMetrics,
 } from '../types/api';
 
 export class ApiError extends Error {
@@ -63,6 +63,12 @@ export const api = {
     },
   },
 
+  dashboard: {
+    metrics() {
+      return request<DashboardMetrics>('/api/dashboard/metrics');
+    },
+  },
+
   organizations: {
     list() {
       return request<OrganizationSummary[]>('/api/organizations');
@@ -76,8 +82,22 @@ export const api = {
   },
 
   cases: {
-    list(page = 0, size = 20) {
-      return request<Page<CaseSummary>>(`/api/cases?page=${page}&size=${size}`);
+    list(params: {
+      page?: number;
+      size?: number;
+      q?: string;
+      status?: string;
+      priority?: string;
+      type?: string;
+    } = {}) {
+      const search = new URLSearchParams();
+      search.set('page', String(params.page ?? 0));
+      search.set('size', String(params.size ?? 20));
+      if (params.q?.trim()) search.set('q', params.q.trim());
+      if (params.status) search.set('status', params.status);
+      if (params.priority) search.set('priority', params.priority);
+      if (params.type) search.set('type', params.type);
+      return request<Page<CaseSummary>>(`/api/cases?${search.toString()}`);
     },
     get(id: string) {
       return request<CaseDetail>(`/api/cases/${id}`);
