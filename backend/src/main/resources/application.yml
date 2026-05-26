@@ -23,10 +23,7 @@ spring:
 
   flyway:
     enabled: true
-    # Flyway locations use a relative path from the working directory (backend/).
-    # Running 'mvn spring-boot:run' from backend/ resolves ../database/migrations correctly.
-    # Override via FLYWAY_LOCATIONS env var for CI/CD or alternate working directories.
-    locations: ${FLYWAY_LOCATIONS:filesystem:../database/migrations}
+    locations: ${FLYWAY_LOCATIONS:classpath:db/migration}
     baseline-on-migrate: false
     validate-on-migrate: true
 
