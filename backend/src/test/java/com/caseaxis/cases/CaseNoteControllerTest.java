@@ -30,7 +30,10 @@ class CaseNoteControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
+    @org.springframework.beans.factory.annotation.Value("${ADMIN_INITIAL_PASSWORD:admin}")
+    private String adminPassword;
     @Autowired private JdbcTemplate jdbcTemplate;
+    @Autowired private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
     @Autowired private UserRepository userRepository;
 
     private UUID orgId;
@@ -40,6 +43,10 @@ class CaseNoteControllerTest {
     @BeforeEach
     void setUp() throws Exception {
         adminId = userRepository.findByUsernameAndDeletedFalse("admin").orElseThrow().getId();
+        jdbcTemplate.update(
+            "UPDATE users SET password_hash = ? WHERE username = ? AND is_deleted = false",
+            passwordEncoder.encode(adminPassword), "admin"
+        );
 
         orgId = UuidGenerator.generate();
         jdbcTemplate.update(
@@ -47,12 +54,13 @@ class CaseNoteControllerTest {
             orgId, "Note Test Org " + orgId, adminId
         );
 
-        String loginBody = objectMapper.writeValueAsString(new LoginRequest("admin", "admin"));
+        String loginBody = objectMapper.writeValueAsString(new LoginRequest("admin", adminPassword));
         String resp = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(loginBody))
             .andReturn().getResponse().getContentAsString();
         token = objectMapper.readTree(resp).at("/data/token").asText();
+        org.assertj.core.api.Assertions.assertThat(token).isNotBlank();
     }
 
     @Test

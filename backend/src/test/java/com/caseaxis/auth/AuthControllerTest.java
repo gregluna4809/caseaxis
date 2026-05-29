@@ -1,6 +1,7 @@
 package com.caseaxis.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -24,15 +25,36 @@ class AuthControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @org.springframework.beans.factory.annotation.Value("${ADMIN_INITIAL_PASSWORD:admin}")
+    private String adminPassword;
+
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
+    @BeforeEach
+    void syncAdminPassword() {
+        jdbcTemplate.update(
+            "UPDATE users SET password_hash = ? WHERE username = ? AND is_deleted = false",
+            passwordEncoder.encode(adminPassword), "admin"
+        );
+    }
+
     @Test
     void login_validCredentials_returnsToken() throws Exception {
-        String body = objectMapper.writeValueAsString(new LoginRequest("admin", "admin"));
-        mockMvc.perform(post("/api/auth/login")
+        String body = objectMapper.writeValueAsString(new LoginRequest("admin", adminPassword));
+        String response = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data.token").isNotEmpty());
+            .andExpect(jsonPath("$.data.token").isNotEmpty())
+            .andReturn().getResponse().getContentAsString();
+
+        String token = objectMapper.readTree(response).at("/data/token").asText();
+        org.assertj.core.api.Assertions.assertThat(token).isNotBlank();
     }
 
     @Test
@@ -52,13 +74,14 @@ class AuthControllerTest {
 
     @Test
     void protectedEndpoint_withValidToken_returns404NotUnauthorized() throws Exception {
-        String body = objectMapper.writeValueAsString(new LoginRequest("admin", "admin"));
+        String body = objectMapper.writeValueAsString(new LoginRequest("admin", adminPassword));
         String response = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
             .andReturn().getResponse().getContentAsString();
 
         String token = objectMapper.readTree(response).at("/data/token").asText();
+        org.assertj.core.api.Assertions.assertThat(token).isNotBlank();
 
         mockMvc.perform(get("/api/cases")
                 .header("Authorization", "Bearer " + token))

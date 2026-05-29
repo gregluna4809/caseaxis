@@ -32,18 +32,28 @@ class GlobalExceptionHandlerTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
+    @org.springframework.beans.factory.annotation.Value("${ADMIN_INITIAL_PASSWORD:admin}")
+    private String adminPassword;
+    @Autowired private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+    @Autowired private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
     @Autowired private UserRepository userRepository;
 
     private String token;
 
     @BeforeEach
     void setUp() throws Exception {
-        String loginBody = objectMapper.writeValueAsString(new LoginRequest("admin", "admin"));
+        jdbcTemplate.update(
+            "UPDATE users SET password_hash = ? WHERE username = ? AND is_deleted = false",
+            passwordEncoder.encode(adminPassword), "admin"
+        );
+
+        String loginBody = objectMapper.writeValueAsString(new LoginRequest("admin", adminPassword));
         String resp = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(loginBody))
             .andReturn().getResponse().getContentAsString();
         token = objectMapper.readTree(resp).at("/data/token").asText();
+        org.assertj.core.api.Assertions.assertThat(token).isNotBlank();
     }
 
     @Test
