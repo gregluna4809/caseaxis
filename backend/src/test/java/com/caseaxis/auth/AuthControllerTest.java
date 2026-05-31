@@ -58,6 +58,46 @@ class AuthControllerTest {
     }
 
     @Test
+    void login_demoCredentials_returnsTokenAndDoesNotAssignAdminRole() throws Exception {
+        String body = objectMapper.writeValueAsString(new LoginRequest("demo", "demo123"));
+        String response = mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.token").isNotEmpty())
+            .andReturn().getResponse().getContentAsString();
+
+        String token = objectMapper.readTree(response).at("/data/token").asText();
+        org.assertj.core.api.Assertions.assertThat(token).isNotBlank();
+
+        Integer adminRoleCount = jdbcTemplate.queryForObject("""
+            SELECT COUNT(*)
+            FROM users u
+            JOIN user_roles ur ON ur.user_id = u.id
+            JOIN roles r ON r.id = ur.role_id
+            WHERE u.username = 'demo'
+              AND u.is_deleted = false
+              AND ur.removed_at IS NULL
+              AND r.code = 'ADMIN'
+            """, Integer.class);
+
+        Integer supervisorRoleCount = jdbcTemplate.queryForObject("""
+            SELECT COUNT(*)
+            FROM users u
+            JOIN user_roles ur ON ur.user_id = u.id
+            JOIN roles r ON r.id = ur.role_id
+            WHERE u.username = 'demo'
+              AND u.is_deleted = false
+              AND ur.removed_at IS NULL
+              AND r.code = 'SUPERVISOR'
+            """, Integer.class);
+
+        org.assertj.core.api.Assertions.assertThat(adminRoleCount).isZero();
+        org.assertj.core.api.Assertions.assertThat(supervisorRoleCount).isEqualTo(1);
+    }
+
+    @Test
     void login_invalidCredentials_returnsUnauthorized() throws Exception {
         String body = objectMapper.writeValueAsString(new LoginRequest("admin", "wrongpassword"));
         mockMvc.perform(post("/api/auth/login")

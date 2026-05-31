@@ -81,6 +81,29 @@ export function LoginPage() {
             {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
+
+        <section className="demo-access-panel" aria-labelledby="demo-access-title">
+          <div className="demo-access-heading">
+            <span className="demo-access-marker" aria-hidden="true">i</span>
+            <h2 id="demo-access-title">Demo Access</h2>
+          </div>
+
+          <dl className="demo-credentials">
+            <div>
+              <dt>Username</dt>
+              <dd>demo</dd>
+            </div>
+            <div>
+              <dt>Password</dt>
+              <dd>demo123</dd>
+            </div>
+          </dl>
+
+          <p>This is a publicly accessible demonstration environment.</p>
+          <p>The application contains synthetic demonstration data generated for portfolio and evaluation purposes.</p>
+          <p>Actions performed using the demo account may be visible to other visitors and may generate audit events, notes, tasks, or workflow changes.</p>
+          <p className="demo-access-warning">Please do not enter real personal, financial, medical, or confidential information.</p>
+        </section>
       </div>
     </div>
   );

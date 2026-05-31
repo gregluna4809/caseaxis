@@ -8,6 +8,25 @@ The system handles high-volume casework through role-based access controls, audi
 
 ---
 
+## Live Demo Access
+
+**Production URL:** https://caseaxis.pulse-forge.com
+
+**Demo credentials**
+
+- Username: `demo`
+- Password: `demo123`
+
+This is a publicly accessible demonstration environment.
+
+The application contains synthetic demonstration data generated for portfolio and evaluation purposes.
+
+Actions performed using the demo account may be visible to other visitors and may generate audit events, notes, tasks, or workflow changes.
+
+## Please do not enter real personal, financial, medical, or confidential information.
+
+---
+
 ## Screenshots
 
 ### Service Console — Operations Dashboard
