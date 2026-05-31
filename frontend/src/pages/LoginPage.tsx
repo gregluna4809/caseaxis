@@ -40,70 +40,131 @@ export function LoginPage() {
 
   return (
     <div className="login-shell">
-      <div className="login-card">
-        <div className="login-header">
-          <div className="login-logo">CA</div>
-          <h1 className="login-title">Sign in to CaseAxis</h1>
-          <p className="login-subtitle">Enterprise case workflow</p>
-        </div>
-
-        <form className="login-form" onSubmit={handleSubmit} noValidate>
-          {error && <div className="form-error">{error}</div>}
-
-          <div className="form-group">
-            <label className="form-label" htmlFor="username">Username</label>
-            <input
-              id="username"
-              type="text"
-              className="form-input"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              autoComplete="username"
-              autoFocus
-              disabled={loading}
-            />
+      <div className="login-landing">
+        <section className="login-hero-panel" aria-labelledby="login-hero-title">
+          <div className="login-hero-copy">
+            <div className="login-logo hero-logo">CA</div>
+            <p className="page-kicker">CaseAxis</p>
+            <h1 id="login-hero-title" className="login-hero-title">Enterprise case workflow platform</h1>
+            <p className="login-hero-subtitle">
+              Production-style case operations with realistic workflow data, secure access controls, and auditable activity.
+            </p>
           </div>
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              className="form-input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-              disabled={loading}
-            />
-          </div>
-
-          <button type="submit" className="btn btn-primary w-full login-submit" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign in'}
-          </button>
-        </form>
-
-        <section className="demo-access-panel" aria-labelledby="demo-access-title">
-          <div className="demo-access-heading">
-            <span className="demo-access-marker" aria-hidden="true">i</span>
-            <h2 id="demo-access-title">Demo Access</h2>
-          </div>
-
-          <dl className="demo-credentials">
-            <div>
-              <dt>Username</dt>
-              <dd>demo</dd>
+          <div className="login-metric-grid" aria-label="Platform highlights">
+            <div className="login-metric-tile">
+              <strong>75,000</strong>
+              <span>seeded cases</span>
             </div>
-            <div>
-              <dt>Password</dt>
-              <dd>demo123</dd>
+            <div className="login-metric-tile">
+              <strong>RBAC</strong>
+              <span>+ audit logging</span>
             </div>
-          </dl>
+            <div className="login-metric-tile">
+              <strong>Production</strong>
+              <span>smoke-tested</span>
+            </div>
+          </div>
 
-          <p>This is a publicly accessible demonstration environment.</p>
-          <p>The application contains synthetic demonstration data generated for portfolio and evaluation purposes.</p>
-          <p>Actions performed using the demo account may be visible to other visitors and may generate audit events, notes, tasks, or workflow changes.</p>
-          <p className="demo-access-warning">Please do not enter real personal, financial, medical, or confidential information.</p>
+          <div className="login-preview-panel" aria-hidden="true">
+            <div className="preview-toolbar">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <div className="preview-metrics">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <div className="preview-workflow">
+              <span className="workflow-node active"></span>
+              <span className="workflow-line"></span>
+              <span className="workflow-node"></span>
+              <span className="workflow-line"></span>
+              <span className="workflow-node"></span>
+            </div>
+            <div className="preview-rows">
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
         </section>
+
+        <div className="login-card">
+          <div className="login-header">
+            <div className="login-logo">CA</div>
+            <h2 className="login-title">Sign in to CaseAxis</h2>
+            <p className="login-subtitle">Enterprise case workflow</p>
+          </div>
+
+          <form className="login-form" onSubmit={handleSubmit} noValidate>
+            {error && <div className="form-error">{error}</div>}
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="username">Username</label>
+              <input
+                id="username"
+                type="text"
+                className="form-input"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                autoComplete="username"
+                autoFocus
+                disabled={loading}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                className="form-input"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                disabled={loading}
+              />
+            </div>
+
+            <button type="submit" className="btn btn-primary w-full login-submit" disabled={loading}>
+              {loading ? 'Signing in...' : 'Sign in'}
+            </button>
+          </form>
+
+          <section className="demo-access-panel" aria-labelledby="demo-access-title">
+            <div className="demo-access-heading">
+              <span className="demo-access-marker" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M7 17 17 7" />
+                  <path d="M9 7h8v8" />
+                </svg>
+              </span>
+              <div>
+                <h3 id="demo-access-title">Live Demo Access</h3>
+                <p>Explore the public portfolio environment.</p>
+              </div>
+            </div>
+
+            <dl className="demo-credentials">
+              <div>
+                <dt>Username</dt>
+                <dd>demo</dd>
+              </div>
+              <div>
+                <dt>Password</dt>
+                <dd>demo123</dd>
+              </div>
+            </dl>
+
+            <p className="demo-access-note">
+              This environment contains synthetic demonstration data. Actions performed using the demo account may be visible to other visitors and may generate audit events.
+            </p>
+          </section>
+        </div>
       </div>
     </div>
   );
