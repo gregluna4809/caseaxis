@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,7 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@Order(0)
 public class AdminUserInitializer implements ApplicationRunner {
 
     private final JdbcTemplate jdbcTemplate;
@@ -31,9 +33,12 @@ public class AdminUserInitializer implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        Integer userCount = jdbcTemplate.queryForObject(
-            "SELECT COUNT(*) FROM users WHERE is_deleted = false", Integer.class);
-        if (userCount != null && userCount > 0) {
+        Integer adminCount = jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM users WHERE username = ? AND is_deleted = false",
+            Integer.class,
+            initialAdminUsername
+        );
+        if (adminCount != null && adminCount > 0) {
             return;
         }
 
