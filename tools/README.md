@@ -1,4 +1,48 @@
-# CaseAxis Demo Data Tools
+# CaseAxis Tools
+
+## Production Smoke Test
+
+`production_smoke_test.py` validates a deployed CaseAxis environment without storing credentials. It checks:
+
+- `/actuator/health`
+- authentication
+- case list loading
+- case detail loading
+- creation of a clearly labeled smoke-test note
+- audit trail recording for the note action
+
+The script returns exit code `0` on success and nonzero on failure. Passwords are never logged or written to files.
+
+### Interactive Mode
+
+Prompts for username and password. The password prompt uses Python `getpass`, so the password is not echoed.
+
+```powershell
+python tools\production_smoke_test.py --base-url http://localhost:8080
+```
+
+### Environment Variable Mode
+
+Useful for automated execution. `CASEAXIS_PASSWORD` is read from the process environment only.
+
+```powershell
+$env:CASEAXIS_USERNAME = "admin"
+$env:CASEAXIS_PASSWORD = "<password>"
+$env:CASEAXIS_BASE_URL = "http://localhost:8080"
+python tools\production_smoke_test.py
+```
+
+### Production Execution
+
+```powershell
+$env:CASEAXIS_USERNAME = "<production-user>"
+$env:CASEAXIS_PASSWORD = "<production-password>"
+python tools\production_smoke_test.py --base-url https://caseaxis.pulse-forge.com
+```
+
+Do not commit credentials, paste them into scripts, or write them to `.env` files intended for source control.
+
+---
 
 ## Brooklyn Insurance & Robotics Seed Data
 
