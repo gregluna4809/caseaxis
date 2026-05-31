@@ -4,6 +4,7 @@ import com.caseaxis.common.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,6 +27,7 @@ public class CaseNoteController {
     private final CaseNoteService noteService;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER')")
     public ResponseEntity<ApiResponse<CaseNoteResponse>> createNote(
             @PathVariable UUID caseId,
             @Valid @RequestBody CreateCaseNoteRequest req,
@@ -37,6 +39,7 @@ public class CaseNoteController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER','AUDITOR')")
     public ResponseEntity<ApiResponse<List<CaseNoteResponse>>> listNotes(
             @PathVariable UUID caseId,
             @AuthenticationPrincipal UserDetails principal) {
@@ -44,6 +47,7 @@ public class CaseNoteController {
     }
 
     @DeleteMapping("/{noteId}")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER')")
     public ResponseEntity<ApiResponse<Void>> deleteNote(
             @PathVariable UUID caseId,
             @PathVariable UUID noteId,

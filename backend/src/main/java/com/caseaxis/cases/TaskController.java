@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -31,6 +32,7 @@ public class TaskController {
     private final TaskWorkspaceService taskWorkspaceService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER','AUDITOR')")
     public ResponseEntity<ApiResponse<Page<TaskSummaryResponse>>> listTasks(
             @PageableDefault(size = 20, sort = "updatedAt", direction = Sort.Direction.DESC) Pageable pageable,
             @RequestParam(required = false) String q,
@@ -46,11 +48,13 @@ public class TaskController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER','AUDITOR')")
     public ResponseEntity<ApiResponse<TaskDetailResponse>> getTask(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.success(taskWorkspaceService.getTask(id)));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER')")
     public ResponseEntity<ApiResponse<CaseTaskResponse>> updateTask(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateCaseTaskRequest req,
@@ -60,6 +64,7 @@ public class TaskController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER')")
     public ResponseEntity<ApiResponse<Void>> deleteTask(
             @PathVariable UUID id,
             @AuthenticationPrincipal UserDetails principal) {

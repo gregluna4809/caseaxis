@@ -1,5 +1,7 @@
 package com.caseaxis.cases;
 
+import com.caseaxis.audit.AuditAction;
+import com.caseaxis.audit.AuditService;
 import com.caseaxis.common.exception.ResourceNotFoundException;
 import com.caseaxis.common.util.UuidGenerator;
 import com.caseaxis.users.UserRepository;
@@ -20,6 +22,7 @@ public class CaseAttachmentService {
     private final CaseRepository caseRepository;
     private final CaseAttachmentRepository attachmentRepository;
     private final UserRepository userRepository;
+    private final AuditService auditService;
 
     @Transactional
     public CaseAttachmentResponse registerAttachment(UUID caseId, CreateCaseAttachmentRequest req, String currentUsername) {
@@ -41,6 +44,19 @@ public class CaseAttachmentService {
         attachment.setCreatedAt(Instant.now());
 
         CaseAttachment saved = attachmentRepository.save(attachment);
+        auditService.recordCaseEvent(
+            currentUserId,
+            caseId,
+            AuditAction.ATTACHMENT_REGISTERED,
+            null,
+            AuditService.fields(
+                "attachmentId", saved.getId(),
+                "filename", saved.getOriginalFilename(),
+                "fileSizeBytes", saved.getFileSizeBytes(),
+                "mimeType", saved.getMimeType()
+            ),
+            AuditService.fields("filename", saved.getOriginalFilename())
+        );
         log.debug("Registered attachment {} for case {}", saved.getId(), caseId);
         return toResponse(saved);
     }
@@ -66,6 +82,14 @@ public class CaseAttachmentService {
         attachment.setDeletedAt(Instant.now());
         attachment.setDeletedBy(currentUserId);
         attachmentRepository.save(attachment);
+        auditService.recordCaseEvent(
+            currentUserId,
+            caseId,
+            AuditAction.ATTACHMENT_DELETED,
+            AuditService.fields("attachmentId", attachmentId, "filename", attachment.getOriginalFilename()),
+            AuditService.fields("deleted", true),
+            AuditService.fields("filename", attachment.getOriginalFilename())
+        );
         log.debug("Soft-deleted attachment {} from case {}", attachmentId, caseId);
     }
 

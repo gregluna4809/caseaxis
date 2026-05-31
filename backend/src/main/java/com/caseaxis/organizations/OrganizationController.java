@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,6 +29,7 @@ public class OrganizationController {
     private final OrganizationService orgService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER','AUDITOR')")
     public ResponseEntity<ApiResponse<Page<OrganizationSummaryResponse>>> listOrganizations(
             @PageableDefault(size = 20, sort = "name", direction = Sort.Direction.ASC) Pageable pageable,
             @RequestParam(required = false) String q,
@@ -36,12 +38,14 @@ public class OrganizationController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER','AUDITOR')")
     public ResponseEntity<ApiResponse<OrganizationDetailResponse>> getOrganizationById(
             @PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.success(orgService.getOrganizationById(id)));
     }
 
     @PostMapping("/{id}/deactivate")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR')")
     public ResponseEntity<ApiResponse<OrganizationDetailResponse>> deactivateOrganization(
             @PathVariable UUID id,
             @AuthenticationPrincipal UserDetails principal) {
@@ -50,6 +54,7 @@ public class OrganizationController {
     }
 
     @GetMapping("/{id}/clients")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER','AUDITOR')")
     public ResponseEntity<ApiResponse<Page<ClientSummaryResponse>>> listOrganizationClients(
             @PathVariable UUID id,
             @PageableDefault(size = 20, sort = "lastName", direction = Sort.Direction.ASC) Pageable pageable) {
@@ -57,6 +62,7 @@ public class OrganizationController {
     }
 
     @GetMapping("/{id}/cases")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER','AUDITOR')")
     public ResponseEntity<ApiResponse<Page<CaseSummaryResponse>>> listOrganizationCases(
             @PathVariable UUID id,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {

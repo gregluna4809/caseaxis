@@ -1,18 +1,19 @@
 import { useState, useEffect, type FormEvent, type ReactNode } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../lib/apiClient';
-import type { CaseDetail, CaseNote, CaseTask, CaseAttachment } from '../types/api';
+import type { AuditEvent, CaseDetail, CaseNote, CaseTask, CaseAttachment } from '../types/api';
 import { StatusBadge, PriorityBadge, TaskStatusBadge } from '../components/StatusBadge';
 import { Modal } from '../components/Modal';
 import { ALLOWED_TRANSITIONS, STATUS_LABEL, TASK_STATUSES } from '../lib/lookups';
 import { displayActor, formatBytes, formatDate, formatDateTime } from '../lib/utils';
 
-type TabId = 'overview' | 'notes' | 'tasks' | 'attachments';
+type TabId = 'overview' | 'audit' | 'notes' | 'tasks' | 'attachments';
 type ModalId = 'note' | 'task' | 'status' | 'archive' | null;
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'overview', label: 'Details' },
-  { id: 'notes', label: 'Activity' },
+  { id: 'audit', label: 'Audit' },
+  { id: 'notes', label: 'Notes' },
   { id: 'tasks', label: 'Tasks' },
   { id: 'attachments', label: 'Files' },
 ];
@@ -25,11 +26,13 @@ export function CaseDetailPage() {
 
   const [caseDetail, setCaseDetail] = useState<CaseDetail | null>(null);
   const [notes, setNotes] = useState<CaseNote[]>([]);
+  const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
   const [tasks, setTasks] = useState<CaseTask[]>([]);
   const [attachments, setAttachments] = useState<CaseAttachment[]>([]);
 
   const [loadingCase, setLoadingCase] = useState(true);
   const [loadingNotes, setLoadingNotes] = useState(true);
+  const [loadingAudit, setLoadingAudit] = useState(true);
   const [loadingTasks, setLoadingTasks] = useState(true);
   const [loadingAttachments, setLoadingAttachments] = useState(true);
   const [caseError, setCaseError] = useState<string | null>(null);
@@ -43,6 +46,7 @@ export function CaseDetailPage() {
     async function loadAll() {
       setLoadingCase(true);
       setLoadingNotes(true);
+      setLoadingAudit(true);
       setLoadingTasks(true);
       setLoadingAttachments(true);
       setCaseError(null);
@@ -62,6 +66,13 @@ export function CaseDetailPage() {
         if (!cancelled) setNotes(n);
       } finally {
         if (!cancelled) setLoadingNotes(false);
+      }
+
+      try {
+        const audit = await api.audit.caseEvents(id!);
+        if (!cancelled) setAuditEvents(audit);
+      } finally {
+        if (!cancelled) setLoadingAudit(false);
       }
 
       try {
@@ -152,6 +163,7 @@ export function CaseDetailPage() {
               aria-selected={activeTab === tab.id}
             >
               {tab.label}
+              {tab.id === 'audit' && !loadingAudit && <span className="tab-count">{auditEvents.length}</span>}
               {tab.id === 'notes' && !loadingNotes && <span className="tab-count">{notes.length}</span>}
               {tab.id === 'tasks' && !loadingTasks && <span className="tab-count">{tasks.length}</span>}
               {tab.id === 'attachments' && !loadingAttachments && <span className="tab-count">{attachments.length}</span>}
@@ -161,6 +173,7 @@ export function CaseDetailPage() {
 
         <div className="tab-content">
           {activeTab === 'overview' && <OverviewTab c={caseDetail} />}
+          {activeTab === 'audit' && <AuditTab events={auditEvents} loading={loadingAudit} />}
           {activeTab === 'notes' && <NotesTab notes={notes} loading={loadingNotes} />}
           {activeTab === 'tasks' && <TasksTab tasks={tasks} loading={loadingTasks} />}
           {activeTab === 'attachments' && <AttachmentsTab attachments={attachments} loading={loadingAttachments} />}
@@ -292,6 +305,36 @@ function NotesTab({ notes, loading }: { notes: CaseNote[]; loading: boolean }) {
               {note.supersedesNoteId && <span className="badge badge-warning">Correction</span>}
             </div>
             <div className="note-body">{note.body}</div>
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function AuditTab({ events, loading }: { events: AuditEvent[]; loading: boolean }) {
+  if (loading) return <div className="spinner">Loading audit events...</div>;
+  if (events.length === 0) return (
+    <div className="empty-state-panel">
+      <div className="empty-state-title">No audit events recorded</div>
+      <div className="empty-state-body">
+        Business actions on this case will appear here as an immutable timeline.
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="activity-feed audit-feed">
+      {events.map((event) => (
+        <article key={event.id} className="activity-item">
+          <div className="activity-marker audit-marker" />
+          <div className="note-card audit-card">
+            <div className="note-meta">
+              <strong>{event.actorDisplayName}</strong>
+              <span>{formatDateTime(event.occurredAt)}</span>
+              <span className="badge badge-neutral">{event.eventType}</span>
+            </div>
+            <div className="note-body audit-summary">{event.summary}</div>
           </div>
         </article>
       ))}

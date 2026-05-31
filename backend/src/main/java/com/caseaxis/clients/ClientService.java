@@ -1,5 +1,7 @@
 package com.caseaxis.clients;
 
+import com.caseaxis.audit.AuditAction;
+import com.caseaxis.audit.AuditService;
 import com.caseaxis.cases.Case;
 import com.caseaxis.cases.CaseRepository;
 import com.caseaxis.cases.CaseSummaryResponse;
@@ -30,6 +32,7 @@ public class ClientService {
     private final OrganizationRepository orgRepository;
     private final CaseRepository caseRepository;
     private final UserRepository userRepository;
+    private final AuditService auditService;
 
     public Page<ClientSummaryResponse> listClients(Pageable pageable, String q, UUID organizationId, Boolean active) {
         String normalizedQ = normalizeText(q);
@@ -94,7 +97,17 @@ public class ClientService {
         client.setActive(false);
         client.setUpdatedBy(currentUserId);
         client.setUpdatedAt(now);
-        return getClientById(clientRepository.save(client).getId());
+        Client saved = clientRepository.save(client);
+        auditService.recordEntityEvent(
+            currentUserId,
+            "client",
+            id,
+            AuditAction.CLIENT_DEACTIVATED,
+            AuditService.fields("active", true),
+            AuditService.fields("active", false),
+            AuditService.fields("clientNumber", saved.getClientNumber())
+        );
+        return getClientById(saved.getId());
     }
 
     public Page<CaseSummaryResponse> listClientCases(UUID clientId, Pageable pageable) {

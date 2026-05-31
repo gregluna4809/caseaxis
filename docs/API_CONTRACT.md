@@ -21,9 +21,10 @@
 11. [Case Notes](#case-notes)
 11. [Case Tasks](#case-tasks)
 12. [Case Attachments](#case-attachments)
-13. [Organizations](#organizations)
-14. [Clients](#clients)
-15. [Reference Data](#reference-data)
+13. [Case Audit Timeline](#case-audit-timeline)
+14. [Organizations](#organizations)
+15. [Clients](#clients)
+16. [Reference Data](#reference-data)
 
 ---
 
@@ -79,7 +80,7 @@ The `message` field is omitted (`null`) on success responses. The `data` field i
 
 ## Authentication
 
-All endpoints except `GET /api/health` and `POST /api/auth/login` require a valid JWT.
+All endpoints except `GET /api/health`, `GET /actuator/health`, `GET /actuator/info`, and `POST /api/auth/login` require a valid JWT.
 
 **Header format:**
 ```
@@ -87,6 +88,19 @@ Authorization: Bearer <token>
 ```
 
 Missing or invalid tokens return `401 Unauthorized`.
+
+### Role-Based Access
+
+CaseAxis enforces role-level authorization on the backend. Frontend controls are convenience only and are not authoritative.
+
+| Role | Access |
+|---|---|
+| `ADMIN` | Full access |
+| `SUPERVISOR` | Workflow, assignment, reports, operational management |
+| `CASE_WORKER` | Normal case, task, note, and attachment metadata work |
+| `AUDITOR` | Read-only access to operational data, reports, and audit timelines |
+
+Unauthorized authenticated writes return `403 Forbidden`.
 
 ---
 
@@ -520,7 +534,7 @@ Spring `Page` envelope with `content` array of `CaseSummaryResponse`:
 
 **Notes:**
 - Summary response omits `description`, `assignedAt`, `resolvedAt`, `closedAt`, `reopenedCount`, `createdBy`
-- All non-deleted cases are returned regardless of the caller's role (RBAC filtering is a future phase)
+- All listed roles can read non-deleted cases. Mutating case actions are restricted by role at the backend.
 
 ---
 
@@ -1289,6 +1303,40 @@ Soft-deletes an attachment record. The physical file is not affected — storage
 
 ---
 
+## Case Audit Timeline
+
+Audit events are immutable backend records written during business operations. The case audit API returns a curated timeline only; raw `old_values`, `new_values`, and `metadata` JSONB payloads are not exposed directly.
+
+### GET /api/cases/{caseId}/audit
+
+Returns up to the 100 most recent audit events for a case.
+
+**Auth required:** Yes  
+**Roles:** `ADMIN`, `SUPERVISOR`, `CASE_WORKER`, `AUDITOR`
+
+**Response - 200 OK:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "019e7fb3-afd7-73f1-9346-2409e4d3a692",
+      "occurredAt": "2026-05-31T20:22:23.041Z",
+      "actorId": "019e48a4-e1d3-7722-a041-2b1de58e8823",
+      "actorDisplayName": "Admin User",
+      "action": "case_status_changed",
+      "eventType": "Status changed",
+      "summary": "Changed status from NEW to ASSIGNED"
+    }
+  ],
+  "timestamp": "2026-05-31T20:22:23.100Z"
+}
+```
+
+Covered case timeline events include case creation, assignment/reassignment, status changes, reopen/archive actions, priority changes, task actions, note actions, and attachment metadata actions.
+
+---
+
 ## Organizations
 
 All endpoints require a valid JWT `Authorization: Bearer <token>` header.
@@ -1613,7 +1661,7 @@ Returns active, non-deleted clients for lookup controls, ordered by last name th
 | `CASE_WORKER` | Case Worker | Handles assigned cases |
 | `AUDITOR` | Auditor | Read-only; cannot create or modify records |
 
-Role-based access control is seeded and modeled in the database but is **not yet enforced at the endpoint level**. All authenticated users currently have full access to all endpoints. Per-role access control is planned for a future phase.
+Role-based access control is enforced at the backend endpoint level. `AUDITOR` is read-only. Mutating operational endpoints are limited to the roles documented in the Authentication section.
 
 ---
 

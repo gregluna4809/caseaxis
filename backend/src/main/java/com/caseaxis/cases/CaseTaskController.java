@@ -4,6 +4,7 @@ import com.caseaxis.common.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -27,6 +28,7 @@ public class CaseTaskController {
     private final CaseTaskService taskService;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER')")
     public ResponseEntity<ApiResponse<CaseTaskResponse>> createTask(
             @PathVariable UUID caseId,
             @Valid @RequestBody CreateCaseTaskRequest req,
@@ -38,6 +40,7 @@ public class CaseTaskController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER','AUDITOR')")
     public ResponseEntity<ApiResponse<List<CaseTaskResponse>>> listTasks(
             @PathVariable UUID caseId,
             @AuthenticationPrincipal UserDetails principal) {
@@ -45,6 +48,7 @@ public class CaseTaskController {
     }
 
     @GetMapping("/{taskId}")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER','AUDITOR')")
     public ResponseEntity<ApiResponse<CaseTaskResponse>> getTask(
             @PathVariable UUID caseId,
             @PathVariable UUID taskId,
@@ -53,6 +57,7 @@ public class CaseTaskController {
     }
 
     @PutMapping("/{taskId}")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER')")
     public ResponseEntity<ApiResponse<CaseTaskResponse>> updateTask(
             @PathVariable UUID caseId,
             @PathVariable UUID taskId,
@@ -63,6 +68,7 @@ public class CaseTaskController {
     }
 
     @DeleteMapping("/{taskId}")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER')")
     public ResponseEntity<ApiResponse<Void>> deleteTask(
             @PathVariable UUID caseId,
             @PathVariable UUID taskId,

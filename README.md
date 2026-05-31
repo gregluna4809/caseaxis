@@ -57,8 +57,10 @@ The included seed tooling populates the system with a realistic Brooklyn-area "R
 - CSV and JSON export
 
 **Security & operations**
-- JWT-based authentication with role-based authorization (ADMIN role bootstrapped on first run)
-- Audit log table for tracking entity changes
+- JWT-based authentication with backend-enforced role-based authorization
+- Role model: ADMIN full access, SUPERVISOR operational management, CASE_WORKER case/task/note work, AUDITOR read-only
+- Immutable audit logging for business actions including case creation, assignment, status/priority changes, task/note/file actions, and deactivation workflows
+- Case-level audit timeline API and frontend activity panel with safe human-readable summaries
 - Flyway-managed schema with 14 ordered migrations
 
 ---

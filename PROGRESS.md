@@ -1272,6 +1272,31 @@ Frontend production build passed with `npm run build`.
 
 ---
 
+## 2026-05-31
+### Enterprise Controls Phase
+
+#### Milestone
+Implemented backend-enforced role-based access control and real audit logging for critical business operations.
+
+#### Implementation Details
+
+- Enabled Spring method security and added role-level controller authorization.
+- Enforced `ADMIN`, `SUPERVISOR`, `CASE_WORKER`, and `AUDITOR` access rules at the backend.
+- Added an `audit` backend module using the existing immutable `audit_logs` table.
+- Added audit writes inside transactional service methods for case creation, assignment/reassignment, status changes, priority changes, archive/reopen, task create/update/complete/delete, note create/delete, attachment metadata register/delete, client deactivation, and organization deactivation.
+- Added `GET /api/cases/{caseId}/audit` with safe timeline responses that expose actor, timestamp, action, event type, and summary, without raw JSONB payload exposure.
+- Added a frontend case audit tab showing a compact read-only activity timeline.
+- Added `EnterpriseControlsTest` for auditor read-only behavior, forbidden writes, audit row creation, and safe audit API responses.
+
+#### Validation
+
+- Backend targeted validation: `.\mvnw.cmd -Dtest=EnterpriseControlsTest test` passed.
+- Backend full unit/controller suite: `.\mvnw.cmd test` ran 107 tests with 0 assertion failures; the only error was the existing Testcontainers PostgreSQL integration test because Docker was not available to Maven in this session.
+- Frontend production build: `npm run build` passed.
+- Frontend tests: `npm test -- --run` passed.
+
+---
+
 ## 2026-05-23
 ### Phase 9 — Client & Organization CRM Module
 

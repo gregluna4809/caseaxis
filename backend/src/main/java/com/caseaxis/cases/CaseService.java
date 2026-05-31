@@ -1,5 +1,7 @@
 package com.caseaxis.cases;
 
+import com.caseaxis.audit.AuditAction;
+import com.caseaxis.audit.AuditService;
 import com.caseaxis.common.exception.ResourceNotFoundException;
 import com.caseaxis.common.util.UuidGenerator;
 import com.caseaxis.clients.Client;
@@ -48,6 +50,7 @@ public class CaseService {
     private final OrganizationRepository organizationRepository;
     private final ClientRepository clientRepository;
     private final JdbcTemplate jdbcTemplate;
+    private final AuditService auditService;
 
     @Transactional
     public CaseDetailResponse createCase(CreateCaseRequest req, String currentUsername) {
@@ -97,6 +100,21 @@ public class CaseService {
         initialHistory.setChangedBy(currentUserId);
         initialHistory.setChangedAt(now);
         statusHistoryRepository.save(initialHistory);
+
+        auditService.recordCaseEvent(
+            currentUserId,
+            saved.getId(),
+            AuditAction.CASE_CREATED,
+            null,
+            AuditService.fields(
+                "caseNumber", saved.getCaseNumber(),
+                "title", saved.getTitle(),
+                "status", initialStatus.getCode(),
+                "priority", priority.getCode(),
+                "type", type.getCode()
+            ),
+            null
+        );
 
         log.debug("Created case {} ({})", saved.getId(), caseNumber);
         return toDetailResponse(saved);
@@ -150,6 +168,7 @@ public class CaseService {
 
         Case c = caseRepository.findByIdAndDeletedFalse(caseId)
             .orElseThrow(() -> new ResourceNotFoundException("Case", caseId));
+        UUID previousAssigneeId = c.getAssignedToId();
 
         // Close any existing active assignment. flush() before inserting new row so the
         // partial unique index uq_case_assignments_one_active sees the updated state.
@@ -175,6 +194,15 @@ public class CaseService {
         c.setUpdatedBy(currentUserId);
         c.setUpdatedAt(now);
         Case saved = caseRepository.save(c);
+
+        auditService.recordCaseEvent(
+            currentUserId,
+            caseId,
+            previousAssigneeId == null ? AuditAction.CASE_ASSIGNED : AuditAction.CASE_REASSIGNED,
+            AuditService.fields("assigneeId", previousAssigneeId),
+            AuditService.fields("assigneeId", req.assigneeId()),
+            AuditService.fields("notesProvided", req.notes() != null && !req.notes().isBlank())
+        );
 
         log.debug("Assigned case {} to user {}", caseId, req.assigneeId());
         return toDetailResponse(saved);
@@ -230,7 +258,54 @@ public class CaseService {
         history.setReason(req.reason());
         statusHistoryRepository.save(history);
 
+        String action = "REOPENED".equals(targetCode)
+            ? AuditAction.CASE_REOPENED
+            : AuditAction.CASE_STATUS_CHANGED;
+        auditService.recordCaseEvent(
+            currentUserId,
+            caseId,
+            action,
+            AuditService.fields("status", currentCode),
+            AuditService.fields("status", targetCode, "reopenedCount", saved.getReopenedCount()),
+            AuditService.fields("reasonProvided", req.reason() != null && !req.reason().isBlank())
+        );
+
         log.debug("Transitioned case {} from {} to {}", caseId, currentCode, targetCode);
+        return toDetailResponse(saved);
+    }
+
+    @Transactional
+    public CaseDetailResponse updatePriority(UUID caseId, UpdateCasePriorityRequest req, String currentUsername) {
+        UUID currentUserId = resolveUserId(currentUsername);
+
+        Case c = caseRepository.findByIdAndDeletedFalse(caseId)
+            .orElseThrow(() -> new ResourceNotFoundException("Case", caseId));
+
+        String previousPriority = c.getPriority().getCode();
+        String targetPriority = req.priorityCode().toUpperCase();
+        if (previousPriority.equals(targetPriority)) {
+            return toDetailResponse(c);
+        }
+
+        CasePriority priority = priorityRepository.findByCodeAndActiveTrue(targetPriority)
+            .orElseThrow(() -> new IllegalArgumentException("Unknown priority code: " + targetPriority));
+
+        Instant now = Instant.now();
+        c.setPriority(priority);
+        c.setUpdatedBy(currentUserId);
+        c.setUpdatedAt(now);
+        Case saved = caseRepository.save(c);
+
+        auditService.recordCaseEvent(
+            currentUserId,
+            caseId,
+            AuditAction.CASE_PRIORITY_CHANGED,
+            AuditService.fields("priority", previousPriority),
+            AuditService.fields("priority", targetPriority),
+            AuditService.fields("reasonProvided", req.reason() != null && !req.reason().isBlank())
+        );
+
+        log.debug("Changed case {} priority from {} to {}", caseId, previousPriority, targetPriority);
         return toDetailResponse(saved);
     }
 
@@ -249,6 +324,7 @@ public class CaseService {
             .orElseThrow(() -> new IllegalStateException("CLOSED status is not configured"));
 
         UUID previousStatusId = c.getStatus().getId();
+        String previousStatusCode = c.getStatus().getCode();
         Instant now = Instant.now();
         c.setStatus(closedStatus);
         c.setClosedAt(now);
@@ -265,6 +341,15 @@ public class CaseService {
         history.setChangedAt(now);
         history.setReason("Case archived from detail workspace");
         statusHistoryRepository.save(history);
+
+        auditService.recordCaseEvent(
+            currentUserId,
+            caseId,
+            AuditAction.CASE_ARCHIVED,
+            AuditService.fields("status", previousStatusCode),
+            AuditService.fields("status", "CLOSED"),
+            null
+        );
 
         log.debug("Archived case {} as CLOSED", caseId);
         return toDetailResponse(saved);

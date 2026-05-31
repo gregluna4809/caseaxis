@@ -1,5 +1,7 @@
 package com.caseaxis.organizations;
 
+import com.caseaxis.audit.AuditAction;
+import com.caseaxis.audit.AuditService;
 import com.caseaxis.cases.Case;
 import com.caseaxis.cases.CaseRepository;
 import com.caseaxis.cases.CaseSummaryResponse;
@@ -27,6 +29,7 @@ public class OrganizationService {
     private final ClientRepository clientRepository;
     private final CaseRepository caseRepository;
     private final UserRepository userRepository;
+    private final AuditService auditService;
 
     public Page<OrganizationSummaryResponse> listOrganizations(Pageable pageable, String q, Boolean active) {
         String normalizedQ = normalizeText(q);
@@ -76,7 +79,17 @@ public class OrganizationService {
         org.setActive(false);
         org.setUpdatedBy(currentUserId);
         org.setUpdatedAt(now);
-        return getOrganizationById(orgRepository.save(org).getId());
+        Organization saved = orgRepository.save(org);
+        auditService.recordEntityEvent(
+            currentUserId,
+            "organization",
+            id,
+            AuditAction.ORGANIZATION_DEACTIVATED,
+            AuditService.fields("active", true),
+            AuditService.fields("active", false),
+            AuditService.fields("organizationCode", saved.getOrganizationCode())
+        );
+        return getOrganizationById(saved.getId());
     }
 
     public Page<ClientSummaryResponse> listOrganizationClients(UUID orgId, Pageable pageable) {

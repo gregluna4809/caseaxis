@@ -1,5 +1,7 @@
 package com.caseaxis.cases;
 
+import com.caseaxis.audit.AuditAction;
+import com.caseaxis.audit.AuditService;
 import com.caseaxis.common.exception.ResourceNotFoundException;
 import com.caseaxis.common.util.UuidGenerator;
 import com.caseaxis.users.UserRepository;
@@ -20,6 +22,7 @@ public class CaseNoteService {
     private final CaseRepository caseRepository;
     private final CaseNoteRepository noteRepository;
     private final UserRepository userRepository;
+    private final AuditService auditService;
 
     @Transactional
     public CaseNoteResponse createNote(UUID caseId, CreateCaseNoteRequest req, String currentUsername) {
@@ -44,6 +47,18 @@ public class CaseNoteService {
         note.setCreatedAt(Instant.now());
 
         CaseNote saved = noteRepository.save(note);
+        auditService.recordCaseEvent(
+            currentUserId,
+            caseId,
+            AuditAction.NOTE_CREATED,
+            null,
+            AuditService.fields(
+                "noteId", saved.getId(),
+                "internal", saved.isInternal(),
+                "supersedesNoteId", saved.getSupersedesNoteId()
+            ),
+            AuditService.fields("internal", saved.isInternal())
+        );
         log.debug("Created note {} for case {}", saved.getId(), caseId);
         return toResponse(saved);
     }
@@ -69,6 +84,14 @@ public class CaseNoteService {
         note.setDeletedAt(Instant.now());
         note.setDeletedBy(currentUserId);
         noteRepository.save(note);
+        auditService.recordCaseEvent(
+            currentUserId,
+            caseId,
+            AuditAction.NOTE_DELETED,
+            AuditService.fields("noteId", noteId, "internal", note.isInternal()),
+            AuditService.fields("deleted", true),
+            AuditService.fields("internal", note.isInternal())
+        );
         log.debug("Soft-deleted note {} from case {}", noteId, caseId);
     }
 

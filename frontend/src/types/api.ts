@@ -190,6 +190,17 @@ export interface CaseNote {
   deleted: boolean;
 }
 
+// GET /api/cases/:id/audit
+export interface AuditEvent {
+  id: string;
+  occurredAt: string;
+  actorId: string | null;
+  actorDisplayName: string;
+  action: string;
+  eventType: string;
+  summary: string;
+}
+
 // GET /api/cases/:id/tasks
 export interface CaseTask {
   id: string;

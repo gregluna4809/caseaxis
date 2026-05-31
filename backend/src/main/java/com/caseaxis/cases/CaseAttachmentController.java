@@ -4,6 +4,7 @@ import com.caseaxis.common.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,6 +27,7 @@ public class CaseAttachmentController {
     private final CaseAttachmentService attachmentService;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER')")
     public ResponseEntity<ApiResponse<CaseAttachmentResponse>> registerAttachment(
             @PathVariable UUID caseId,
             @Valid @RequestBody CreateCaseAttachmentRequest req,
@@ -37,6 +39,7 @@ public class CaseAttachmentController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER','AUDITOR')")
     public ResponseEntity<ApiResponse<List<CaseAttachmentResponse>>> listAttachments(
             @PathVariable UUID caseId,
             @AuthenticationPrincipal UserDetails principal) {
@@ -44,6 +47,7 @@ public class CaseAttachmentController {
     }
 
     @DeleteMapping("/{attachmentId}")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER')")
     public ResponseEntity<ApiResponse<Void>> deleteAttachment(
             @PathVariable UUID caseId,
             @PathVariable UUID attachmentId,

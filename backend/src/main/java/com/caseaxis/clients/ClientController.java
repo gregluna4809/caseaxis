@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,6 +28,7 @@ public class ClientController {
     private final ClientService clientService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER','AUDITOR')")
     public ResponseEntity<ApiResponse<Page<ClientSummaryResponse>>> listClients(
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
             @RequestParam(required = false) String q,
@@ -36,11 +38,13 @@ public class ClientController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER','AUDITOR')")
     public ResponseEntity<ApiResponse<ClientDetailResponse>> getClientById(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.success(clientService.getClientById(id)));
     }
 
     @PostMapping("/{id}/deactivate")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR')")
     public ResponseEntity<ApiResponse<ClientDetailResponse>> deactivateClient(
             @PathVariable UUID id,
             @AuthenticationPrincipal UserDetails principal) {
@@ -48,6 +52,7 @@ public class ClientController {
     }
 
     @GetMapping("/{id}/cases")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER','AUDITOR')")
     public ResponseEntity<ApiResponse<Page<CaseSummaryResponse>>> listClientCases(
             @PathVariable UUID id,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {

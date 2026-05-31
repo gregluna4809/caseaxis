@@ -1,6 +1,7 @@
 import type {
   ApiResponse, Page, LoginResponse,
   CaseSummary, CaseDetail, CaseNote, CaseTask, CaseAttachment,
+  AuditEvent,
   TaskSummary, TaskDetail,
   OrganizationSummary, OrganizationDetail, ClientSummary, ClientDetail,
   DashboardMetrics, DashboardOverview,
@@ -317,6 +318,12 @@ export const api = {
   attachments: {
     list(caseId: string) {
       return request<CaseAttachment[]>(`/api/cases/${caseId}/attachments`);
+    },
+  },
+
+  audit: {
+    caseEvents(caseId: string) {
+      return request<AuditEvent[]>(`/api/cases/${caseId}/audit`);
     },
   },
 

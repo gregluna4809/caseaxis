@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,6 +30,7 @@ public class CaseController {
     private final CaseService caseService;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER')")
     public ResponseEntity<ApiResponse<CaseDetailResponse>> createCase(
             @Valid @RequestBody CreateCaseRequest req,
             @AuthenticationPrincipal UserDetails principal) {
@@ -39,6 +41,7 @@ public class CaseController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER','AUDITOR')")
     public ResponseEntity<ApiResponse<Page<CaseSummaryResponse>>> listCases(
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
             @RequestParam(required = false) String q,
@@ -51,6 +54,7 @@ public class CaseController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER','AUDITOR')")
     public ResponseEntity<ApiResponse<CaseDetailResponse>> getCaseById(
             @PathVariable UUID id,
             @AuthenticationPrincipal UserDetails principal) {
@@ -58,6 +62,7 @@ public class CaseController {
     }
 
     @PostMapping("/{id}/assign")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR')")
     public ResponseEntity<ApiResponse<CaseDetailResponse>> assignCase(
             @PathVariable UUID id,
             @Valid @RequestBody AssignCaseRequest req,
@@ -67,6 +72,7 @@ public class CaseController {
     }
 
     @PostMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CASE_WORKER')")
     public ResponseEntity<ApiResponse<CaseDetailResponse>> transitionStatus(
             @PathVariable UUID id,
             @Valid @RequestBody TransitionStatusRequest req,
@@ -75,7 +81,18 @@ public class CaseController {
             caseService.transitionStatus(id, req, principal.getUsername())));
     }
 
+    @PostMapping("/{id}/priority")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR')")
+    public ResponseEntity<ApiResponse<CaseDetailResponse>> updatePriority(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateCasePriorityRequest req,
+            @AuthenticationPrincipal UserDetails principal) {
+        return ResponseEntity.ok(ApiResponse.success(
+            caseService.updatePriority(id, req, principal.getUsername())));
+    }
+
     @PostMapping("/{id}/archive")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR')")
     public ResponseEntity<ApiResponse<CaseDetailResponse>> archiveCase(
             @PathVariable UUID id,
             @AuthenticationPrincipal UserDetails principal) {
