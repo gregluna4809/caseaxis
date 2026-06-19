@@ -62,10 +62,10 @@ export function TaskListPage() {
         <div className="object-header-main">
           <span className="object-icon">T</span>
           <div>
-            <p className="page-kicker">Tasks</p>
-            <h1 className="page-title">Task Workspace</h1>
+            <p className="page-kicker">Review Actions</p>
+            <h1 className="page-title">Officer Action Queue</h1>
             <p className="page-subtitle">
-              {loading ? 'Loading...' : `${totalElements.toLocaleString()} work items matching current filters`}
+              {loading ? 'Loading...' : `${totalElements.toLocaleString()} review actions matching current filters`}
             </p>
           </div>
         </div>
@@ -74,8 +74,8 @@ export function TaskListPage() {
       <div className="list-view-card">
         <div className="list-view-toolbar">
           <div>
-            <span className="list-view-title">Task List View</span>
-            <span className="list-view-subtitle">Server-side search, status filters, overdue queue, and pagination</span>
+            <span className="list-view-title">Review Action List</span>
+            <span className="list-view-subtitle">Search action items, status filters, overdue queue, and pagination</span>
           </div>
           <div className="toolbar-controls">
             <div className="search-control task-search-control">
@@ -83,7 +83,7 @@ export function TaskListPage() {
               <input
                 value={query}
                 onChange={(e) => resetPageAnd(() => setQuery(e.target.value))}
-                placeholder="Task title"
+                placeholder="Action title"
                 aria-label="Search tasks"
               />
             </div>
@@ -119,7 +119,7 @@ export function TaskListPage() {
               <table className="data-table task-data-table">
                 <thead>
                   <tr>
-                    <th>Task</th>
+                    <th>Review Action</th>
                     <th>Status</th>
                     <th>Due Date</th>
                     <th>Case #</th>
@@ -133,9 +133,9 @@ export function TaskListPage() {
                     <tr>
                       <td colSpan={7}>
                         <div className="empty-state-panel">
-                          <div className="empty-state-title">No tasks found</div>
+                          <div className="empty-state-title">No review actions found</div>
                           <div className="empty-state-body">
-                            No work items match the current filters. Adjust the search, status, or overdue filter.
+                            No review actions match the current filters. Adjust the search, status, or overdue filter.
                           </div>
                         </div>
                       </td>
@@ -147,7 +147,7 @@ export function TaskListPage() {
                       <tr
                         key={task.id}
                         className={`clickable ${overdue ? 'task-row-overdue' : ''}`}
-                        title="Open task record"
+                        title="Open review action record"
                         onClick={() => navigate(`/tasks/${task.id}`)}
                       >
                         <td>
@@ -173,7 +173,7 @@ export function TaskListPage() {
 
             <div className="pagination">
               <span className="pagination-summary">
-                {totalElements.toLocaleString()} task{totalElements !== 1 ? 's' : ''}
+                {totalElements.toLocaleString()} action{totalElements !== 1 ? 's' : ''}
               </span>
               <div className="pagination-controls">
                 <button className="btn btn-secondary btn-sm" onClick={() => setPage(0)} disabled={result.first} title="First page">First</button>

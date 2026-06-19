@@ -49,10 +49,10 @@ export function ClientListPage() {
         <div className="object-header-main">
           <span className="object-icon">P</span>
           <div>
-            <p className="page-kicker">CRM</p>
-            <h1 className="page-title">Clients</h1>
+            <p className="page-kicker">Benefit Recipients</p>
+            <h1 className="page-title">Recipient Directory</h1>
             <p className="page-subtitle">
-              {loading ? 'Loading...' : `${totalElements.toLocaleString()} records matching current filters`}
+              {loading ? 'Loading...' : `${totalElements.toLocaleString()} recipients matching current filters`}
             </p>
           </div>
         </div>
@@ -61,8 +61,8 @@ export function ClientListPage() {
       <div className="list-view-card">
         <div className="list-view-toolbar">
           <div>
-            <span className="list-view-title">Client List View</span>
-            <span className="list-view-subtitle">Search by name, client number, or email</span>
+            <span className="list-view-title">Recipient List View</span>
+            <span className="list-view-subtitle">Search by name, recipient number, or email</span>
           </div>
           <div className="toolbar-controls">
             <form onSubmit={handleSearch} style={{ display: 'contents' }}>
@@ -71,8 +71,8 @@ export function ClientListPage() {
                 <input
                   value={draftQ}
                   onChange={(e) => setDraftQ(e.target.value)}
-                  placeholder="Name or client number"
-                  aria-label="Search clients"
+                  placeholder="Name or recipient number"
+                  aria-label="Search recipients"
                 />
               </div>
               <button type="submit" className="btn btn-secondary btn-sm">Search</button>
@@ -94,7 +94,7 @@ export function ClientListPage() {
         </div>
 
         {error && <div className="form-error surface-error">{error}</div>}
-        {loading && <div className="spinner">Loading clients...</div>}
+        {loading && <div className="spinner">Loading recipients...</div>}
 
         {!loading && !error && result && (
           <>
@@ -102,9 +102,9 @@ export function ClientListPage() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Client #</th>
+                    <th>Recipient #</th>
                     <th>Name</th>
-                    <th>Organization</th>
+                    <th>Agency</th>
                     <th>Email</th>
                     <th>Phone</th>
                     <th>Status</th>
@@ -116,9 +116,9 @@ export function ClientListPage() {
                     <tr>
                       <td colSpan={7}>
                         <div className="empty-state-panel">
-                          <div className="empty-state-title">No clients found</div>
+                          <div className="empty-state-title">No recipients found</div>
                           <div className="empty-state-body">
-                            No clients match the current search or filter criteria. Try adjusting your search terms or clearing a filter.
+                            No benefit recipients match the current search or filter criteria. Try adjusting your search terms or clearing a filter.
                           </div>
                         </div>
                       </td>
@@ -128,7 +128,7 @@ export function ClientListPage() {
                     <tr
                       key={c.id}
                       className="clickable"
-                      title="Open client record"
+                      title="Open recipient record"
                       onClick={() => navigate(`/clients/${c.id}`)}
                     >
                       <td className="td-mono">{c.clientNumber}</td>

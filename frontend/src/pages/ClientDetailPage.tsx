@@ -47,25 +47,25 @@ export function ClientDetailPage() {
     return () => { cancelled = true; };
   }, [id, activeTab, casesPage]);
 
-  if (loading) return <div className="spinner">Loading client...</div>;
+  if (loading) return <div className="spinner">Loading recipient...</div>;
 
   if (error || !client) {
     return (
       <div className="page-stack">
-        <Link to="/clients" className="back-link">Back to Clients</Link>
-        <div className="form-error">{error ?? 'Client not found.'}</div>
+        <Link to="/clients" className="back-link">Back to Recipients</Link>
+        <div className="form-error">{error ?? 'Recipient not found.'}</div>
       </div>
     );
   }
 
   return (
     <div className="page-stack">
-      <Link to="/clients" className="back-link">Back to Clients</Link>
+      <Link to="/clients" className="back-link">Back to Recipients</Link>
 
       <section className="case-hero record-highlights">
         <div className="object-icon record-icon">P</div>
         <div className="case-hero-main">
-          <div className="case-number">Client {client.clientNumber}</div>
+          <div className="case-number">Recipient {client.clientNumber}</div>
           <h1 className="case-title-large">{client.displayName}</h1>
           <div className="case-badges">
             <span className={`badge ${client.active ? 'badge-status-ASSIGNED' : 'badge-neutral'}`}>
@@ -83,9 +83,9 @@ export function ClientDetailPage() {
           </div>
         </div>
         <div className="case-hero-meta highlights-fields">
-          <Metric label="Total Cases" value={String(client.totalCases)} />
-          <Metric label="Open" value={String(client.openCases)} />
-          <Metric label="Escalated" value={String(client.escalatedCases)} />
+          <Metric label="Total Reviews" value={String(client.totalCases)} />
+          <Metric label="Active" value={String(client.openCases)} />
+          <Metric label="Appeals" value={String(client.escalatedCases)} />
           <Metric label="Overdue" value={String(client.overdueCases)} />
         </div>
       </section>
@@ -96,7 +96,7 @@ export function ClientDetailPage() {
           onClick={() => setConfirmDeactivate(true)}
           disabled={!client.active}
         >
-          Deactivate Client
+          Deactivate Recipient
         </button>
       </div>
 
@@ -118,7 +118,7 @@ export function ClientDetailPage() {
             role="tab"
             aria-selected={activeTab === 'cases'}
           >
-            Cases
+            Benefit Cases
             {client.totalCases > 0 && <span className="tab-count">{client.totalCases}</span>}
           </button>
         </div>
@@ -139,9 +139,9 @@ export function ClientDetailPage() {
 
       {confirmDeactivate && (
         <ConfirmActionModal
-          title="Deactivate Client"
-          message="This client will be removed from active client lists and lookup workflows. Existing cases and history will remain linked to the client record."
-          confirmLabel="Deactivate Client"
+          title="Deactivate Recipient"
+          message="This recipient will be removed from active recipient lists and lookup workflows. Existing cases and history will remain linked to the recipient record."
+          confirmLabel="Deactivate Recipient"
           submitting={submittingAction}
           onClose={() => setConfirmDeactivate(false)}
           onConfirm={async () => {
@@ -176,13 +176,13 @@ function Metric({ label, value }: { label: string; value: string }) {
 function OverviewTab({ client }: { client: ClientDetail }) {
   return (
     <div className="detail-grid">
-      <DetailField label="Client number" value={client.clientNumber} />
+      <DetailField label="Recipient number" value={client.clientNumber} />
       <DetailField label="First name" value={client.firstName} />
       <DetailField label="Last name" value={client.lastName} />
       <DetailField label="Email" value={client.email ?? '-'} />
       <DetailField label="Phone" value={formatPhoneNumber(client.phone)} />
       <DetailField
-        label="Organization"
+        label="Agency"
         value={
           client.organizationName && client.organizationId ? (
             <Link to={`/organizations/${client.organizationId}`}>
@@ -253,7 +253,7 @@ function CasesTab({
   setPage: (fn: (p: number) => number) => void;
   onCaseClick: (id: string) => void;
 }) {
-  if (loading) return <div className="spinner">Loading cases...</div>;
+  if (loading) return <div className="spinner">Loading benefit cases...</div>;
 
   const rows = result?.content ?? [];
   const totalPages = result?.totalPages ?? 0;
@@ -278,8 +278,8 @@ function CasesTab({
               <tr>
                 <td colSpan={6}>
                   <div className="empty-state-panel">
-                    <div className="empty-state-title">No cases</div>
-                    <div className="empty-state-body">This client has no cases on record.</div>
+                    <div className="empty-state-title">No benefit cases</div>
+                    <div className="empty-state-body">This recipient has no benefit cases on record.</div>
                   </div>
                 </td>
               </tr>

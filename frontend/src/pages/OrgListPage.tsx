@@ -49,10 +49,10 @@ export function OrgListPage() {
         <div className="object-header-main">
           <span className="object-icon">O</span>
           <div>
-            <p className="page-kicker">CRM</p>
-            <h1 className="page-title">Organizations</h1>
+            <p className="page-kicker">Agency Directory</p>
+            <h1 className="page-title">Partner Agencies</h1>
             <p className="page-subtitle">
-              {loading ? 'Loading...' : `${totalElements.toLocaleString()} records matching current filters`}
+              {loading ? 'Loading...' : `${totalElements.toLocaleString()} agencies matching current filters`}
             </p>
           </div>
         </div>
@@ -61,8 +61,8 @@ export function OrgListPage() {
       <div className="list-view-card">
         <div className="list-view-toolbar">
           <div>
-            <span className="list-view-title">Organization List View</span>
-            <span className="list-view-subtitle">Search by name or organization code</span>
+            <span className="list-view-title">Agency List View</span>
+            <span className="list-view-subtitle">Search by name or agency code</span>
           </div>
           <div className="toolbar-controls">
             <form onSubmit={handleSearch} style={{ display: 'contents' }}>
@@ -71,8 +71,8 @@ export function OrgListPage() {
                 <input
                   value={draftQ}
                   onChange={(e) => setDraftQ(e.target.value)}
-                  placeholder="Name or org code"
-                  aria-label="Search organizations"
+                  placeholder="Name or agency code"
+                  aria-label="Search agencies"
                 />
               </div>
               <button type="submit" className="btn btn-secondary btn-sm">Search</button>
@@ -94,7 +94,7 @@ export function OrgListPage() {
         </div>
 
         {error && <div className="form-error surface-error">{error}</div>}
-        {loading && <div className="spinner">Loading organizations...</div>}
+        {loading && <div className="spinner">Loading agencies...</div>}
 
         {!loading && !error && result && (
           <>
@@ -105,9 +105,9 @@ export function OrgListPage() {
                     <th>Org #</th>
                     <th>Name</th>
                     <th>Status</th>
-                    <th>Clients</th>
+                    <th>Recipients</th>
                     <th>Cases</th>
-                    <th>Open Cases</th>
+                    <th>Active Cases</th>
                     <th>Created</th>
                   </tr>
                 </thead>
@@ -116,9 +116,9 @@ export function OrgListPage() {
                     <tr>
                       <td colSpan={7}>
                         <div className="empty-state-panel">
-                          <div className="empty-state-title">No organizations found</div>
+                          <div className="empty-state-title">No agencies found</div>
                           <div className="empty-state-body">
-                            No organizations match the current search or filter criteria. Try adjusting your search terms or clearing a filter.
+                            No partner agencies match the current search or filter criteria. Try adjusting your search terms or clearing a filter.
                           </div>
                         </div>
                       </td>
@@ -128,7 +128,7 @@ export function OrgListPage() {
                     <tr
                       key={o.id}
                       className="clickable"
-                      title="Open organization record"
+                      title="Open agency record"
                       onClick={() => navigate(`/organizations/${o.id}`)}
                     >
                       <td className="td-mono">{o.organizationCode}</td>

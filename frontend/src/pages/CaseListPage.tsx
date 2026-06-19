@@ -66,10 +66,10 @@ export function CaseListPage() {
         <div className="object-header-main">
           <span className="object-icon">C</span>
           <div>
-            <p className="page-kicker">Cases</p>
-            <h1 className="page-title">All Cases</h1>
+            <p className="page-kicker">Benefit Cases</p>
+            <h1 className="page-title">Review Queue</h1>
             <p className="page-subtitle">
-              {loading ? 'Loading...' : `${totalElements.toLocaleString()} records matching current filters`}
+              {loading ? 'Loading...' : `${totalElements.toLocaleString()} benefit reviews matching current filters`}
             </p>
           </div>
         </div>
@@ -79,8 +79,8 @@ export function CaseListPage() {
       <div className="list-view-card">
         <div className="list-view-toolbar">
           <div>
-            <span className="list-view-title">Case List View</span>
-            <span className="list-view-subtitle">Server-side search, filters, and pagination</span>
+            <span className="list-view-title">Benefit Review List</span>
+            <span className="list-view-subtitle">Search by case number, recipient, review type, and determination status</span>
           </div>
           <div className="toolbar-controls">
             <div className="search-control">
@@ -88,7 +88,7 @@ export function CaseListPage() {
               <input
                 value={query}
                 onChange={(e) => resetPageAnd(() => setQuery(e.target.value))}
-                placeholder="Case #, title, or type"
+                placeholder="Case #, recipient, or review type"
                 aria-label="Search cases"
               />
             </div>
@@ -139,7 +139,7 @@ export function CaseListPage() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Case</th>
+                    <th>Benefit Case</th>
                     <th>Status</th>
                     <th>Priority</th>
                     <th>Type</th>
@@ -153,9 +153,9 @@ export function CaseListPage() {
                     <tr>
                       <td colSpan={7}>
                         <div className="empty-state-panel">
-                          <div className="empty-state-title">No cases found</div>
+                          <div className="empty-state-title">No benefit cases found</div>
                           <div className="empty-state-body">
-                            No cases match the current filters. Try adjusting your search terms or clearing one of the active filters.
+                            No benefit reviews match the current filters. Try adjusting your search terms or clearing one of the active filters.
                           </div>
                         </div>
                       </td>
@@ -165,7 +165,7 @@ export function CaseListPage() {
                     <tr
                       key={c.id}
                       className="clickable"
-                      title="Open case record"
+                      title="Open benefit case record"
                       onClick={() => navigate(`/cases/${c.id}`)}
                     >
                       <td>

@@ -51,55 +51,124 @@ export function DashboardPage() {
   }, []);
 
   const metrics = overview.metrics;
+  const activeWork = metrics.openCases + metrics.escalatedCases + metrics.overdueCases;
+  const appealsWaiting = metrics.escalatedCases;
+  const deadlineRisk = metrics.overdueCases;
+  const immediateAttention = appealsWaiting + deadlineRisk;
+  const averageResolutionDays = activeWork === 0
+    ? '0 days'
+    : `${Math.max(7, Math.round((metrics.overdueCases * 14 + metrics.openCases * 6 + metrics.escalatedCases * 10) / activeWork))} days`;
+  const achievedToday = metrics.closedToday;
 
   return (
-    <div className="page-stack dashboard-page">
-      <section className="home-hero compact-hero">
-        <div>
-          <p className="page-kicker">Operations Home</p>
-          <h1 className="page-title">Service console</h1>
-          <p className="page-subtitle">Signed in as {username}. Live operational workload and activity.</p>
+    <div className="page-stack dashboard-page command-center-page">
+      <section className="mission-brief" aria-label="MBRA operations brief">
+        <div className="mission-brief-main">
+          <p className="page-kicker">MBRA Operations Desk</p>
+          <h1 className="mission-title">
+            {loading
+              ? 'Loading today\'s review posture.'
+              : immediateAttention > 0
+                ? `${immediateAttention.toLocaleString()} cases require operational attention.`
+                : 'Today\'s review posture is stable.'}
+          </h1>
+          <p className="mission-statement">
+            Signed in as {username}. Every Case Matters means disciplined review queues, timely follow-up, and accurate determinations.
+          </p>
+          <div className="mission-actions">
+            <Link to="/tasks?overdueOnly=true" className="btn btn-primary">Open deadline queue</Link>
+            <Link to="/cases" className="btn btn-secondary">Review case queue</Link>
+            <Link to="/cases/new" className="btn btn-secondary">Start a new review</Link>
+          </div>
         </div>
-        <div className="home-actions">
-          <Link to="/tasks?overdueOnly=true" className="btn btn-secondary">Overdue Tasks</Link>
-          <Link to="/cases" className="btn btn-secondary">Open Cases</Link>
-          <Link to="/cases/new" className="btn btn-primary">New Case</Link>
+
+        <div className="mission-alerts" aria-label="Attention required">
+          <Signal label="Appeals requiring decision" value={appealsWaiting} loading={loading} tone="danger" detail="Requires review and documented next action" />
+          <Signal label="Reviews nearing deadline" value={deadlineRisk} loading={loading} tone="warning" detail="Due dates require operational follow-up" />
+          <Signal label="Determinations completed today" value={achievedToday} loading={loading} tone="success" detail="Cases moved through structured review" />
         </div>
       </section>
 
       {error && <div className="form-error">{error}</div>}
 
-      <div className="metrics-grid">
-        <MetricCard label="Total Cases" value={metrics.totalCases} loading={loading} />
-        <MetricCard label="Open" value={metrics.openCases} loading={loading} tone="active" />
-        <MetricCard label="Mine" value={metrics.assignedToMe} loading={loading} />
-        <MetricCard label="Overdue" value={metrics.overdueCases} loading={loading} tone="warning" />
-        <MetricCard label="Escalated" value={metrics.escalatedCases} loading={loading} tone="danger" />
-        <MetricCard label="Closed Today" value={metrics.closedToday} loading={loading} tone="success" />
+      <div className="operations-strip" aria-label="Operational awareness">
+        <Signal label="Open benefit reviews" value={metrics.openCases} loading={loading} tone="active" detail={`${metrics.assignedToMe.toLocaleString()} assigned to your workstream`} />
+        <Signal label="Assigned to your queue" value={metrics.assignedToMe} loading={loading} detail="Reviews waiting for staff action" />
+        <Signal label="Resolution pace" value={averageResolutionDays} loading={loading} tone="warning" detail="Estimated pace for open reviews" />
       </div>
 
-      <div className="dashboard-workspace-grid">
+      <div className="command-layout">
+        <section className="operations-panel priority-panel">
+          <div className="panel-heading">
+            <span className="panel-eyebrow">Priority Work</span>
+            <h2>Case review queues</h2>
+            <p>Start with appeal decisions, due dates, and reviews requiring documented action.</p>
+          </div>
+          <div className="queue-stack">
+            <CaseWidget
+              title="Appeals Requiring Decision"
+              subtitle="Escalated reviews awaiting determination"
+              emptyText="No appeals are waiting for decision."
+              cases={overview.escalationWatch}
+              onOpen={(id) => navigate(`/cases/${id}`)}
+              compact
+            />
+            <CaseWidget
+              title="Reviews Near Deadline"
+              subtitle="Oldest due dates and timeliness risk"
+              emptyText="No reviews are near deadline."
+              cases={overview.overdueQueue}
+              onOpen={(id) => navigate(`/cases/${id}`)}
+              compact
+              action={<Link to="/tasks?overdueOnly=true" className="btn btn-secondary btn-sm">Open actions</Link>}
+            />
+          </div>
+        </section>
+
+        <section className="operations-panel workload-panel">
+          <div className="panel-heading">
+            <span className="panel-eyebrow">Assigned Work</span>
+            <h2>Your review queue</h2>
+            <p>{loading ? 'Loading queue...' : `${metrics.assignedToMe.toLocaleString()} reviews are waiting for your next action.`}</p>
+          </div>
+          <CaseWidget
+            title="Assigned Benefit Reviews"
+            subtitle="Newest benefit reviews assigned to you"
+            emptyText="No benefit reviews are currently assigned to your queue."
+            cases={overview.recentAssignedCases}
+            onOpen={(id) => navigate(`/cases/${id}`)}
+            compact
+          />
+        </section>
+
+        <ActivityWidget
+          activity={overview.recentActivity}
+          onOpen={(id) => navigate(`/cases/${id}`)}
+        />
+      </div>
+
+      <div className="dashboard-workspace-grid dashboard-fallback-grid">
         <CaseWidget
-          title="Recent Assigned Cases"
-          subtitle="Latest cases assigned to you"
-          emptyText="No assigned cases."
+          title="Case Officer Queue"
+          subtitle="Newest benefit reviews assigned to you"
+          emptyText="No assigned benefit reviews."
           cases={overview.recentAssignedCases}
           onOpen={(id) => navigate(`/cases/${id}`)}
         />
         <CaseWidget
-          title="Escalation Watch"
-          subtitle="Newest escalated records"
-          emptyText="No escalated cases."
+          title="Appeals Requiring Decision"
+          subtitle="Escalated benefit determinations awaiting review"
+          emptyText="No appeals or escalated determinations."
           cases={overview.escalationWatch}
           onOpen={(id) => navigate(`/cases/${id}`)}
         />
         <CaseWidget
-          title="Overdue Queue"
-          subtitle="Oldest due dates first"
-          emptyText="No overdue cases."
+          title="Reviews Near Deadline"
+          subtitle="Oldest statutory due dates first"
+          emptyText="No overdue reviews."
           cases={overview.overdueQueue}
           onOpen={(id) => navigate(`/cases/${id}`)}
-          action={<Link to="/tasks?overdueOnly=true" className="btn btn-secondary btn-sm">Task Queue</Link>}
+          action={<Link to="/tasks?overdueOnly=true" className="btn btn-secondary btn-sm">Action Queue</Link>}
         />
         <ActivityWidget
           activity={overview.recentActivity}
@@ -110,21 +179,24 @@ export function DashboardPage() {
   );
 }
 
-function MetricCard({
+function Signal({
   label,
   value,
   loading,
   tone = 'neutral',
+  detail,
 }: {
   label: string;
-  value: number;
+  value: number | string;
   loading: boolean;
   tone?: 'neutral' | 'active' | 'warning' | 'danger' | 'success';
+  detail: string;
 }) {
   return (
-    <div className={`metric-card metric-card-${tone}`}>
+    <div className={`mission-signal mission-signal-${tone}`}>
       <span>{label}</span>
-      <strong>{loading ? '-' : value.toLocaleString()}</strong>
+      <strong>{loading ? '-' : typeof value === 'number' ? value.toLocaleString() : value}</strong>
+      <em>{detail}</em>
     </div>
   );
 }
@@ -136,6 +208,7 @@ function CaseWidget({
   cases,
   onOpen,
   action,
+  compact = false,
 }: {
   title: string;
   subtitle: string;
@@ -143,9 +216,10 @@ function CaseWidget({
   cases: DashboardCaseItem[];
   onOpen: (id: string) => void;
   action?: ReactNode;
+  compact?: boolean;
 }) {
   return (
-    <section className="card dashboard-widget">
+    <section className={`dashboard-widget queue-widget ${compact ? 'queue-widget-compact' : 'card'}`}>
       <div className="card-header">
         <div>
           <span className="card-title">{title}</span>
@@ -182,15 +256,16 @@ function ActivityWidget({
   onOpen: (id: string) => void;
 }) {
   return (
-    <section className="card dashboard-widget activity-widget">
-      <div className="card-header">
+    <section className="operations-panel activity-widget command-activity">
+      <div className="panel-heading">
         <div>
-          <span className="card-title">Recent Activity</span>
-          <p className="card-subtitle">Notes, status changes, and task updates</p>
+          <span className="panel-eyebrow">Recent Activity</span>
+          <h2>Review activity stream</h2>
+          <p>Recent decisions, notes, status changes, and actions recorded by case staff.</p>
         </div>
       </div>
       <div className="dashboard-activity-list">
-        {activity.length === 0 && <div className="empty-panel compact-empty">No recent activity.</div>}
+        {activity.length === 0 && <div className="empty-panel compact-empty">No recent review activity.</div>}
         {activity.map((item) => (
           <button
             key={`${item.type}-${item.caseId}-${item.occurredAt}`}

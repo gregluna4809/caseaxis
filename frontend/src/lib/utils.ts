@@ -74,5 +74,5 @@ export function truncate(str: string | null | undefined, len = 8): string {
 }
 
 export function displayActor(value: string | null | undefined): string {
-  return value ? 'CaseAxis user' : 'Unassigned';
+  return value ? 'MBRA case officer' : 'Unassigned';
 }

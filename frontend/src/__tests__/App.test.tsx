@@ -11,20 +11,27 @@ describe('App', () => {
   it('displays public demo access instructions on the login page', () => {
     render(<App />);
 
-    expect(screen.getByRole('heading', { name: 'Enterprise case workflow platform' })).toBeInTheDocument();
-    expect(screen.getByText('75,000')).toBeInTheDocument();
-    expect(screen.getByText('seeded cases')).toBeInTheDocument();
-    expect(screen.getByText('RBAC')).toBeInTheDocument();
-    expect(screen.getByText('+ audit logging')).toBeInTheDocument();
-    expect(screen.getByText('Production')).toBeInTheDocument();
-    expect(screen.getByText('smoke-tested')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Metropolitan Benefits Review Authority' })).toBeInTheDocument();
+    expect(screen.getByText('Every Case Matters.')).toBeInTheDocument();
+    expect(screen.getAllByText('MBRA').length).toBeGreaterThan(0);
+    expect(screen.getByText('Review')).toBeInTheDocument();
+    expect(screen.getByText('structured queues')).toBeInTheDocument();
+    expect(screen.getByText('Decision')).toBeInTheDocument();
+    expect(screen.getByText('determination flow')).toBeInTheDocument();
+    expect(screen.getByText('Deadline')).toBeInTheDocument();
+    expect(screen.getByText('case timeliness')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Case Management System' })).toBeInTheDocument();
+    expect(screen.getByText('Staff Operations Portal')).toBeInTheDocument();
+    expect(screen.getByText('Case review workflow')).toBeInTheDocument();
+    expect(screen.getByText('Determination tracking')).toBeInTheDocument();
+    expect(screen.getByText('Deadline management')).toBeInTheDocument();
 
-    const demoPanel = screen.getByRole('region', { name: 'Live Demo Access' });
-    expect(within(demoPanel).getByRole('heading', { name: 'Live Demo Access' })).toBeInTheDocument();
+    const demoPanel = screen.getByRole('region', { name: 'Service Demo Access' });
+    expect(within(demoPanel).getByRole('heading', { name: 'Service Demo Access' })).toBeInTheDocument();
     expect(within(demoPanel).getByText('Username')).toBeInTheDocument();
     expect(within(demoPanel).getByText('demo')).toBeInTheDocument();
     expect(within(demoPanel).getByText('Password')).toBeInTheDocument();
     expect(within(demoPanel).getByText('demo123')).toBeInTheDocument();
-    expect(within(demoPanel).getByText('This environment contains synthetic demonstration data. Actions performed using the demo account may be visible to other visitors and may generate audit events.')).toBeInTheDocument();
+    expect(within(demoPanel).getByText('This environment contains synthetic benefits review data. Actions performed using the demo account may be visible to other visitors and may appear in the service history.')).toBeInTheDocument();
   });
 });

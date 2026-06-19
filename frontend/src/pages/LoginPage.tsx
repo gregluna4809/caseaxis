@@ -43,26 +43,31 @@ export function LoginPage() {
       <div className="login-landing">
         <section className="login-hero-panel" aria-labelledby="login-hero-title">
           <div className="login-hero-copy">
-            <div className="login-logo hero-logo">CA</div>
-            <p className="page-kicker">CaseAxis</p>
-            <h1 id="login-hero-title" className="login-hero-title">Enterprise case workflow platform</h1>
+            <div className="login-logo hero-logo service-mark">MB</div>
+            <p className="page-kicker">Metropolitan Benefits Review Authority</p>
+            <h1 id="login-hero-title" className="login-hero-title">Metropolitan Benefits Review Authority</h1>
             <p className="login-hero-subtitle">
-              Production-style case operations with realistic workflow data, secure access controls, and auditable activity.
+              <strong>Every Case Matters.</strong> Benefits review operations for fair, timely, and accurate case determinations.
             </p>
+            <div className="login-proof-row" aria-label="Platform capabilities">
+              <span>Case review workflow</span>
+              <span>Determination tracking</span>
+              <span>Deadline management</span>
+            </div>
           </div>
 
           <div className="login-metric-grid" aria-label="Platform highlights">
             <div className="login-metric-tile">
-              <strong>75,000</strong>
-              <span>seeded cases</span>
+              <strong>Review</strong>
+              <span>structured queues</span>
             </div>
             <div className="login-metric-tile">
-              <strong>RBAC</strong>
-              <span>+ audit logging</span>
+              <strong>Decision</strong>
+              <span>determination flow</span>
             </div>
             <div className="login-metric-tile">
-              <strong>Production</strong>
-              <span>smoke-tested</span>
+              <strong>Deadline</strong>
+              <span>case timeliness</span>
             </div>
           </div>
 
@@ -95,9 +100,10 @@ export function LoginPage() {
 
         <div className="login-card">
           <div className="login-header">
-            <div className="login-logo">CA</div>
-            <h2 className="login-title">Sign in to CaseAxis</h2>
-            <p className="login-subtitle">Enterprise case workflow</p>
+            <div className="login-logo service-mark">MB</div>
+            <p className="page-kicker">MBRA</p>
+            <h2 className="login-title">Case Management System</h2>
+            <p className="login-subtitle">Staff Operations Portal</p>
           </div>
 
           <form className="login-form" onSubmit={handleSubmit} noValidate>
@@ -144,8 +150,8 @@ export function LoginPage() {
                 </svg>
               </span>
               <div>
-                <h3 id="demo-access-title">Live Demo Access</h3>
-                <p>Explore the public portfolio environment.</p>
+                <h3 id="demo-access-title">Service Demo Access</h3>
+                <p>Explore the synthetic MBRA operations training environment.</p>
               </div>
             </div>
 
@@ -161,7 +167,7 @@ export function LoginPage() {
             </dl>
 
             <p className="demo-access-note">
-              This environment contains synthetic demonstration data. Actions performed using the demo account may be visible to other visitors and may generate audit events.
+              This environment contains synthetic benefits review data. Actions performed using the demo account may be visible to other visitors and may appear in the service history.
             </p>
           </section>
         </div>

@@ -12,10 +12,10 @@ type ModalId = 'note' | 'task' | 'status' | 'archive' | null;
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'overview', label: 'Details' },
-  { id: 'audit', label: 'Audit' },
+  { id: 'audit', label: 'History' },
   { id: 'notes', label: 'Notes' },
-  { id: 'tasks', label: 'Tasks' },
-  { id: 'attachments', label: 'Files' },
+  { id: 'tasks', label: 'Actions' },
+  { id: 'attachments', label: 'Documents' },
 ];
 
 export function CaseDetailPage() {
@@ -105,21 +105,30 @@ export function CaseDetailPage() {
   if (caseError || !caseDetail) {
     return (
       <div className="page-stack">
-        <Link to="/cases" className="back-link">Back to Cases</Link>
+        <Link to="/cases" className="back-link">Back to Benefit Cases</Link>
         <div className="form-error">{caseError ?? 'Case not found.'}</div>
       </div>
     );
   }
 
-  return (
-    <div className="page-stack">
-      <Link to="/cases" className="back-link">Back to Cases</Link>
+  const isDeadlineRisk = Boolean(caseDetail.dueDate && caseDetail.statusCode !== 'CLOSED');
+  const isAppeal = caseDetail.statusCode === 'ESCALATED' || caseDetail.reopenedCount > 0;
+  const attentionMessage = isAppeal
+    ? 'This appeal requires review and a documented decision.'
+    : isDeadlineRisk
+      ? 'This review needs action before the due date.'
+      : 'Keep the review moving with notes, tasks, and a clear next step.';
 
-      <section className="case-hero record-highlights">
+  return (
+    <div className="page-stack case-command-page">
+      <Link to="/cases" className="back-link">Back to Benefit Cases</Link>
+
+      <section className="case-command-hero record-highlights">
         <div className="object-icon record-icon">C</div>
         <div className="case-hero-main">
-          <div className="case-number">Case {caseDetail.caseNumber}</div>
+          <div className="case-number">MBRA Case {caseDetail.caseNumber}</div>
           <h1 className="case-title-large">{caseDetail.title}</h1>
+          <p className="case-mission-line">{attentionMessage} Every Case Matters.</p>
           <div className="case-badges">
             <StatusBadge code={caseDetail.statusCode} label={caseDetail.statusDisplayName} />
             <PriorityBadge code={caseDetail.priorityCode} label={caseDetail.priorityDisplayName} />
@@ -128,25 +137,43 @@ export function CaseDetailPage() {
               <span className="badge badge-warning">Reopened x{caseDetail.reopenedCount}</span>
             )}
           </div>
+          <WorkflowStrip currentStatus={caseDetail.statusCode} />
         </div>
-        <div className="case-hero-meta highlights-fields">
-          <Metric label="Due" value={formatDate(caseDetail.dueDate)} />
-          <Metric label="Assignee" value={displayActor(caseDetail.assignedToId)} />
-          <Metric label="Updated" value={formatDate(caseDetail.updatedAt)} />
+        <div className="case-command-status">
+          <span className="panel-eyebrow">Recipient Review Status</span>
+          <strong>{caseDetail.statusDisplayName}</strong>
+          <p>{caseDetail.priorityDisplayName} priority benefit review assigned to {displayActor(caseDetail.assignedToId)}.</p>
         </div>
       </section>
 
-      <div className="action-bar quick-actions">
-        <button className="btn btn-secondary" onClick={() => setActiveModal('note')}>Add Note</button>
-        <button className="btn btn-secondary" onClick={() => setActiveModal('task')}>Add Task</button>
-        <button className="btn btn-primary" onClick={() => setActiveModal('status')}>Transition Status</button>
-        <button
-          className="btn btn-secondary"
-          onClick={() => setActiveModal('archive')}
-          disabled={caseDetail.statusCode === 'CLOSED'}
-        >
-          Archive Case
-        </button>
+      <div className="case-command-grid">
+        <section className="operations-panel next-action-panel">
+          <div className="panel-heading">
+            <span className="panel-eyebrow">Next Operational Step</span>
+            <h2>{caseDetail.statusCode === 'CLOSED' ? 'Keep the case history complete' : 'Move this review toward determination'}</h2>
+            <p>{attentionMessage}</p>
+          </div>
+          <div className="action-bar quick-actions command-actions">
+            <button className="btn btn-secondary" onClick={() => setActiveModal('note')}>Add Note</button>
+            <button className="btn btn-secondary" onClick={() => setActiveModal('task')}>Add Action</button>
+            <button className="btn btn-primary" onClick={() => setActiveModal('status')}>Record Decision</button>
+            <button
+              className="btn btn-secondary"
+              onClick={() => setActiveModal('archive')}
+              disabled={caseDetail.statusCode === 'CLOSED'}
+            >
+              Close Case
+            </button>
+          </div>
+        </section>
+
+        <section className="operations-panel case-context-panel">
+          <div className="case-hero-meta highlights-fields">
+            <Metric label="Due" value={formatDate(caseDetail.dueDate)} />
+            <Metric label="Case officer" value={displayActor(caseDetail.assignedToId)} />
+            <Metric label="Updated" value={formatDate(caseDetail.updatedAt)} />
+          </div>
+        </section>
       </div>
 
       {actionError && <div className="form-error">{actionError}</div>}
@@ -196,7 +223,7 @@ export function CaseDetailPage() {
       )}
       {activeModal === 'archive' && (
         <Modal
-          title="Archive Case"
+          title="Close Case"
           onClose={() => setActiveModal(null)}
           footer={(
             <>
@@ -218,16 +245,44 @@ export function CaseDetailPage() {
                   }
                 }}
               >
-                {submittingAction ? 'Archiving...' : 'Archive Case'}
+                {submittingAction ? 'Closing...' : 'Close Case'}
               </button>
             </>
           )}
         >
           <div className="field-hint-warn">
-            This will close the case through the archive workflow. The case record, notes, tasks, attachments, and status history remain preserved.
+            This will close the benefit case through the MBRA workflow. The case record, notes, actions, documents, and decision history remain preserved.
           </div>
         </Modal>
       )}
+    </div>
+  );
+}
+
+function WorkflowStrip({ currentStatus }: { currentStatus: string }) {
+  const steps = [
+    { code: 'NEW', label: 'New' },
+    { code: 'ASSIGNED', label: 'Assigned' },
+    { code: 'IN_REVIEW', label: 'Review' },
+    { code: 'PENDING_INFO', label: 'Pending' },
+    { code: 'ESCALATED', label: 'Escalated' },
+    { code: 'APPROVED', label: 'Approved' },
+    { code: 'DENIED', label: 'Denied' },
+    { code: 'CLOSED', label: 'Closed' },
+    { code: 'REOPENED', label: 'Reopened' },
+  ];
+  const activeIndex = steps.findIndex((step) => step.code === currentStatus);
+
+  return (
+    <div className="workflow-strip" aria-label="Benefit review workflow">
+      {steps.map((step, index) => (
+        <span
+          key={step.code}
+          className={`workflow-step ${activeIndex >= 0 && index <= activeIndex ? 'complete' : ''} ${step.code === currentStatus ? 'current' : ''}`}
+        >
+          {step.label}
+        </span>
+      ))}
     </div>
   );
 }
@@ -252,13 +307,13 @@ function OverviewTab({ c }: { c: CaseDetail }) {
       </div>
 
       <div className="detail-grid">
-        <DetailField label="Case number" value={c.caseNumber} />
+        <DetailField label="MBRA case number" value={c.caseNumber} />
         <DetailField label="Status" value={<StatusBadge code={c.statusCode} label={c.statusDisplayName} />} />
         <DetailField label="Priority" value={<PriorityBadge code={c.priorityCode} label={c.priorityDisplayName} />} />
         <DetailField label="Type" value={c.typeDisplayName} />
-        <DetailField label="Organization" value={c.organizationName && c.organizationCode ? `${c.organizationName} (${c.organizationCode})` : '-'} />
-        <DetailField label="Client" value={c.clientDisplayName && c.clientNumber ? `${c.clientDisplayName} (${c.clientNumber})` : '-'} />
-        <DetailField label="Assigned to" value={displayActor(c.assignedToId)} />
+        <DetailField label="Agency" value={c.organizationName && c.organizationCode ? `${c.organizationName} (${c.organizationCode})` : '-'} />
+        <DetailField label="Benefit recipient" value={c.clientDisplayName && c.clientNumber ? `${c.clientDisplayName} (${c.clientNumber})` : '-'} />
+        <DetailField label="Case officer" value={displayActor(c.assignedToId)} />
         <DetailField label="Assigned at" value={formatDateTime(c.assignedAt)} />
         <DetailField label="Due date" value={formatDate(c.dueDate)} />
         <DetailField label="Reopened count" value={String(c.reopenedCount)} />
@@ -313,12 +368,12 @@ function NotesTab({ notes, loading }: { notes: CaseNote[]; loading: boolean }) {
 }
 
 function AuditTab({ events, loading }: { events: AuditEvent[]; loading: boolean }) {
-  if (loading) return <div className="spinner">Loading audit events...</div>;
+  if (loading) return <div className="spinner">Loading service history...</div>;
   if (events.length === 0) return (
     <div className="empty-state-panel">
-      <div className="empty-state-title">No audit events recorded</div>
+      <div className="empty-state-title">No service history recorded</div>
       <div className="empty-state-body">
-        Business actions on this case will appear here as an immutable timeline.
+        Case actions will appear here as a clear service timeline.
       </div>
     </div>
   );
@@ -343,12 +398,12 @@ function AuditTab({ events, loading }: { events: AuditEvent[]; loading: boolean 
 }
 
 function TasksTab({ tasks, loading }: { tasks: CaseTask[]; loading: boolean }) {
-  if (loading) return <div className="spinner">Loading tasks...</div>;
+  if (loading) return <div className="spinner">Loading review actions...</div>;
   if (tasks.length === 0) return (
     <div className="empty-state-panel">
-      <div className="empty-state-title">No tasks assigned</div>
+      <div className="empty-state-title">No review actions assigned</div>
       <div className="empty-state-body">
-        This case has no tasks yet. Use Add Task to create work items and track progress toward resolution.
+        This case has no review actions yet. Use Add Action to create officer work items and track progress toward determination.
       </div>
     </div>
   );
@@ -501,13 +556,13 @@ function AddTaskModal({ caseId, onClose, onDone }: { caseId: string; onClose: ()
 
   return (
     <Modal
-      title="Add Task"
+      title="Add Review Action"
       onClose={onClose}
       footer={(
         <>
           <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
           <button type="submit" form="add-task-form" className="btn btn-primary" disabled={submitting}>
-            {submitting ? 'Saving...' : 'Add Task'}
+            {submitting ? 'Saving...' : 'Add Action'}
           </button>
         </>
       )}
@@ -515,7 +570,7 @@ function AddTaskModal({ caseId, onClose, onDone }: { caseId: string; onClose: ()
       <form id="add-task-form" onSubmit={handleSubmit} className="modal-form">
         {error && <div className="form-error">{error}</div>}
         <div className="form-group">
-          <label className="form-label" htmlFor="modal-task-title">Title *</label>
+            <label className="form-label" htmlFor="modal-task-title">Action Title *</label>
           <input
             id="modal-task-title"
             className="form-input"
@@ -524,7 +579,7 @@ function AddTaskModal({ caseId, onClose, onDone }: { caseId: string; onClose: ()
             onChange={(e) => setTitle(e.target.value)}
             required
             maxLength={500}
-            placeholder="Task title"
+            placeholder="Review action title"
           />
         </div>
         <div className="form-group">
@@ -586,7 +641,7 @@ function TransitionStatusModal({
 
   if (allowed.length === 0) {
     return (
-      <Modal title="Transition Status" onClose={onClose} footer={<button className="btn btn-secondary" onClick={onClose}>Close</button>}>
+      <Modal title="Record Decision" onClose={onClose} footer={<button className="btn btn-secondary" onClick={onClose}>Close</button>}>
         <p className="muted-copy">
           No transitions are available from <strong>{STATUS_LABEL[currentStatus] ?? currentStatus}</strong>.
         </p>
@@ -609,7 +664,7 @@ function TransitionStatusModal({
 
   return (
     <Modal
-      title="Transition Status"
+      title="Record Decision"
       onClose={onClose}
       footer={(
         <>
@@ -623,11 +678,11 @@ function TransitionStatusModal({
       <form id="transition-form" onSubmit={handleSubmit} className="modal-form">
         {error && <div className="form-error">{error}</div>}
         <div className="form-group">
-          <label className="form-label" htmlFor="modal-ts-current">Current Status</label>
+          <label className="form-label" htmlFor="modal-ts-current">Current Review Status</label>
           <input id="modal-ts-current" className="form-input" type="text" value={STATUS_LABEL[currentStatus] ?? currentStatus} disabled />
         </div>
         <div className="form-group">
-          <label className="form-label" htmlFor="modal-ts-new">New Status *</label>
+          <label className="form-label" htmlFor="modal-ts-new">New Review Status *</label>
           <select id="modal-ts-new" className="form-select" value={statusCode} onChange={(e) => setStatusCode(e.target.value)} required>
             {allowed.map((code) => <option key={code} value={code}>{STATUS_LABEL[code] ?? code}</option>)}
           </select>

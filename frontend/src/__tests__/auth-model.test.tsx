@@ -81,7 +81,7 @@ describe('frontend auth model', () => {
       renderShellForRoles([role]);
 
       const navigation = screen.getByRole('navigation', { name: 'Primary navigation' });
-      expect(within(navigation).getByRole('link', { name: /new case/i })).toBeInTheDocument();
+      expect(within(navigation).getByRole('link', { name: /new review/i })).toBeInTheDocument();
     },
   );
 
@@ -91,7 +91,7 @@ describe('frontend auth model', () => {
       renderShellForRoles([role]);
 
       const navigation = screen.getByRole('navigation', { name: 'Primary navigation' });
-      expect(within(navigation).getByRole('link', { name: /reports/i })).toBeInTheDocument();
+      expect(within(navigation).getByRole('link', { name: /service outcomes/i })).toBeInTheDocument();
     },
   );
 
@@ -99,9 +99,9 @@ describe('frontend auth model', () => {
     renderShellForRoles(['AUDITOR']);
 
     const navigation = screen.getByRole('navigation', { name: 'Primary navigation' });
-    expect(screen.getByText('Read-only auditor')).toBeInTheDocument();
-    expect(within(navigation).getByRole('link', { name: /reports/i })).toBeInTheDocument();
-    expect(within(navigation).queryByRole('link', { name: /new case/i })).not.toBeInTheDocument();
+    expect(screen.getByText('Read-only reviewer')).toBeInTheDocument();
+    expect(within(navigation).getByRole('link', { name: /service outcomes/i })).toBeInTheDocument();
+    expect(within(navigation).queryByRole('link', { name: /new review/i })).not.toBeInTheDocument();
   });
 
   it('logs in through the cookie auth flow without storing a JavaScript-readable token', async () => {

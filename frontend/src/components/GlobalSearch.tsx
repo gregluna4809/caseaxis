@@ -78,7 +78,7 @@ export function GlobalSearch() {
           ref={inputRef}
           className="global-search-input"
           type="text"
-          placeholder="Cases, clients, organizations..."
+          placeholder="Cases, recipients, agencies..."
           value={query}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
@@ -99,7 +99,7 @@ export function GlobalSearch() {
 
           {results && results.cases.length > 0 && (
             <div className="search-group">
-              <div className="search-group-header">Cases</div>
+              <div className="search-group-header">Benefit Cases</div>
               {results.cases.map(item => (
                 <div
                   key={item.id}
@@ -121,7 +121,7 @@ export function GlobalSearch() {
 
           {results && results.clients.length > 0 && (
             <div className="search-group">
-              <div className="search-group-header">Clients</div>
+              <div className="search-group-header">Benefit Recipients</div>
               {results.clients.map(item => (
                 <div
                   key={item.id}
@@ -144,7 +144,7 @@ export function GlobalSearch() {
 
           {results && results.organizations.length > 0 && (
             <div className="search-group">
-              <div className="search-group-header">Organizations</div>
+              <div className="search-group-header">Agencies</div>
               {results.organizations.map(item => (
                 <div
                   key={item.id}
@@ -165,7 +165,7 @@ export function GlobalSearch() {
 
           {results && results.tasks.length > 0 && (
             <div className="search-group">
-              <div className="search-group-header">Tasks</div>
+              <div className="search-group-header">Review Actions</div>
               {results.tasks.map(item => (
                 <div
                   key={item.id}
@@ -177,7 +177,7 @@ export function GlobalSearch() {
                 >
                   <div className="search-result-main">
                     <div className="search-result-title">{item.title}</div>
-                    <div className="search-result-sub">Task</div>
+                    <div className="search-result-sub">Review action</div>
                   </div>
                   <span className="search-result-badge">{item.statusDisplayName}</span>
                 </div>

@@ -212,9 +212,9 @@ export function ReportsPage() {
         <div className="object-header-main">
           <span className="object-icon">R</span>
           <div>
-            <p className="page-kicker">Analytics</p>
-            <h1 className="page-title">Reports</h1>
-            <p className="page-subtitle">Operational analytics and workload intelligence</p>
+            <p className="page-kicker">Determination Analytics</p>
+            <h1 className="page-title">Service Outcomes</h1>
+            <p className="page-subtitle">Benefits review outcomes, workload support, and service timeliness</p>
           </div>
         </div>
         <div className="home-actions">
@@ -297,14 +297,14 @@ export function ReportsPage() {
       {error && <div className="form-error">{error}</div>}
 
       <div className="metrics-grid report-metrics-grid">
-        <MetricCard label="Total Cases" value={summary.totalCases} loading={loading} />
-        <MetricCard label="Open Cases" value={summary.openCases} loading={loading} tone="active" />
-        <MetricCard label="Closed Cases" value={summary.closedCases} loading={loading} tone="success" />
-        <MetricCard label="Overdue Cases" value={summary.overdueCases} loading={loading} tone="warning" />
-        <MetricCard label="Escalated Cases" value={summary.escalatedCases} loading={loading} tone="danger" />
+        <MetricCard label="Total Reviews" value={summary.totalCases} loading={loading} />
+        <MetricCard label="Active Cases" value={summary.openCases} loading={loading} tone="active" />
+        <MetricCard label="Recipients Helped" value={summary.closedCases} loading={loading} tone="success" />
+        <MetricCard label="Overdue Reviews" value={summary.overdueCases} loading={loading} tone="warning" />
+        <MetricCard label="Recipients Waiting on Appeals" value={summary.escalatedCases} loading={loading} tone="danger" />
         <MetricCard label="Avg Resolution" value={formatDuration(summary.averageResolutionHours)} loading={loading} />
-        <MetricCard label="Open Tasks" value={summary.openTasks} loading={loading} tone="active" />
-        <MetricCard label="Completed Tasks" value={summary.completedTasks} loading={loading} tone="success" />
+        <MetricCard label="Open Actions" value={summary.openTasks} loading={loading} tone="active" />
+        <MetricCard label="Completed Actions" value={summary.completedTasks} loading={loading} tone="success" />
       </div>
 
       {loading && <div className="spinner">Loading report analytics...</div>}
@@ -415,7 +415,7 @@ function OverdueSection({ rows }: { rows: OverdueAgingBucket[] }) {
   const max = maxCount(rows);
   return (
     <section className="card report-section-card">
-      <ReportSectionHeader title="Overdue Aging Report" subtitle="Open overdue cases grouped by age" />
+      <ReportSectionHeader title="Overdue Aging Report" subtitle="Open overdue benefit reviews grouped by age" />
       <BarChart rows={rows.map((row) => ({ label: row.bucket, count: row.count }))} max={max} tone="warning" />
       <ReportTableEmpty rows={rows.filter((row) => row.count > 0)} colSpan={3} />
       <div className="table-wrapper report-table-wrapper">
@@ -453,15 +453,15 @@ function AssigneeWorkloadSection({
 }) {
   return (
     <section className="card report-section-card">
-      <ReportSectionHeader title="Assignee Workload" subtitle="Open, overdue, escalated, and closed cases by owner" />
+      <ReportSectionHeader title="Case Officer Workload" subtitle="Active, overdue, appealed, and closed reviews by officer" />
       <div className="table-wrapper report-workload-wrapper">
         <table className="data-table">
           <thead>
             <tr>
-              <th>Assignee</th>
-              <SortableTh label="Open Cases" sortKey="openCases" activeSort={sort} onSort={onSort} />
-              <SortableTh label="Overdue Cases" sortKey="overdueCases" activeSort={sort} onSort={onSort} />
-              <SortableTh label="Escalated Cases" sortKey="escalatedCases" activeSort={sort} onSort={onSort} />
+              <th>Case Officer</th>
+              <SortableTh label="Active Cases" sortKey="openCases" activeSort={sort} onSort={onSort} />
+              <SortableTh label="Overdue Reviews" sortKey="overdueCases" activeSort={sort} onSort={onSort} />
+              <SortableTh label="Appeals" sortKey="escalatedCases" activeSort={sort} onSort={onSort} />
               <SortableTh label="Closed This Period" sortKey="closedThisPeriod" activeSort={sort} onSort={onSort} />
             </tr>
           </thead>
@@ -494,15 +494,15 @@ function OrganizationWorkloadSection({
 }) {
   return (
     <section className="card report-section-card">
-      <ReportSectionHeader title="Organization Workload" subtitle="Case volume and escalation concentration by organization" />
+      <ReportSectionHeader title="Agency Workload" subtitle="Case volume and appeal concentration by partner agency" />
       <div className="table-wrapper report-workload-wrapper">
         <table className="data-table">
           <thead>
             <tr>
-              <th>Organization</th>
-              <SortableTh label="Total Cases" sortKey="totalCases" activeSort={sort} onSort={onSort} />
-              <SortableTh label="Open Cases" sortKey="openCases" activeSort={sort} onSort={onSort} />
-              <SortableTh label="Escalated Cases" sortKey="escalatedCases" activeSort={sort} onSort={onSort} />
+              <th>Agency</th>
+              <SortableTh label="Total Reviews" sortKey="totalCases" activeSort={sort} onSort={onSort} />
+              <SortableTh label="Active Cases" sortKey="openCases" activeSort={sort} onSort={onSort} />
+              <SortableTh label="Appeals" sortKey="escalatedCases" activeSort={sort} onSort={onSort} />
             </tr>
           </thead>
           <tbody>
@@ -531,7 +531,7 @@ function ClosureTrendSection({ rows }: { rows: ClosureTrendPoint[] }) {
   const max = maxCount(rows);
   return (
     <section className="card report-section-card">
-      <ReportSectionHeader title="Closure Trend" subtitle="Daily closures for the selected reporting period" />
+      <ReportSectionHeader title="Recipient Outcome Trend" subtitle="Daily case closures for the selected reporting period" />
       {rows.length === 0 ? (
         <div className="empty-panel compact-empty">No closures in this period.</div>
       ) : (
