@@ -1,6 +1,5 @@
 package com.caseaxis.common.exception;
 
-import com.caseaxis.auth.LoginRequest;
 import com.caseaxis.users.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,7 +37,7 @@ class GlobalExceptionHandlerTest {
     @Autowired private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
     @Autowired private UserRepository userRepository;
 
-    private String token;
+    private jakarta.servlet.http.Cookie token;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -47,19 +46,13 @@ class GlobalExceptionHandlerTest {
             passwordEncoder.encode(adminPassword), "admin"
         );
 
-        String loginBody = objectMapper.writeValueAsString(new LoginRequest("admin", adminPassword));
-        String resp = mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(loginBody))
-            .andReturn().getResponse().getContentAsString();
-        token = objectMapper.readTree(resp).at("/data/token").asText();
-        org.assertj.core.api.Assertions.assertThat(token).isNotBlank();
+        token = com.caseaxis.test.TestAuthCookies.loginCookie(mockMvc, objectMapper, "admin", adminPassword);
     }
 
     @Test
     void unknownRoute_authenticated_returns404NotFound() throws Exception {
         mockMvc.perform(get("/api/this-route-does-not-exist")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.success").value(false));
     }
@@ -76,9 +69,12 @@ class GlobalExceptionHandlerTest {
         // NoHandlerFoundException was caught by @ExceptionHandler(Exception.class)
         // and returned 500. It must now return 404.
         int status = mockMvc.perform(get("/api/nonexistent-endpoint")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andReturn().getResponse().getStatus();
 
         org.assertj.core.api.Assertions.assertThat(status).isNotEqualTo(500);
     }
 }
+
+
+

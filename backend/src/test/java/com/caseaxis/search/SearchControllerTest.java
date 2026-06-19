@@ -1,6 +1,5 @@
 package com.caseaxis.search;
 
-import com.caseaxis.auth.LoginRequest;
 import com.caseaxis.common.util.UuidGenerator;
 import com.caseaxis.users.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,7 +34,7 @@ class SearchControllerTest {
     @Autowired private UserRepository userRepository;
 
     private UUID adminId;
-    private String token;
+    private jakarta.servlet.http.Cookie token;
     private UUID orgId;
 
     @BeforeEach
@@ -52,19 +51,13 @@ class SearchControllerTest {
             orgId, "SearchTest Org " + orgId, adminId
         );
 
-        String loginBody = objectMapper.writeValueAsString(new LoginRequest("admin", adminPassword));
-        String resp = mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(loginBody))
-            .andReturn().getResponse().getContentAsString();
-        token = objectMapper.readTree(resp).at("/data/token").asText();
-        org.assertj.core.api.Assertions.assertThat(token).isNotBlank();
+        token = com.caseaxis.test.TestAuthCookies.loginCookie(mockMvc, objectMapper, "admin", adminPassword);
     }
 
     @Test
     void search_emptyQuery_returnsEmptyGroups() throws Exception {
         mockMvc.perform(get("/api/search")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.cases").isArray())
@@ -89,14 +82,14 @@ class SearchControllerTest {
             "organizationId", orgId.toString()
         );
         mockMvc.perform(post("/api/cases")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isCreated());
 
         mockMvc.perform(get("/api/search")
                 .param("q", unique)
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.cases").isArray())
             .andExpect(jsonPath("$.data.cases[0].title").value(unique));
@@ -112,7 +105,7 @@ class SearchControllerTest {
 
         mockMvc.perform(get("/api/search")
                 .param("q", unique)
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.organizations[0].name").value(unique));
     }
@@ -129,7 +122,7 @@ class SearchControllerTest {
 
         mockMvc.perform(get("/api/search")
                 .param("q", unique)
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.clients[0].displayName").value(unique + " TestLast"));
     }
@@ -138,7 +131,7 @@ class SearchControllerTest {
     void search_noMatch_returnsEmptyGroups() throws Exception {
         mockMvc.perform(get("/api/search")
                 .param("q", "XYZZY_NO_MATCH_" + UUID.randomUUID())
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.cases").isEmpty())
             .andExpect(jsonPath("$.data.clients").isEmpty())
@@ -146,3 +139,6 @@ class SearchControllerTest {
             .andExpect(jsonPath("$.data.tasks").isEmpty());
     }
 }
+
+
+

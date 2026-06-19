@@ -1,6 +1,5 @@
 package com.caseaxis.cases;
 
-import com.caseaxis.auth.LoginRequest;
 import com.caseaxis.common.util.UuidGenerator;
 import com.caseaxis.users.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,7 +37,7 @@ class CaseNoteControllerTest {
 
     private UUID orgId;
     private UUID adminId;
-    private String token;
+    private jakarta.servlet.http.Cookie token;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -54,13 +53,7 @@ class CaseNoteControllerTest {
             orgId, "Note Test Org " + orgId, adminId
         );
 
-        String loginBody = objectMapper.writeValueAsString(new LoginRequest("admin", adminPassword));
-        String resp = mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(loginBody))
-            .andReturn().getResponse().getContentAsString();
-        token = objectMapper.readTree(resp).at("/data/token").asText();
-        org.assertj.core.api.Assertions.assertThat(token).isNotBlank();
+        token = com.caseaxis.test.TestAuthCookies.loginCookie(mockMvc, objectMapper, "admin", adminPassword);
     }
 
     @Test
@@ -69,7 +62,7 @@ class CaseNoteControllerTest {
 
         var req = new CreateCaseNoteRequest("First note body", false, null);
         mockMvc.perform(post("/api/cases/" + caseId + "/notes")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isCreated())
@@ -86,7 +79,7 @@ class CaseNoteControllerTest {
 
         var req = new CreateCaseNoteRequest("Internal note body", true, null);
         mockMvc.perform(post("/api/cases/" + caseId + "/notes")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isCreated())
@@ -99,7 +92,7 @@ class CaseNoteControllerTest {
 
         var req = new CreateCaseNoteRequest("", false, null);
         mockMvc.perform(post("/api/cases/" + caseId + "/notes")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isBadRequest());
@@ -109,7 +102,7 @@ class CaseNoteControllerTest {
     void createNote_caseNotFound_returns404() throws Exception {
         var req = new CreateCaseNoteRequest("Orphan note", false, null);
         mockMvc.perform(post("/api/cases/" + UUID.randomUUID() + "/notes")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isNotFound());
@@ -122,7 +115,7 @@ class CaseNoteControllerTest {
         createNote(caseId, "Note 2");
 
         mockMvc.perform(get("/api/cases/" + caseId + "/notes")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data", hasSize(2)));
@@ -131,7 +124,7 @@ class CaseNoteControllerTest {
     @Test
     void listNotes_caseNotFound_returns404() throws Exception {
         mockMvc.perform(get("/api/cases/" + UUID.randomUUID() + "/notes")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isNotFound());
     }
 
@@ -141,13 +134,13 @@ class CaseNoteControllerTest {
         String noteId = createNote(caseId, "Note to delete");
 
         mockMvc.perform(delete("/api/cases/" + caseId + "/notes/" + noteId)
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true));
 
         // Soft-deleted note should not appear in list
         mockMvc.perform(get("/api/cases/" + caseId + "/notes")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data", hasSize(0)));
     }
@@ -157,7 +150,7 @@ class CaseNoteControllerTest {
         String caseId = createTestCase("Delete 404 Case");
 
         mockMvc.perform(delete("/api/cases/" + caseId + "/notes/" + UUID.randomUUID())
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isNotFound());
     }
 
@@ -176,7 +169,7 @@ class CaseNoteControllerTest {
     private String createTestCase(String title) throws Exception {
         var req = new CreateCaseRequest(title, null, "LOW", "GENERAL", orgId, null, null);
         String resp = mockMvc.perform(post("/api/cases")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isCreated())
@@ -187,7 +180,7 @@ class CaseNoteControllerTest {
     private String createNote(String caseId, String body) throws Exception {
         var req = new CreateCaseNoteRequest(body, false, null);
         String resp = mockMvc.perform(post("/api/cases/" + caseId + "/notes")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isCreated())
@@ -195,3 +188,6 @@ class CaseNoteControllerTest {
         return objectMapper.readTree(resp).at("/data/id").asText();
     }
 }
+
+
+

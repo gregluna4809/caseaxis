@@ -1,0 +1,11 @@
+groups:
+  - name: caseaxis-health
+    rules:
+      - alert: CaseAxisHealthNon200
+        expr: probe_success{job="caseaxis-health"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: CaseAxis health endpoint is not returning HTTP 2xx
+          description: "The health probe for {{ $labels.instance }} has failed for at least 2 minutes."

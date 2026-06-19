@@ -1,0 +1,16 @@
+[Unit]
+Description=CaseAxis PostgreSQL logical backup to off-host object storage
+Wants=docker.service
+After=docker.service network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/apps/caseaxis
+EnvironmentFile=/etc/caseaxis/backup.env
+ExecStart=/opt/apps/caseaxis/deploy/backup/backup-postgres.sh
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+
+[Install]
+WantedBy=multi-user.target

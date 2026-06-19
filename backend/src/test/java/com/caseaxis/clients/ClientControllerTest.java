@@ -1,6 +1,5 @@
 package com.caseaxis.clients;
 
-import com.caseaxis.auth.LoginRequest;
 import com.caseaxis.common.util.UuidGenerator;
 import com.caseaxis.users.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,7 +36,7 @@ class ClientControllerTest {
     @Autowired private UserRepository userRepository;
 
     private UUID adminId;
-    private String token;
+    private jakarta.servlet.http.Cookie token;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -47,13 +46,7 @@ class ClientControllerTest {
             passwordEncoder.encode(adminPassword), "admin"
         );
 
-        String loginBody = objectMapper.writeValueAsString(new LoginRequest("admin", adminPassword));
-        String resp = mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(loginBody))
-            .andReturn().getResponse().getContentAsString();
-        token = objectMapper.readTree(resp).at("/data/token").asText();
-        org.assertj.core.api.Assertions.assertThat(token).isNotBlank();
+        token = com.caseaxis.test.TestAuthCookies.loginCookie(mockMvc, objectMapper, "admin", adminPassword);
     }
 
     @Test
@@ -65,7 +58,7 @@ class ClientControllerTest {
     @Test
     void listClients_authenticated_returnsPaginatedPage() throws Exception {
         mockMvc.perform(get("/api/clients")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.content").isArray())
@@ -89,7 +82,7 @@ class ClientControllerTest {
         );
 
         mockMvc.perform(get("/api/clients?page=0&size=1")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.content[0].displayName").value("Zulu, Newer"));
     }
@@ -103,7 +96,7 @@ class ClientControllerTest {
         );
 
         String response = mockMvc.perform(get("/api/clients?q=Zxqtest")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString();
 
@@ -126,7 +119,7 @@ class ClientControllerTest {
         );
 
         String response = mockMvc.perform(get("/api/clients?q=Zxqperson")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString();
 
@@ -150,7 +143,7 @@ class ClientControllerTest {
         );
 
         String response = mockMvc.perform(get("/api/clients?q=Wonderland")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString();
 
@@ -178,7 +171,7 @@ class ClientControllerTest {
         );
 
         String response = mockMvc.perform(get("/api/clients?organizationId=" + orgId)
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString();
 
@@ -195,7 +188,7 @@ class ClientControllerTest {
         );
 
         mockMvc.perform(get("/api/clients?q=Zxqclient")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.content[?(@.displayName=='Zxqclient, Business')].clientNumber").value(
                 org.hamcrest.Matchers.hasItem(matchesPattern("CL-\\d{9}"))
@@ -211,7 +204,7 @@ class ClientControllerTest {
     @Test
     void getClientById_notFound_returns404() throws Exception {
         mockMvc.perform(get("/api/clients/" + UUID.randomUUID())
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isNotFound());
     }
 
@@ -224,7 +217,7 @@ class ClientControllerTest {
         );
 
         mockMvc.perform(get("/api/clients/" + clientId)
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.displayName").value("Test, Detail"))
@@ -243,13 +236,13 @@ class ClientControllerTest {
         );
 
         mockMvc.perform(post("/api/clients/" + clientId + "/deactivate")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.active").value(false))
             .andExpect(jsonPath("$.data.displayName").value("Client, Deactivate"));
 
         mockMvc.perform(get("/api/clients?active=true&q=Client")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.content[?(@.id=='" + clientId + "')]").isEmpty());
     }
@@ -263,7 +256,7 @@ class ClientControllerTest {
     @Test
     void listClientCases_notFoundClient_returns404() throws Exception {
         mockMvc.perform(get("/api/clients/" + UUID.randomUUID() + "/cases")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isNotFound());
     }
 
@@ -276,9 +269,12 @@ class ClientControllerTest {
         );
 
         mockMvc.perform(get("/api/clients/" + clientId + "/cases")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.content").isArray());
     }
 }
+
+
+

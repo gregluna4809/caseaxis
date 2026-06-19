@@ -1,3 +1,5 @@
 package com.caseaxis.auth;
 
-public record LoginResponse(String token) {}
+import java.util.List;
+
+public record LoginResponse(String username, List<String> roles) {}

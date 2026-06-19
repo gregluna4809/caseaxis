@@ -1,6 +1,5 @@
 package com.caseaxis.cases;
 
-import com.caseaxis.auth.LoginRequest;
 import com.caseaxis.common.util.UuidGenerator;
 import com.caseaxis.users.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,7 +38,7 @@ class TaskControllerTest {
 
     private UUID orgId;
     private UUID adminId;
-    private String token;
+    private jakarta.servlet.http.Cookie token;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -55,13 +54,7 @@ class TaskControllerTest {
             orgId, "Task Workspace Test Org " + orgId, adminId
         );
 
-        String loginBody = objectMapper.writeValueAsString(new LoginRequest("admin", adminPassword));
-        String resp = mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(loginBody))
-            .andReturn().getResponse().getContentAsString();
-        token = objectMapper.readTree(resp).at("/data/token").asText();
-        org.assertj.core.api.Assertions.assertThat(token).isNotBlank();
+        token = com.caseaxis.test.TestAuthCookies.loginCookie(mockMvc, objectMapper, "admin", adminPassword);
     }
 
     // --- GET /api/tasks ---
@@ -79,7 +72,7 @@ class TaskControllerTest {
         createTask(caseId, "Workspace Task Two");
 
         mockMvc.perform(get("/api/tasks")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.content").isArray())
@@ -94,7 +87,7 @@ class TaskControllerTest {
         createTask(caseId, "Unrelated Task");
 
         mockMvc.perform(get("/api/tasks?q=Zxqtaskworkspace")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.totalElements").value(1))
             .andExpect(jsonPath("$.data.content[0].title").value("Zxqtaskworkspace Alpha"));
@@ -106,7 +99,7 @@ class TaskControllerTest {
         createTask(caseId, "Zxqtaskcasetitle Task");
 
         mockMvc.perform(get("/api/tasks?q=Zxqtaskcasetitle")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.totalElements").value(1))
             .andExpect(jsonPath("$.data.content[0].caseId").value(caseId))
@@ -121,19 +114,19 @@ class TaskControllerTest {
 
         var updateReq = new UpdateCaseTaskRequest("Zxqtaskstatus Pending Task", null, "IN_PROGRESS", null, null);
         mockMvc.perform(put("/api/cases/" + caseId + "/tasks/" + taskId)
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateReq)))
             .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/tasks?q=Zxqtaskstatus&status=IN_PROGRESS")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.totalElements").value(1))
             .andExpect(jsonPath("$.data.content[0].statusCode").value("IN_PROGRESS"));
 
         mockMvc.perform(get("/api/tasks?q=Zxqtaskstatus&status=PENDING")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.totalElements").value(0));
     }
@@ -144,7 +137,7 @@ class TaskControllerTest {
         createTask(caseId, "Zxqtaskoverdue Past Due Task", LocalDate.now().minusDays(1));
 
         mockMvc.perform(get("/api/tasks?q=Zxqtaskoverdue&overdueOnly=true")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.totalElements").value(1))
             .andExpect(jsonPath("$.data.content[0].terminal").value(false));
@@ -157,13 +150,13 @@ class TaskControllerTest {
 
         var completeReq = new UpdateCaseTaskRequest("Zxqtaskoverduedone Completed Task", null, "COMPLETED", null, null);
         mockMvc.perform(put("/api/cases/" + caseId + "/tasks/" + taskId)
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(completeReq)))
             .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/tasks?q=Zxqtaskoverduedone&overdueOnly=true")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.totalElements").value(0));
     }
@@ -179,7 +172,7 @@ class TaskControllerTest {
     @Test
     void getTask_notFound_returns404() throws Exception {
         mockMvc.perform(get("/api/tasks/" + UUID.randomUUID())
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isNotFound());
     }
 
@@ -189,7 +182,7 @@ class TaskControllerTest {
         String taskId = createTask(caseId, "Zxqtaskdetail Detail Task");
 
         mockMvc.perform(get("/api/tasks/" + taskId)
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.id").value(taskId))
@@ -219,7 +212,7 @@ class TaskControllerTest {
 
         var req = new UpdateCaseTaskRequest("Workspace Updatable Task", "New description", "IN_PROGRESS", null, null);
         mockMvc.perform(put("/api/tasks/" + taskId)
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isOk())
@@ -232,7 +225,7 @@ class TaskControllerTest {
     void updateTask_notFound_returns404() throws Exception {
         var req = new UpdateCaseTaskRequest("title", null, "IN_PROGRESS", null, null);
         mockMvc.perform(put("/api/tasks/" + UUID.randomUUID())
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isNotFound());
@@ -244,11 +237,11 @@ class TaskControllerTest {
         String taskId = createTask(caseId, "Zxqtaskdelete Delete Task");
 
         mockMvc.perform(delete("/api/tasks/" + taskId)
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/tasks?q=Zxqtaskdelete")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.totalElements").value(0));
     }
@@ -258,7 +251,7 @@ class TaskControllerTest {
     private String createTestCase(String title) throws Exception {
         var req = new CreateCaseRequest(title, null, "LOW", "GENERAL", orgId, null, null);
         String resp = mockMvc.perform(post("/api/cases")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isCreated())
@@ -273,7 +266,7 @@ class TaskControllerTest {
     private String createTask(String caseId, String title, LocalDate dueDate) throws Exception {
         var req = new CreateCaseTaskRequest(title, null, null, null, dueDate);
         String resp = mockMvc.perform(post("/api/cases/" + caseId + "/tasks")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isCreated())
@@ -281,3 +274,6 @@ class TaskControllerTest {
         return objectMapper.readTree(resp).at("/data/id").asText();
     }
 }
+
+
+

@@ -1,6 +1,5 @@
 package com.caseaxis.cases;
 
-import com.caseaxis.auth.LoginRequest;
 import com.caseaxis.common.util.UuidGenerator;
 import com.caseaxis.users.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,7 +42,7 @@ class CaseControllerTest {
 
     private UUID orgId;
     private UUID adminId;
-    private String token;
+    private jakarta.servlet.http.Cookie token;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -59,19 +58,13 @@ class CaseControllerTest {
             orgId, "Test Org " + orgId, adminId
         );
 
-        String loginBody = objectMapper.writeValueAsString(new LoginRequest("admin", adminPassword));
-        String resp = mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(loginBody))
-            .andReturn().getResponse().getContentAsString();
-        token = objectMapper.readTree(resp).at("/data/token").asText();
-        org.assertj.core.api.Assertions.assertThat(token).isNotBlank();
+        token = com.caseaxis.test.TestAuthCookies.loginCookie(mockMvc, objectMapper, "admin", adminPassword);
     }
 
     @Test
     void listCases_authenticated_returnsPage() throws Exception {
         mockMvc.perform(get("/api/cases")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.content").isArray());
@@ -89,7 +82,7 @@ class CaseControllerTest {
                 .param("status", "NEW")
                 .param("priority", "HIGH")
                 .param("type", "COMPLAINT")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.content[0].title").value(uniqueTitle))
@@ -111,7 +104,7 @@ class CaseControllerTest {
             "HIGH", "COMPLAINT", orgId, null, null
         );
         mockMvc.perform(post("/api/cases")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isCreated())
@@ -129,7 +122,7 @@ class CaseControllerTest {
     void createCase_missingSubject_returns400() throws Exception {
         var req = new CreateCaseRequest("No subject", null, "LOW", "GENERAL", null, null, null);
         mockMvc.perform(post("/api/cases")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isBadRequest());
@@ -140,7 +133,7 @@ class CaseControllerTest {
         String caseId = createTestCase("Detail Lookup Test", "MEDIUM", "INQUIRY");
 
         mockMvc.perform(get("/api/cases/" + caseId)
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.id").value(caseId))
             .andExpect(jsonPath("$.data.statusCode").value("NEW"))
@@ -152,7 +145,7 @@ class CaseControllerTest {
     @Test
     void getCaseById_nonexistent_returns404() throws Exception {
         mockMvc.perform(get("/api/cases/" + UUID.randomUUID())
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isNotFound());
     }
 
@@ -162,7 +155,7 @@ class CaseControllerTest {
 
         var assignReq = new AssignCaseRequest(adminId, "Initial assignment");
         mockMvc.perform(post("/api/cases/" + caseId + "/assign")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(assignReq)))
             .andExpect(status().isOk())
@@ -176,7 +169,7 @@ class CaseControllerTest {
 
         var first = new AssignCaseRequest(adminId, "First assignment");
         mockMvc.perform(post("/api/cases/" + caseId + "/assign")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(first)))
             .andExpect(status().isOk());
@@ -185,7 +178,7 @@ class CaseControllerTest {
         // would reject the insert with 500 if the prior row wasn't closed first.
         var second = new AssignCaseRequest(adminId, "Reassigned");
         mockMvc.perform(post("/api/cases/" + caseId + "/assign")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(second)))
             .andExpect(status().isOk())
@@ -194,7 +187,7 @@ class CaseControllerTest {
 
         // Confirm the GET reflects the current assignment
         mockMvc.perform(get("/api/cases/" + caseId)
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.assignedToId").value(adminId.toString()));
     }
@@ -205,7 +198,7 @@ class CaseControllerTest {
 
         var req = new TransitionStatusRequest("ASSIGNED", "Moving to worker queue");
         mockMvc.perform(post("/api/cases/" + caseId + "/status")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isOk())
@@ -219,7 +212,7 @@ class CaseControllerTest {
 
         var req = new TransitionStatusRequest("APPROVED", null);
         mockMvc.perform(post("/api/cases/" + caseId + "/status")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isConflict())
@@ -236,7 +229,7 @@ class CaseControllerTest {
 
         var req = new TransitionStatusRequest("REOPENED", "Client requested reopen");
         mockMvc.perform(post("/api/cases/" + caseId + "/status")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isOk())
@@ -249,14 +242,14 @@ class CaseControllerTest {
         String caseId = createTestCase("Archive Workflow Test", "MEDIUM", "GENERAL");
 
         mockMvc.perform(post("/api/cases/" + caseId + "/archive")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.id").value(caseId))
             .andExpect(jsonPath("$.data.statusCode").value("CLOSED"))
             .andExpect(jsonPath("$.data.closedAt").isNotEmpty());
 
         mockMvc.perform(get("/api/cases/" + caseId)
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.id").value(caseId));
     }
@@ -266,7 +259,7 @@ class CaseControllerTest {
     private String createTestCase(String title, String priorityCode, String typeCode) throws Exception {
         var req = new CreateCaseRequest(title, null, priorityCode, typeCode, orgId, null, null);
         String resp = mockMvc.perform(post("/api/cases")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isCreated())
@@ -277,9 +270,12 @@ class CaseControllerTest {
     private void transition(String caseId, String targetCode) throws Exception {
         var req = new TransitionStatusRequest(targetCode, null);
         mockMvc.perform(post("/api/cases/" + caseId + "/status")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isOk());
     }
 }
+
+
+

@@ -4,23 +4,22 @@ import com.caseaxis.audit.AuditAction;
 import com.caseaxis.audit.AuditService;
 import com.caseaxis.common.exception.ResourceNotFoundException;
 import com.caseaxis.common.util.UuidGenerator;
-import com.caseaxis.clients.Client;
-import com.caseaxis.clients.ClientRepository;
-import com.caseaxis.organizations.Organization;
-import com.caseaxis.organizations.OrganizationRepository;
 import com.caseaxis.users.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -47,8 +46,6 @@ public class CaseService {
     private final CaseAssignmentRepository assignmentRepository;
     private final CaseStatusHistoryRepository statusHistoryRepository;
     private final UserRepository userRepository;
-    private final OrganizationRepository organizationRepository;
-    private final ClientRepository clientRepository;
     private final JdbcTemplate jdbcTemplate;
     private final AuditService auditService;
 
@@ -117,14 +114,12 @@ public class CaseService {
         );
 
         log.debug("Created case {} ({})", saved.getId(), caseNumber);
-        return toDetailResponse(saved);
+        return toDetailResponse(saved.getId());
     }
 
     @Transactional(readOnly = true)
     public CaseDetailResponse getCaseById(UUID caseId) {
-        Case c = caseRepository.findByIdAndDeletedFalse(caseId)
-            .orElseThrow(() -> new ResourceNotFoundException("Case", caseId));
-        return toDetailResponse(c);
+        return toDetailResponse(caseId);
     }
 
     @Transactional(readOnly = true)
@@ -139,7 +134,7 @@ public class CaseService {
             String status,
             String priority,
             String type) {
-        String normalizedQuery = normalizeText(q);
+        String normalizedQuery = toPrefixTsQuery(q);
         String normalizedStatus = normalizeCode(status);
         String normalizedPriority = normalizeCode(priority);
         String normalizedType = normalizeCode(type);
@@ -155,10 +150,11 @@ public class CaseService {
 
         return caseRepository.searchActive(
             normalizedQuery,
+            normalizeCaseNumber(q),
             normalizedStatus,
             normalizedPriority,
             normalizedType,
-            pageable
+            PageRequest.of(pageable.getPageNumber(), pageable.getPageSize())
         ).map(this::toSummaryResponse);
     }
 
@@ -205,7 +201,7 @@ public class CaseService {
         );
 
         log.debug("Assigned case {} to user {}", caseId, req.assigneeId());
-        return toDetailResponse(saved);
+        return toDetailResponse(saved.getId());
     }
 
     @Transactional
@@ -271,7 +267,7 @@ public class CaseService {
         );
 
         log.debug("Transitioned case {} from {} to {}", caseId, currentCode, targetCode);
-        return toDetailResponse(saved);
+        return toDetailResponse(saved.getId());
     }
 
     @Transactional
@@ -284,7 +280,7 @@ public class CaseService {
         String previousPriority = c.getPriority().getCode();
         String targetPriority = req.priorityCode().toUpperCase();
         if (previousPriority.equals(targetPriority)) {
-            return toDetailResponse(c);
+            return toDetailResponse(c.getId());
         }
 
         CasePriority priority = priorityRepository.findByCodeAndActiveTrue(targetPriority)
@@ -306,7 +302,7 @@ public class CaseService {
         );
 
         log.debug("Changed case {} priority from {} to {}", caseId, previousPriority, targetPriority);
-        return toDetailResponse(saved);
+        return toDetailResponse(saved.getId());
     }
 
     @Transactional
@@ -317,7 +313,7 @@ public class CaseService {
             .orElseThrow(() -> new ResourceNotFoundException("Case", caseId));
 
         if ("CLOSED".equals(c.getStatus().getCode())) {
-            return toDetailResponse(c);
+            return toDetailResponse(c.getId());
         }
 
         CaseStatus closedStatus = statusRepository.findByCodeAndActiveTrue("CLOSED")
@@ -352,7 +348,7 @@ public class CaseService {
         );
 
         log.debug("Archived case {} as CLOSED", caseId);
-        return toDetailResponse(saved);
+        return toDetailResponse(saved.getId());
     }
 
     // --- Private helpers ---
@@ -363,11 +359,24 @@ public class CaseService {
             .getId();
     }
 
-    private String normalizeText(String value) {
+    public static String toPrefixTsQuery(String value) {
         if (value == null || value.isBlank()) {
             return null;
         }
-        return value.trim();
+        String normalized = Arrays.stream(value.toLowerCase().split("[^a-z0-9]+"))
+            .filter(token -> !token.isBlank())
+            .limit(8)
+            .map(token -> token + ":*")
+            .collect(Collectors.joining(" & "));
+        return normalized.isBlank() ? null : normalized;
+    }
+
+    public static String normalizeCaseNumber(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String normalized = value.trim().toUpperCase();
+        return normalized.matches("CA-\\d{6}") ? normalized : null;
     }
 
     private String normalizeCode(String value) {
@@ -395,40 +404,41 @@ public class CaseService {
         );
     }
 
-    private CaseDetailResponse toDetailResponse(Case c) {
-        Organization organization = c.getOrganizationId() == null
-            ? null
-            : organizationRepository.findById(c.getOrganizationId()).orElse(null);
-        Client client = c.getClientId() == null
-            ? null
-            : clientRepository.findById(c.getClientId()).orElse(null);
+    private CaseDetailResponse toDetailResponse(UUID caseId) {
+        CaseDetailProjection c = caseRepository.findDetailByIdAndDeletedFalse(caseId)
+            .orElseThrow(() -> new ResourceNotFoundException("Case", caseId));
+        return toDetailResponse(c);
+    }
 
+    static CaseDetailResponse toDetailResponse(CaseDetailProjection c) {
         return new CaseDetailResponse(
-            c.getId(),
-            c.getCaseNumber(),
-            c.getTitle(),
-            c.getDescription(),
-            c.getStatus().getCode(),
-            c.getStatus().getDisplayName(),
-            c.getPriority().getCode(),
-            c.getPriority().getDisplayName(),
-            c.getType().getCode(),
-            c.getType().getDisplayName(),
-            c.getOrganizationId(),
-            organization == null ? null : organization.getOrganizationCode(),
-            organization == null ? null : organization.getName(),
-            c.getClientId(),
-            client == null ? null : client.getClientNumber(),
-            client == null ? null : client.getLastName() + ", " + client.getFirstName(),
-            c.getAssignedToId(),
-            c.getAssignedAt(),
-            c.getDueDate(),
-            c.getResolvedAt(),
-            c.getClosedAt(),
-            c.getReopenedCount(),
-            c.getCreatedBy(),
-            c.getCreatedAt(),
-            c.getUpdatedAt()
+            c.id(),
+            c.caseNumber(),
+            c.title(),
+            c.description(),
+            c.statusCode(),
+            c.statusDisplayName(),
+            c.priorityCode(),
+            c.priorityDisplayName(),
+            c.typeCode(),
+            c.typeDisplayName(),
+            c.organizationId(),
+            c.organizationCode(),
+            c.organizationName(),
+            c.clientId(),
+            c.clientNumber(),
+            c.clientLastName() == null || c.clientFirstName() == null
+                ? null
+                : c.clientLastName() + ", " + c.clientFirstName(),
+            c.assignedToId(),
+            c.assignedAt(),
+            c.dueDate(),
+            c.resolvedAt(),
+            c.closedAt(),
+            c.reopenedCount(),
+            c.createdBy(),
+            c.createdAt(),
+            c.updatedAt()
         );
     }
 }

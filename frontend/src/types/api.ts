@@ -21,8 +21,11 @@ export interface Page<T> {
 }
 
 export interface LoginResponse {
-  token: string;
+  username: string;
+  roles?: RoleCode[];
 }
+
+export type RoleCode = 'ADMIN' | 'SUPERVISOR' | 'CASE_WORKER' | 'AUDITOR';
 
 // GET /api/dashboard/metrics
 export interface DashboardMetrics {

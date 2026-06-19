@@ -3,6 +3,7 @@ package com.caseaxis.security;
 import com.caseaxis.users.User;
 import com.caseaxis.users.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -22,6 +23,10 @@ public class CaseAxisUserDetailsService implements UserDetailsService {
         User user = userRepository.findByUsernameAndDeletedFalse(username)
             .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
+        if (!user.isActive()) {
+            throw new DisabledException("User account is deactivated");
+        }
+
         List<SimpleGrantedAuthority> authorities = userRepository
             .findActiveRoleCodesByUserId(user.getId())
             .stream()
@@ -32,7 +37,6 @@ public class CaseAxisUserDetailsService implements UserDetailsService {
             .username(user.getUsername())
             .password(user.getPasswordHash())
             .authorities(authorities)
-            .disabled(!user.isActive())
             .build();
     }
 }

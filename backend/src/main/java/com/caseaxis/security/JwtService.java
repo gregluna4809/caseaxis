@@ -21,8 +21,21 @@ public class JwtService {
     public JwtService(
             @Value("${application.jwt.secret}") String secret,
             @Value("${application.jwt.expiration-ms}") long expirationMs) {
-        this.signingKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        byte[] secretBytes = validateSecret(secret);
+        this.signingKey = Keys.hmacShaKeyFor(secretBytes);
         this.expirationMs = expirationMs;
+    }
+
+    private static byte[] validateSecret(String secret) {
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException("JWT_SECRET must be set and must be at least 32 bytes long.");
+        }
+
+        byte[] secretBytes = secret.getBytes(StandardCharsets.UTF_8);
+        if (secretBytes.length < 32) {
+            throw new IllegalStateException("JWT_SECRET must be at least 32 bytes long.");
+        }
+        return secretBytes;
     }
 
     public String generateToken(UserDetails userDetails) {

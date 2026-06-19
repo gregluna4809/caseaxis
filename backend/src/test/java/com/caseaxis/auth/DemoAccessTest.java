@@ -6,6 +6,7 @@ import com.caseaxis.cases.CreateCaseTaskRequest;
 import com.caseaxis.cases.TransitionStatusRequest;
 import com.caseaxis.cases.UpdateCasePriorityRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +37,7 @@ class DemoAccessTest {
 
     private UUID demoId;
     private UUID orgId;
-    private String demoToken;
+    private Cookie demoToken;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -49,7 +50,7 @@ class DemoAccessTest {
             "INSERT INTO organizations (id, name, created_by) VALUES (?, ?, ?)",
             orgId, "Demo Access Test Org", demoId
         );
-        demoToken = login("demo", "demo123");
+        demoToken = com.caseaxis.test.TestAuthCookies.loginCookie(mockMvc, objectMapper, "demo", "demo123");
     }
 
     @Test
@@ -74,7 +75,7 @@ class DemoAccessTest {
             null
         );
         String createCaseResponse = mockMvc.perform(post("/api/cases")
-                .header("Authorization", "Bearer " + demoToken)
+                .cookie(demoToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createCaseRequest)))
             .andExpect(status().isCreated())
@@ -87,7 +88,7 @@ class DemoAccessTest {
             null
         );
         mockMvc.perform(post("/api/cases/" + caseId + "/notes")
-                .header("Authorization", "Bearer " + demoToken)
+                .cookie(demoToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(noteRequest)))
             .andExpect(status().isCreated());
@@ -100,7 +101,7 @@ class DemoAccessTest {
             LocalDate.now().plusDays(7)
         );
         mockMvc.perform(post("/api/cases/" + caseId + "/tasks")
-                .header("Authorization", "Bearer " + demoToken)
+                .cookie(demoToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(taskRequest)))
             .andExpect(status().isCreated());
@@ -110,7 +111,7 @@ class DemoAccessTest {
             "Demo validation status change."
         );
         mockMvc.perform(post("/api/cases/" + caseId + "/status")
-                .header("Authorization", "Bearer " + demoToken)
+                .cookie(demoToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(statusRequest)))
             .andExpect(status().isOk());
@@ -120,23 +121,15 @@ class DemoAccessTest {
             "Demo validation priority change."
         );
         mockMvc.perform(post("/api/cases/" + caseId + "/priority")
-                .header("Authorization", "Bearer " + demoToken)
+                .cookie(demoToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(priorityRequest)))
             .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/cases/" + caseId + "/audit")
-                .header("Authorization", "Bearer " + demoToken))
+                .cookie(demoToken))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.length()", greaterThanOrEqualTo(5)));
     }
 
-    private String login(String username, String password) throws Exception {
-        String response = mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(new LoginRequest(username, password))))
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString();
-        return objectMapper.readTree(response).at("/data/token").asText();
-    }
 }

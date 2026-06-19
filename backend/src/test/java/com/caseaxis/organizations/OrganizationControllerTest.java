@@ -1,6 +1,5 @@
 package com.caseaxis.organizations;
 
-import com.caseaxis.auth.LoginRequest;
 import com.caseaxis.common.util.UuidGenerator;
 import com.caseaxis.users.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,7 +35,7 @@ class OrganizationControllerTest {
     @Autowired private UserRepository userRepository;
 
     private UUID adminId;
-    private String token;
+    private jakarta.servlet.http.Cookie token;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -46,13 +45,7 @@ class OrganizationControllerTest {
             passwordEncoder.encode(adminPassword), "admin"
         );
 
-        String loginBody = objectMapper.writeValueAsString(new LoginRequest("admin", adminPassword));
-        String resp = mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(loginBody))
-            .andReturn().getResponse().getContentAsString();
-        token = objectMapper.readTree(resp).at("/data/token").asText();
-        org.assertj.core.api.Assertions.assertThat(token).isNotBlank();
+        token = com.caseaxis.test.TestAuthCookies.loginCookie(mockMvc, objectMapper, "admin", adminPassword);
     }
 
     @Test
@@ -64,7 +57,7 @@ class OrganizationControllerTest {
     @Test
     void listOrganizations_authenticated_returnsPaginatedPage() throws Exception {
         mockMvc.perform(get("/api/organizations")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.content").isArray())
@@ -80,7 +73,7 @@ class OrganizationControllerTest {
         );
 
         String response = mockMvc.perform(get("/api/organizations")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString();
 
@@ -103,7 +96,7 @@ class OrganizationControllerTest {
         );
 
         String response = mockMvc.perform(get("/api/organizations")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString();
 
@@ -127,7 +120,7 @@ class OrganizationControllerTest {
         );
 
         String response = mockMvc.perform(get("/api/organizations?active=true")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString();
 
@@ -145,7 +138,7 @@ class OrganizationControllerTest {
         );
 
         mockMvc.perform(get("/api/organizations?q=Zxqbusiness")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.content[?(@.name=='Zxqbusiness Org')].organizationCode").value(
                 org.hamcrest.Matchers.hasItem(matchesPattern("ORG-\\d{9}"))
@@ -166,7 +159,7 @@ class OrganizationControllerTest {
         );
 
         String response = mockMvc.perform(get("/api/organizations?q=Zenith")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString();
 
@@ -184,7 +177,7 @@ class OrganizationControllerTest {
     @Test
     void getOrganizationById_notFound_returns404() throws Exception {
         mockMvc.perform(get("/api/organizations/" + UUID.randomUUID())
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isNotFound());
     }
 
@@ -197,7 +190,7 @@ class OrganizationControllerTest {
         );
 
         mockMvc.perform(get("/api/organizations/" + orgId)
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.name").value("Detail Org"))
@@ -215,7 +208,7 @@ class OrganizationControllerTest {
         );
 
         mockMvc.perform(post("/api/organizations/" + orgId + "/deactivate")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.active").value(false))
             .andExpect(jsonPath("$.data.name").value("Deactivate Org"));
@@ -234,7 +227,7 @@ class OrganizationControllerTest {
         );
 
         mockMvc.perform(post("/api/organizations/" + orgId + "/deactivate")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isConflict());
     }
 
@@ -247,7 +240,7 @@ class OrganizationControllerTest {
     @Test
     void listOrganizationClients_notFoundOrg_returns404() throws Exception {
         mockMvc.perform(get("/api/organizations/" + UUID.randomUUID() + "/clients")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isNotFound());
     }
 
@@ -265,10 +258,13 @@ class OrganizationControllerTest {
         );
 
         mockMvc.perform(get("/api/organizations/" + orgId + "/clients")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.content").isArray())
             .andExpect(jsonPath("$.data.content[0].displayName").value("Client, Test"));
     }
 }
+
+
+

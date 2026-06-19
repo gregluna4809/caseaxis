@@ -29,7 +29,7 @@ export function LoginPage() {
 
     try {
       const data = await api.auth.login(username.trim(), password);
-      login(data.token, username.trim());
+      login(data.username, data.roles);
       navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed. Check your credentials.');

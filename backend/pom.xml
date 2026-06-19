@@ -23,6 +23,7 @@
         <uuid-creator.version>5.3.3</uuid-creator.version>
         <jjwt.version>0.12.5</jjwt.version>
         <testcontainers.version>1.21.4</testcontainers.version>
+        <dependency-check.version>12.1.0</dependency-check.version>
     </properties>
 
     <dependencyManagement>
@@ -47,6 +48,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -153,6 +158,35 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <environmentVariables>
+                        <JWT_SECRET>caseaxis-test-jwt-secret-32-bytes-minimum</JWT_SECRET>
+                        <DB_URL>jdbc:postgresql://localhost:5434/caseaxis_local</DB_URL>
+                        <DB_USERNAME>greg</DB_USERNAME>
+                        <DB_PASSWORD>mypass123</DB_PASSWORD>
+                    </environmentVariables>
+                    <systemPropertyVariables>
+                        <application.security.login-rate-limit.enabled>false</application.security.login-rate-limit.enabled>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>${dependency-check.version}</version>
+                <configuration>
+                    <failBuildOnCVSS>7</failBuildOnCVSS>
+                    <dataDirectory>${user.home}/.m2/repository/org/owasp/dependency-check-data</dataDirectory>
+                    <ossIndexAnalyzerEnabled>false</ossIndexAnalyzerEnabled>
+                    <formats>
+                        <format>HTML</format>
+                        <format>JSON</format>
+                    </formats>
                 </configuration>
             </plugin>
         </plugins>

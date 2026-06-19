@@ -16,6 +16,46 @@ public interface CaseRepository extends JpaRepository<Case, UUID> {
 
     Optional<Case> findByIdAndDeletedFalse(UUID id);
 
+    @Query("""
+            SELECT new com.caseaxis.cases.CaseDetailProjection(
+                c.id,
+                c.caseNumber,
+                c.title,
+                c.description,
+                s.code,
+                s.displayName,
+                p.code,
+                p.displayName,
+                t.code,
+                t.displayName,
+                c.organizationId,
+                o.organizationCode,
+                o.name,
+                c.clientId,
+                cl.clientNumber,
+                cl.firstName,
+                cl.lastName,
+                c.assignedToId,
+                c.assignedAt,
+                c.dueDate,
+                c.resolvedAt,
+                c.closedAt,
+                c.reopenedCount,
+                c.createdBy,
+                c.createdAt,
+                c.updatedAt
+            )
+            FROM CaseRecord c
+            JOIN c.status s
+            JOIN c.priority p
+            JOIN c.type t
+            LEFT JOIN Organization o ON o.id = c.organizationId
+            LEFT JOIN Client cl ON cl.id = c.clientId
+            WHERE c.deleted = false
+              AND c.id = :id
+            """)
+    Optional<CaseDetailProjection> findDetailByIdAndDeletedFalse(@Param("id") UUID id);
+
     @Query(value = "SELECT c FROM CaseRecord c " +
                    "JOIN FETCH c.status JOIN FETCH c.priority JOIN FETCH c.type " +
                    "WHERE c.deleted = false",
@@ -23,35 +63,34 @@ public interface CaseRepository extends JpaRepository<Case, UUID> {
     Page<Case> findAllActive(Pageable pageable);
 
     @Query(value = """
-            SELECT c FROM CaseRecord c
-            JOIN FETCH c.status s
-            JOIN FETCH c.priority p
-            JOIN FETCH c.type t
-            WHERE c.deleted = false
-              AND (:q IS NULL
-                OR LOWER(c.caseNumber) LIKE LOWER(CONCAT('%', :q, '%'))
-                OR LOWER(c.title) LIKE LOWER(CONCAT('%', :q, '%'))
-                OR LOWER(t.displayName) LIKE LOWER(CONCAT('%', :q, '%')))
+            SELECT c.* FROM cases c
+            JOIN case_statuses s ON s.id = c.status_id
+            JOIN case_priorities p ON p.id = c.priority_id
+            JOIN case_types t ON t.id = c.type_id
+            WHERE c.is_deleted = FALSE
+              AND (c.search_vector @@ to_tsquery('english', :searchQuery)
+                OR (:caseNumber IS NOT NULL AND c.case_number = :caseNumber))
+              AND (:status IS NULL OR s.code = :status)
+              AND (:priority IS NULL OR p.code = :priority)
+              AND (:type IS NULL OR t.code = :type)
+            ORDER BY c.created_at DESC
+            """,
+           countQuery = """
+            SELECT COUNT(*) FROM cases c
+            JOIN case_statuses s ON s.id = c.status_id
+            JOIN case_priorities p ON p.id = c.priority_id
+            JOIN case_types t ON t.id = c.type_id
+            WHERE c.is_deleted = FALSE
+              AND (c.search_vector @@ to_tsquery('english', :searchQuery)
+                OR (:caseNumber IS NOT NULL AND c.case_number = :caseNumber))
               AND (:status IS NULL OR s.code = :status)
               AND (:priority IS NULL OR p.code = :priority)
               AND (:type IS NULL OR t.code = :type)
             """,
-           countQuery = """
-            SELECT COUNT(c) FROM CaseRecord c
-            JOIN c.status s
-            JOIN c.priority p
-            JOIN c.type t
-            WHERE c.deleted = false
-              AND (:q IS NULL
-                OR LOWER(c.caseNumber) LIKE LOWER(CONCAT('%', :q, '%'))
-                OR LOWER(c.title) LIKE LOWER(CONCAT('%', :q, '%'))
-                OR LOWER(t.displayName) LIKE LOWER(CONCAT('%', :q, '%')))
-              AND (:status IS NULL OR s.code = :status)
-              AND (:priority IS NULL OR p.code = :priority)
-              AND (:type IS NULL OR t.code = :type)
-            """)
+           nativeQuery = true)
     Page<Case> searchActive(
-        @Param("q") String q,
+        @Param("searchQuery") String searchQuery,
+        @Param("caseNumber") String caseNumber,
         @Param("status") String status,
         @Param("priority") String priority,
         @Param("type") String type,

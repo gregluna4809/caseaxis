@@ -1,0 +1,75 @@
+services:
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    container_name: caseaxis-prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - caseaxis_prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - default
+      - caseaxis
+
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.25.0
+    container_name: caseaxis-blackbox-exporter
+    restart: unless-stopped
+    volumes:
+      - ./observability/blackbox/blackbox.yml:/etc/blackbox_exporter/config.yml:ro
+    expose:
+      - "9115"
+    networks:
+      - default
+      - caseaxis
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: caseaxis-alertmanager
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    volumes:
+      - ./observability/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - caseaxis_alertmanager_data:/alertmanager
+    ports:
+      - "9093:9093"
+    networks:
+      - default
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    container_name: caseaxis-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-change-me}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - caseaxis_grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - default
+
+volumes:
+  caseaxis_prometheus_data:
+  caseaxis_alertmanager_data:
+  caseaxis_grafana_data:
+
+networks:
+  default:
+    driver: bridge
+    name: caseaxis_observability
+  caseaxis:
+    external: true
+    name: caseaxis_default

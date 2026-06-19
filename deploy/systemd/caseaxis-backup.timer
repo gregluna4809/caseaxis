@@ -1,0 +1,12 @@
+[Unit]
+Description=Run CaseAxis PostgreSQL logical backup daily
+
+[Timer]
+OnCalendar=*-*-* 03:15:00
+Timezone=UTC
+RandomizedDelaySec=20m
+Persistent=true
+Unit=caseaxis-backup.service
+
+[Install]
+WantedBy=timers.target

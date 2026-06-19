@@ -16,7 +16,7 @@ services:
       - default
 
   backend:
-    build: ./backend
+    image: ghcr.io/gregluna4809/caseaxis-backend:${CASEAXIS_IMAGE_TAG:?Set CASEAXIS_IMAGE_TAG to the tested CI image tag, for example sha-<commit>}
     container_name: caseaxis-backend
     restart: unless-stopped
     depends_on:
@@ -35,7 +35,7 @@ services:
       - caddy
 
   frontend:
-    build: ./frontend
+    image: ghcr.io/gregluna4809/caseaxis-frontend:${CASEAXIS_IMAGE_TAG:?Set CASEAXIS_IMAGE_TAG to the tested CI image tag, for example sha-<commit>}
     container_name: caseaxis-frontend
     restart: unless-stopped
     depends_on:

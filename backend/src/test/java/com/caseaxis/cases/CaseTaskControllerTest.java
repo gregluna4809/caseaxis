@@ -1,6 +1,5 @@
 package com.caseaxis.cases;
 
-import com.caseaxis.auth.LoginRequest;
 import com.caseaxis.common.util.UuidGenerator;
 import com.caseaxis.users.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,7 +38,7 @@ class CaseTaskControllerTest {
 
     private UUID orgId;
     private UUID adminId;
-    private String token;
+    private jakarta.servlet.http.Cookie token;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -55,13 +54,7 @@ class CaseTaskControllerTest {
             orgId, "Task Test Org " + orgId, adminId
         );
 
-        String loginBody = objectMapper.writeValueAsString(new LoginRequest("admin", adminPassword));
-        String resp = mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(loginBody))
-            .andReturn().getResponse().getContentAsString();
-        token = objectMapper.readTree(resp).at("/data/token").asText();
-        org.assertj.core.api.Assertions.assertThat(token).isNotBlank();
+        token = com.caseaxis.test.TestAuthCookies.loginCookie(mockMvc, objectMapper, "admin", adminPassword);
     }
 
     @Test
@@ -70,7 +63,7 @@ class CaseTaskControllerTest {
 
         var req = new CreateCaseTaskRequest("Review documents", "Check all attached docs", null, null, null);
         mockMvc.perform(post("/api/cases/" + caseId + "/tasks")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isCreated())
@@ -87,7 +80,7 @@ class CaseTaskControllerTest {
 
         var req = new CreateCaseTaskRequest("Already started task", null, "IN_PROGRESS", null, null);
         mockMvc.perform(post("/api/cases/" + caseId + "/tasks")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isCreated())
@@ -100,7 +93,7 @@ class CaseTaskControllerTest {
 
         var req = new CreateCaseTaskRequest("", null, null, null, null);
         mockMvc.perform(post("/api/cases/" + caseId + "/tasks")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isBadRequest());
@@ -110,7 +103,7 @@ class CaseTaskControllerTest {
     void createTask_caseNotFound_returns404() throws Exception {
         var req = new CreateCaseTaskRequest("Orphan task", null, null, null, null);
         mockMvc.perform(post("/api/cases/" + UUID.randomUUID() + "/tasks")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isNotFound());
@@ -123,7 +116,7 @@ class CaseTaskControllerTest {
         createTask(caseId, "Task B");
 
         mockMvc.perform(get("/api/cases/" + caseId + "/tasks")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data", hasSize(2)));
@@ -135,7 +128,7 @@ class CaseTaskControllerTest {
         String taskId = createTask(caseId, "Specific task");
 
         mockMvc.perform(get("/api/cases/" + caseId + "/tasks/" + taskId)
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.id").value(taskId))
             .andExpect(jsonPath("$.data.title").value("Specific task"))
@@ -147,7 +140,7 @@ class CaseTaskControllerTest {
         String caseId = createTestCase("Task 404 Case");
 
         mockMvc.perform(get("/api/cases/" + caseId + "/tasks/" + UUID.randomUUID())
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isNotFound());
     }
 
@@ -158,7 +151,7 @@ class CaseTaskControllerTest {
 
         var req = new UpdateCaseTaskRequest("Updatable task", "Updated desc", "IN_PROGRESS", null, null);
         mockMvc.perform(put("/api/cases/" + caseId + "/tasks/" + taskId)
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isOk())
@@ -173,7 +166,7 @@ class CaseTaskControllerTest {
 
         var req = new UpdateCaseTaskRequest("Task to complete", null, "COMPLETED", null, null);
         mockMvc.perform(put("/api/cases/" + caseId + "/tasks/" + taskId)
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isOk())
@@ -188,12 +181,12 @@ class CaseTaskControllerTest {
         String taskId = createTask(caseId, "Task to delete");
 
         mockMvc.perform(delete("/api/cases/" + caseId + "/tasks/" + taskId)
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true));
 
         mockMvc.perform(get("/api/cases/" + caseId + "/tasks")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data", hasSize(0)));
     }
@@ -203,7 +196,7 @@ class CaseTaskControllerTest {
         String caseId = createTestCase("Delete 404 Task Case");
 
         mockMvc.perform(delete("/api/cases/" + caseId + "/tasks/" + UUID.randomUUID())
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isNotFound());
     }
 
@@ -212,7 +205,7 @@ class CaseTaskControllerTest {
     private String createTestCase(String title) throws Exception {
         var req = new CreateCaseRequest(title, null, "LOW", "GENERAL", orgId, null, null);
         String resp = mockMvc.perform(post("/api/cases")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isCreated())
@@ -223,7 +216,7 @@ class CaseTaskControllerTest {
     private String createTask(String caseId, String title) throws Exception {
         var req = new CreateCaseTaskRequest(title, null, null, null, null);
         String resp = mockMvc.perform(post("/api/cases/" + caseId + "/tasks")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isCreated())
@@ -231,3 +224,6 @@ class CaseTaskControllerTest {
         return objectMapper.readTree(resp).at("/data/id").asText();
     }
 }
+
+
+

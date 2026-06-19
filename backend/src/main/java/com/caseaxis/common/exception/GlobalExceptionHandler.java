@@ -1,6 +1,7 @@
 package com.caseaxis.common.exception;
 
 import com.caseaxis.common.response.ApiResponse;
+import com.caseaxis.security.LoginRateLimitExceededException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +27,13 @@ public class GlobalExceptionHandler {
         log.debug("Authentication failed: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
             .body(ApiResponse.error("Invalid username or password"));
+    }
+
+    @ExceptionHandler(LoginRateLimitExceededException.class)
+    public ResponseEntity<ApiResponse<Void>> handleLoginRateLimitExceeded(LoginRateLimitExceededException ex) {
+        log.warn("Login rate limit exceeded: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+            .body(ApiResponse.error(ex.getMessage()));
     }
 
     @ExceptionHandler(AccessDeniedException.class)

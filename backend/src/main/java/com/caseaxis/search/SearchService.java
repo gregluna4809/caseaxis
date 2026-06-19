@@ -1,5 +1,6 @@
 package com.caseaxis.search;
 
+import com.caseaxis.cases.CaseService;
 import com.caseaxis.cases.CaseRepository;
 import com.caseaxis.cases.CaseTask;
 import com.caseaxis.cases.CaseTaskRepository;
@@ -26,18 +27,22 @@ public class SearchService {
 
     public SearchResultsResponse search(String q) {
         var pageable = PageRequest.of(0, LIMIT);
+        String caseSearchQuery = CaseService.toPrefixTsQuery(q);
+        String caseNumber = CaseService.normalizeCaseNumber(q);
 
-        List<CaseSearchItem> cases = caseRepository
-            .searchActive(q, null, null, null, pageable)
-            .stream()
-            .map(c -> new CaseSearchItem(
-                c.getId(),
-                c.getCaseNumber(),
-                c.getTitle(),
-                c.getStatus().getCode(),
-                c.getStatus().getDisplayName()
-            ))
-            .toList();
+        List<CaseSearchItem> cases = caseSearchQuery == null
+            ? List.of()
+            : caseRepository
+                .searchActive(caseSearchQuery, caseNumber, null, null, null, pageable)
+                .stream()
+                .map(c -> new CaseSearchItem(
+                    c.getId(),
+                    c.getCaseNumber(),
+                    c.getTitle(),
+                    c.getStatus().getCode(),
+                    c.getStatus().getDisplayName()
+                ))
+                .toList();
 
         List<ClientSearchItem> clients = clientRepository
             .searchActive(q, null, null, pageable)

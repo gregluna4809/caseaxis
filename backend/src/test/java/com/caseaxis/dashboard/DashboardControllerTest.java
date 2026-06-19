@@ -1,6 +1,5 @@
 package com.caseaxis.dashboard;
 
-import com.caseaxis.auth.LoginRequest;
 import com.caseaxis.cases.AssignCaseRequest;
 import com.caseaxis.cases.CreateCaseRequest;
 import com.caseaxis.common.util.UuidGenerator;
@@ -39,7 +38,7 @@ class DashboardControllerTest {
 
     private UUID orgId;
     private UUID adminId;
-    private String token;
+    private jakarta.servlet.http.Cookie token;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -55,13 +54,7 @@ class DashboardControllerTest {
             orgId, "Dashboard Metrics Org " + orgId, adminId
         );
 
-        String loginBody = objectMapper.writeValueAsString(new LoginRequest("admin", adminPassword));
-        String resp = mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(loginBody))
-            .andReturn().getResponse().getContentAsString();
-        token = objectMapper.readTree(resp).at("/data/token").asText();
-        org.assertj.core.api.Assertions.assertThat(token).isNotBlank();
+        token = com.caseaxis.test.TestAuthCookies.loginCookie(mockMvc, objectMapper, "admin", adminPassword);
     }
 
     @Test
@@ -71,7 +64,7 @@ class DashboardControllerTest {
         String assignedOverdueId = createCase("Dashboard Assigned Overdue", "HIGH", "COMPLAINT", LocalDate.now().minusDays(1));
         var assignReq = new AssignCaseRequest(adminId, "Dashboard metrics assignment");
         mockMvc.perform(post("/api/cases/" + assignedOverdueId + "/assign")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(assignReq)))
             .andExpect(status().isOk());
@@ -98,7 +91,7 @@ class DashboardControllerTest {
         String assignedOverdueId = createCase("Dashboard Overview Assigned", "HIGH", "COMPLAINT", LocalDate.now().minusDays(2));
         var assignReq = new AssignCaseRequest(adminId, "Overview assignment");
         mockMvc.perform(post("/api/cases/" + assignedOverdueId + "/assign")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(assignReq)))
             .andExpect(status().isOk());
@@ -107,7 +100,7 @@ class DashboardControllerTest {
         transition(escalatedId, "ESCALATED");
 
         mockMvc.perform(get("/api/dashboard/overview")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.metrics.totalCases").isNumber())
@@ -126,7 +119,7 @@ class DashboardControllerTest {
     private String createCase(String title, String priorityCode, String typeCode, LocalDate dueDate) throws Exception {
         var req = new CreateCaseRequest(title, null, priorityCode, typeCode, orgId, null, dueDate);
         String resp = mockMvc.perform(post("/api/cases")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isCreated())
@@ -137,7 +130,7 @@ class DashboardControllerTest {
     private void transition(String caseId, String targetCode) throws Exception {
         var req = new com.caseaxis.cases.TransitionStatusRequest(targetCode, null);
         mockMvc.perform(post("/api/cases/" + caseId + "/status")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isOk());
@@ -145,10 +138,13 @@ class DashboardControllerTest {
 
     private DashboardMetricsResponse getMetrics() throws Exception {
         String resp = mockMvc.perform(get("/api/dashboard/metrics")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andReturn().getResponse().getContentAsString();
         return objectMapper.treeToValue(objectMapper.readTree(resp).at("/data"), DashboardMetricsResponse.class);
     }
 }
+
+
+

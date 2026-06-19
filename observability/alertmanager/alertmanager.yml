@@ -1,0 +1,29 @@
+global:
+  resolve_timeout: 5m
+  # Replace these deploy-time placeholders with real SMTP credentials before enabling alerts.
+  smtp_smarthost: "smtp.example.com:587"
+  smtp_from: "caseaxis-alerts@example.com"
+  smtp_auth_username: "caseaxis-alerts@example.com"
+  smtp_auth_password: "replace-before-deploy"
+
+route:
+  receiver: caseaxis-ops
+  group_by:
+    - alertname
+    - instance
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 1h
+
+receivers:
+  - name: caseaxis-ops
+    email_configs:
+      - to: "ops@example.com"
+        send_resolved: true
+    slack_configs:
+      # Replace with the production Slack incoming webhook before enabling alerts.
+      - api_url: "https://hooks.slack.com/services/REPLACE/BEFORE/DEPLOY"
+        channel: "#caseaxis-alerts"
+        send_resolved: true
+        title: "{{ .CommonLabels.alertname }}"
+        text: "{{ range .Alerts }}{{ .Annotations.summary }}\n{{ .Annotations.description }}{{ end }}"

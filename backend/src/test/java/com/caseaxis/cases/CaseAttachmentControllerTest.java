@@ -1,6 +1,5 @@
 package com.caseaxis.cases;
 
-import com.caseaxis.auth.LoginRequest;
 import com.caseaxis.common.util.UuidGenerator;
 import com.caseaxis.users.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,7 +37,7 @@ class CaseAttachmentControllerTest {
 
     private UUID orgId;
     private UUID adminId;
-    private String token;
+    private jakarta.servlet.http.Cookie token;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -54,13 +53,7 @@ class CaseAttachmentControllerTest {
             orgId, "Attachment Test Org " + orgId, adminId
         );
 
-        String loginBody = objectMapper.writeValueAsString(new LoginRequest("admin", adminPassword));
-        String resp = mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(loginBody))
-            .andReturn().getResponse().getContentAsString();
-        token = objectMapper.readTree(resp).at("/data/token").asText();
-        org.assertj.core.api.Assertions.assertThat(token).isNotBlank();
+        token = com.caseaxis.test.TestAuthCookies.loginCookie(mockMvc, objectMapper, "admin", adminPassword);
     }
 
     @Test
@@ -71,7 +64,7 @@ class CaseAttachmentControllerTest {
             "report.pdf", "/uploads/2026/report.pdf", 204800L, "application/pdf", "Annual report"
         );
         mockMvc.perform(post("/api/cases/" + caseId + "/attachments")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isCreated())
@@ -89,7 +82,7 @@ class CaseAttachmentControllerTest {
 
         var req = new CreateCaseAttachmentRequest("doc.txt", "/store/doc.txt", null, null, null);
         mockMvc.perform(post("/api/cases/" + caseId + "/attachments")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isCreated())
@@ -102,7 +95,7 @@ class CaseAttachmentControllerTest {
 
         var req = new CreateCaseAttachmentRequest("file.txt", "", null, null, null);
         mockMvc.perform(post("/api/cases/" + caseId + "/attachments")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isBadRequest());
@@ -112,7 +105,7 @@ class CaseAttachmentControllerTest {
     void registerAttachment_caseNotFound_returns404() throws Exception {
         var req = new CreateCaseAttachmentRequest("file.txt", "/store/file.txt", null, null, null);
         mockMvc.perform(post("/api/cases/" + UUID.randomUUID() + "/attachments")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isNotFound());
@@ -125,7 +118,7 @@ class CaseAttachmentControllerTest {
         registerAttachment(caseId, "file2.pdf", "/store/file2.pdf");
 
         mockMvc.perform(get("/api/cases/" + caseId + "/attachments")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data", hasSize(2)));
@@ -134,7 +127,7 @@ class CaseAttachmentControllerTest {
     @Test
     void listAttachments_caseNotFound_returns404() throws Exception {
         mockMvc.perform(get("/api/cases/" + UUID.randomUUID() + "/attachments")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isNotFound());
     }
 
@@ -144,12 +137,12 @@ class CaseAttachmentControllerTest {
         String attachmentId = registerAttachment(caseId, "delete-me.pdf", "/store/delete-me.pdf");
 
         mockMvc.perform(delete("/api/cases/" + caseId + "/attachments/" + attachmentId)
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true));
 
         mockMvc.perform(get("/api/cases/" + caseId + "/attachments")
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data", hasSize(0)));
     }
@@ -159,7 +152,7 @@ class CaseAttachmentControllerTest {
         String caseId = createTestCase("Delete 404 Attachment Case");
 
         mockMvc.perform(delete("/api/cases/" + caseId + "/attachments/" + UUID.randomUUID())
-                .header("Authorization", "Bearer " + token))
+                .cookie(token))
             .andExpect(status().isNotFound());
     }
 
@@ -168,7 +161,7 @@ class CaseAttachmentControllerTest {
     private String createTestCase(String title) throws Exception {
         var req = new CreateCaseRequest(title, null, "LOW", "GENERAL", orgId, null, null);
         String resp = mockMvc.perform(post("/api/cases")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isCreated())
@@ -179,7 +172,7 @@ class CaseAttachmentControllerTest {
     private String registerAttachment(String caseId, String filename, String storagePath) throws Exception {
         var req = new CreateCaseAttachmentRequest(filename, storagePath, null, null, null);
         String resp = mockMvc.perform(post("/api/cases/" + caseId + "/attachments")
-                .header("Authorization", "Bearer " + token)
+                .cookie(token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isCreated())
@@ -187,3 +180,6 @@ class CaseAttachmentControllerTest {
         return objectMapper.readTree(resp).at("/data/id").asText();
     }
 }
+
+
+

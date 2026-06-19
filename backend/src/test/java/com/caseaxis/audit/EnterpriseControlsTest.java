@@ -1,8 +1,8 @@
 package com.caseaxis.audit;
 
-import com.caseaxis.auth.LoginRequest;
 import com.caseaxis.cases.CreateCaseRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,8 +39,8 @@ class EnterpriseControlsTest {
 
     private UUID adminId;
     private UUID orgId;
-    private String adminToken;
-    private String auditorToken;
+    private Cookie adminToken;
+    private Cookie auditorToken;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -84,20 +84,20 @@ class EnterpriseControlsTest {
             orgId, "Enterprise Controls Test Org", adminId
         );
 
-        adminToken = login("admin", adminPassword);
-        auditorToken = login(auditorUsername, auditorPassword);
+        adminToken = com.caseaxis.test.TestAuthCookies.loginCookie(mockMvc, objectMapper, "admin", adminPassword);
+        auditorToken = com.caseaxis.test.TestAuthCookies.loginCookie(mockMvc, objectMapper, auditorUsername, auditorPassword);
     }
 
     @Test
     void auditor_canReadButCannotMutateCases() throws Exception {
         mockMvc.perform(get("/api/cases")
-                .header("Authorization", "Bearer " + auditorToken))
+                .cookie(auditorToken))
             .andExpect(status().isOk());
 
         CreateCaseRequest req = new CreateCaseRequest(
             "Auditor forbidden create", null, "LOW", "GENERAL", orgId, null, null);
         mockMvc.perform(post("/api/cases")
-                .header("Authorization", "Bearer " + auditorToken)
+                .cookie(auditorToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isForbidden())
@@ -118,13 +118,13 @@ class EnterpriseControlsTest {
         org.assertj.core.api.Assertions.assertThat(createdEvents).isEqualTo(1);
 
         mockMvc.perform(post("/api/cases/" + caseId + "/status")
-                .header("Authorization", "Bearer " + adminToken)
+                .cookie(adminToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"targetStatusCode\":\"ASSIGNED\",\"reason\":\"Queue assignment\"}"))
             .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/cases/" + caseId + "/audit")
-                .header("Authorization", "Bearer " + auditorToken))
+                .cookie(auditorToken))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.length()", greaterThanOrEqualTo(2)))
             .andExpect(jsonPath("$.data[0].eventType").value("Status changed"))
@@ -138,7 +138,7 @@ class EnterpriseControlsTest {
         CreateCaseRequest req = new CreateCaseRequest(
             title, null, "HIGH", "COMPLAINT", orgId, null, null);
         String resp = mockMvc.perform(post("/api/cases")
-                .header("Authorization", "Bearer " + adminToken)
+                .cookie(adminToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
             .andExpect(status().isCreated())
@@ -146,12 +146,4 @@ class EnterpriseControlsTest {
         return objectMapper.readTree(resp).at("/data/id").asText();
     }
 
-    private String login(String username, String password) throws Exception {
-        String response = mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(new LoginRequest(username, password))))
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString();
-        return objectMapper.readTree(response).at("/data/token").asText();
-    }
 }

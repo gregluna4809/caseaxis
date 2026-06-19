@@ -1,13 +1,14 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { GlobalSearch } from './GlobalSearch';
+import { RoleGate } from './RoleGate';
 
 export function AppShell() {
-  const { username, logout } = useAuth();
+  const { username, isReadOnlyAuditor, logout } = useAuth();
   const navigate = useNavigate();
 
-  function handleLogout() {
-    logout();
+  async function handleLogout() {
+    await logout();
     navigate('/login');
   }
 
@@ -26,6 +27,7 @@ export function AppShell() {
 
         <div className="global-header-right">
           <span className="workspace-selector">Case Operations</span>
+          {isReadOnlyAuditor && <span className="username-chip">Read-only auditor</span>}
           <span className="username-chip">{username}</span>
           <button className="btn btn-secondary btn-sm" onClick={handleLogout}>
             Sign out
@@ -57,6 +59,14 @@ export function AppShell() {
               <span>Cases</span>
             </NavLink>
           </li>
+          <RoleGate allow={['ADMIN', 'SUPERVISOR', 'CASE_WORKER']}>
+            <li>
+              <NavLink to="/cases/new" className={({ isActive }) => (isActive ? 'active' : '')}>
+                <span className="nav-icon">+</span>
+                <span>New Case</span>
+              </NavLink>
+            </li>
+          </RoleGate>
           <li>
             <NavLink to="/clients" className={({ isActive }) => (isActive ? 'active' : '')}>
               <span className="nav-icon">P</span>
@@ -76,10 +86,12 @@ export function AppShell() {
             </NavLink>
           </li>
           <li>
-            <NavLink to="/reports" className={({ isActive }) => (isActive ? 'active' : '')}>
-              <span className="nav-icon">R</span>
-              <span>Reports</span>
-            </NavLink>
+            <RoleGate allow={['ADMIN', 'SUPERVISOR', 'AUDITOR']}>
+              <NavLink to="/reports" className={({ isActive }) => (isActive ? 'active' : '')}>
+                <span className="nav-icon">R</span>
+                <span>Reports</span>
+              </NavLink>
+            </RoleGate>
           </li>
         </ul>
       </nav>

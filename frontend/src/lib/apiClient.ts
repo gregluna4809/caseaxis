@@ -20,23 +20,17 @@ export class ApiError extends Error {
   }
 }
 
-function getToken(): string | null {
-  return localStorage.getItem('caseaxis_token');
-}
-
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = getToken();
-
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers as Record<string, string> | undefined),
   };
 
-  const response = await fetch(path, { ...options, headers });
+  const response = await fetch(path, { ...options, headers, credentials: 'include' });
 
   if (response.status === 401) {
-    localStorage.removeItem('caseaxis_token');
     localStorage.removeItem('caseaxis_username');
+    localStorage.removeItem('caseaxis_roles');
     window.location.href = '/login';
     throw new ApiError('Session expired. Please log in again.');
   }
@@ -60,17 +54,11 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 async function requestText(path: string, options: RequestInit = {}): Promise<string> {
-  const token = getToken();
-
-  const headers: Record<string, string> = {
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-
-  const response = await fetch(path, { ...options, headers });
+  const response = await fetch(path, { ...options, credentials: 'include' });
 
   if (response.status === 401) {
-    localStorage.removeItem('caseaxis_token');
     localStorage.removeItem('caseaxis_username');
+    localStorage.removeItem('caseaxis_roles');
     window.location.href = '/login';
     throw new ApiError('Session expired. Please log in again.');
   }
