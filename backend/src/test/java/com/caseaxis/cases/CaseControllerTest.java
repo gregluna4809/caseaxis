@@ -72,13 +72,14 @@ class CaseControllerTest {
 
     @Test
     void listCases_withQueryAndFilters_returnsMatchingPage() throws Exception {
-        String uniqueTitle = "Searchable Filter Case " + UUID.randomUUID();
+        String uniqueSearchToken = "zxqcasefilter" + UUID.randomUUID().toString().replace("-", "");
+        String uniqueTitle = "Searchable Filter Case " + uniqueSearchToken;
         createTestCase(uniqueTitle, "HIGH", "COMPLAINT");
 
         mockMvc.perform(get("/api/cases")
                 .param("page", "0")
                 .param("size", "50")
-                .param("q", uniqueTitle)
+                .param("q", uniqueSearchToken)
                 .param("status", "NEW")
                 .param("priority", "HIGH")
                 .param("type", "COMPLAINT")
