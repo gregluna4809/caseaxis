@@ -32,6 +32,9 @@ public class AuthController {
     @Value("${application.jwt.expiration-ms}")
     private long jwtExpirationMs;
 
+    @Value("${application.security.cookie.secure:true}")
+    private boolean cookieSecure;
+
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
@@ -59,7 +62,7 @@ public class AuthController {
     private ResponseCookie tokenCookie(String token, long maxAgeMs) {
         return ResponseCookie.from(TOKEN_COOKIE_NAME, token)
             .httpOnly(true)
-            .secure(true)
+            .secure(cookieSecure)
             .sameSite("Strict")
             .path("/")
             .maxAge(Math.max(0, maxAgeMs / 1000))

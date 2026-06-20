@@ -12,6 +12,7 @@ import java.time.ZoneOffset;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LoginRateLimitInterceptorTest {
 
@@ -98,6 +99,20 @@ class LoginRateLimitInterceptorTest {
         clock.advanceSeconds(6);
 
         assertDoesNotThrow(() -> configuredInterceptor.preHandle(loginRequest("203.0.113.60"), response, new Object()));
+    }
+
+    @Test
+    void evictsExpiredEntriesOnceTrackedClientMapExceedsBound() {
+        for (int i = 0; i < LoginRateLimitInterceptor.MAX_TRACKED_CLIENTS; i++) {
+            String ip = "10." + (i / 65536 % 256) + "." + (i / 256 % 256) + "." + (i % 256);
+            assertDoesNotThrow(() -> interceptor.preHandle(loginRequest(ip), response, new Object()));
+        }
+
+        clock.advanceSeconds(61);
+
+        assertDoesNotThrow(() -> interceptor.preHandle(loginRequest("203.0.113.99"), response, new Object()));
+
+        assertTrue(interceptor.trackedClientCount() <= LoginRateLimitInterceptor.MAX_TRACKED_CLIENTS);
     }
 
     private MockHttpServletRequest loginRequest(String remoteAddress) {

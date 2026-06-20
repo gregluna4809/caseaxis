@@ -4,6 +4,8 @@ logging:
 
 application:
   security:
+    cookie:
+      secure: false
     cors:
       allowed-origins:
         - http://localhost:5173

@@ -68,8 +68,11 @@ public interface CaseRepository extends JpaRepository<Case, UUID> {
             JOIN case_priorities p ON p.id = c.priority_id
             JOIN case_types t ON t.id = c.type_id
             WHERE c.is_deleted = FALSE
-              AND (c.search_vector @@ to_tsquery('english', :searchQuery)
-                OR (:caseNumber IS NOT NULL AND c.case_number = :caseNumber))
+              AND (
+                (:searchQuery IS NULL AND :caseNumber IS NULL)
+                OR (:searchQuery IS NOT NULL AND c.search_vector @@ to_tsquery('english', :searchQuery))
+                OR (:caseNumber IS NOT NULL AND c.case_number = :caseNumber)
+              )
               AND (:status IS NULL OR s.code = :status)
               AND (:priority IS NULL OR p.code = :priority)
               AND (:type IS NULL OR t.code = :type)
@@ -81,8 +84,11 @@ public interface CaseRepository extends JpaRepository<Case, UUID> {
             JOIN case_priorities p ON p.id = c.priority_id
             JOIN case_types t ON t.id = c.type_id
             WHERE c.is_deleted = FALSE
-              AND (c.search_vector @@ to_tsquery('english', :searchQuery)
-                OR (:caseNumber IS NOT NULL AND c.case_number = :caseNumber))
+              AND (
+                (:searchQuery IS NULL AND :caseNumber IS NULL)
+                OR (:searchQuery IS NOT NULL AND c.search_vector @@ to_tsquery('english', :searchQuery))
+                OR (:caseNumber IS NOT NULL AND c.case_number = :caseNumber)
+              )
               AND (:status IS NULL OR s.code = :status)
               AND (:priority IS NULL OR p.code = :priority)
               AND (:type IS NULL OR t.code = :type)

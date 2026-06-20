@@ -44,6 +44,8 @@ application:
     secret: ${JWT_SECRET}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
   security:
+    cookie:
+      secure: ${AUTH_COOKIE_SECURE:true}
     cors:
       allowed-origins: ${CORS_ALLOWED_ORIGINS:https://caseaxis.pulse-forge.com,https://staging.caseaxis.pulse-forge.com}
     login-rate-limit:

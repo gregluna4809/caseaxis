@@ -19,6 +19,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Component
 public class LoginRateLimitInterceptor implements HandlerInterceptor {
 
+    static final int MAX_TRACKED_CLIENTS = 10_000;
+
     private final Clock clock;
     private final boolean enabled;
     private final int maxAttempts;
@@ -62,15 +64,13 @@ public class LoginRateLimitInterceptor implements HandlerInterceptor {
 
         String clientIp = clientIp(request);
         Instant now = Instant.now(clock);
+        Instant windowStart = now.minus(window);
         AtomicBoolean allowed = new AtomicBoolean(true);
 
         // Single-instance limiter: protects one running backend process only.
         attemptsByClientIp.compute(clientIp, (ip, attempts) -> {
             Deque<Instant> currentAttempts = attempts == null ? new ArrayDeque<>() : attempts;
-            Instant windowStart = now.minus(window);
-            while (!currentAttempts.isEmpty() && currentAttempts.peekFirst().isBefore(windowStart)) {
-                currentAttempts.removeFirst();
-            }
+            removeExpired(currentAttempts, windowStart);
             if (currentAttempts.size() >= maxAttempts) {
                 allowed.set(false);
                 return currentAttempts;
@@ -79,10 +79,33 @@ public class LoginRateLimitInterceptor implements HandlerInterceptor {
             return currentAttempts;
         });
 
+        if (attemptsByClientIp.size() > MAX_TRACKED_CLIENTS) {
+            evictStaleEntries(windowStart);
+        }
+
         if (!allowed.get()) {
             throw new LoginRateLimitExceededException("Too many login attempts. Try again later.");
         }
         return true;
+    }
+
+    private static void removeExpired(Deque<Instant> attempts, Instant windowStart) {
+        while (!attempts.isEmpty() && attempts.peekFirst().isBefore(windowStart)) {
+            attempts.removeFirst();
+        }
+    }
+
+    private void evictStaleEntries(Instant windowStart) {
+        attemptsByClientIp.forEach((ip, attempts) ->
+            attemptsByClientIp.computeIfPresent(ip, (key, currentAttempts) -> {
+                removeExpired(currentAttempts, windowStart);
+                return currentAttempts.isEmpty() ? null : currentAttempts;
+            })
+        );
+    }
+
+    int trackedClientCount() {
+        return attemptsByClientIp.size();
     }
 
     private String clientIp(HttpServletRequest request) {
