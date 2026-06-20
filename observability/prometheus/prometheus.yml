@@ -16,7 +16,7 @@ scrape_configs:
     metrics_path: /actuator/prometheus
     static_configs:
       - targets:
-          - caseaxis-backend:8080
+          - caseaxis-backend:9091
 
   - job_name: caseaxis-health
     metrics_path: /probe
@@ -25,7 +25,7 @@ scrape_configs:
         - http_2xx
     static_configs:
       - targets:
-          - http://caseaxis-backend:8080/actuator/health
+          - http://caseaxis-backend:9091/actuator/health
     relabel_configs:
       - source_labels:
           - __address__

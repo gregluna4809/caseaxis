@@ -30,6 +30,7 @@ services:
       SPRING_PROFILES_ACTIVE: prod
     expose:
       - "8080"
+      - "9091"
     networks:
       - default
       - caddy

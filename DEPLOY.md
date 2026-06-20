@@ -82,9 +82,6 @@ caseaxis.pulse-forge.com {
     handle /api/* {
         reverse_proxy caseaxis-backend:8080
     }
-    handle /actuator/* {
-        reverse_proxy caseaxis-backend:8080
-    }
     handle {
         reverse_proxy caseaxis-frontend:80
     }
@@ -107,8 +104,8 @@ docker run --rm --network caseaxis_default -v /opt/apps/caseaxis/tools:/tools -e
 
 ## Verify
 
-- `curl https://caseaxis.pulse-forge.com/actuator/health`
-- Expected: `{"status":"UP"}`
+- `curl https://caseaxis.pulse-forge.com/api/health`
+- Expected: JSON body with `"status":"UP"` (actuator endpoints run on the internal-only management port 9091 and are not reachable through the public reverse proxy)
 - Open `https://caseaxis.pulse-forge.com` in browser, confirm UI loads
 
 ## Disaster recovery
@@ -212,7 +209,7 @@ docker compose --env-file .env.production -f docker-compose.prod.yml pull backen
 docker compose --env-file .env.production -f docker-compose.prod.yml up -d
 ```
 
-7. Verify `/actuator/health`, login, dashboard totals, case search, and a representative case detail page.
+7. Verify `/api/health`, login, dashboard totals, case search, and a representative case detail page.
 8. Record the restore result below.
 
 Last restore test: `TODO: YYYY-MM-DD, backup timestamp, operator, result, issues found`
