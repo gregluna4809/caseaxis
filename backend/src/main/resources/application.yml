@@ -54,6 +54,8 @@ application:
       window-seconds: ${LOGIN_RATE_LIMIT_WINDOW_SECONDS:60}
 
 management:
+  server:
+    port: ${MANAGEMENT_SERVER_PORT:9091}
   endpoints:
     web:
       exposure:
@@ -64,6 +66,10 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
 
 logging:
   structured:
