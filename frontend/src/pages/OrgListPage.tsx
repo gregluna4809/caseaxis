@@ -49,8 +49,8 @@ export function OrgListPage() {
         <div className="object-header-main">
           <span className="object-icon">O</span>
           <div>
-            <p className="page-kicker">CRM</p>
-            <h1 className="page-title">Organizations</h1>
+            <p className="page-kicker">Agencies</p>
+            <h1 className="page-title">Agencies</h1>
             <p className="page-subtitle">
               {loading ? 'Loading...' : `${totalElements.toLocaleString()} records matching current filters`}
             </p>
@@ -72,7 +72,7 @@ export function OrgListPage() {
                   value={draftQ}
                   onChange={(e) => setDraftQ(e.target.value)}
                   placeholder="Name or org code"
-                  aria-label="Search organizations"
+                  aria-label="Search agencies"
                 />
               </div>
               <button type="submit" className="btn btn-secondary btn-sm">Search</button>
@@ -94,7 +94,7 @@ export function OrgListPage() {
         </div>
 
         {error && <div className="form-error surface-error">{error}</div>}
-        {loading && <div className="spinner">Loading organizations...</div>}
+        {loading && <div className="spinner">Loading agencies...</div>}
 
         {!loading && !error && result && (
           <>
@@ -105,7 +105,7 @@ export function OrgListPage() {
                     <th>Org #</th>
                     <th>Name</th>
                     <th>Status</th>
-                    <th>Clients</th>
+                    <th>Recipients</th>
                     <th>Cases</th>
                     <th>Open Cases</th>
                     <th>Created</th>
@@ -116,9 +116,9 @@ export function OrgListPage() {
                     <tr>
                       <td colSpan={7}>
                         <div className="empty-state-panel">
-                          <div className="empty-state-title">No organizations found</div>
+                          <div className="empty-state-title">No agencies found</div>
                           <div className="empty-state-body">
-                            No organizations match the current search or filter criteria. Try adjusting your search terms or clearing a filter.
+                            No agencies match the current search or filter criteria. Try adjusting your search terms or clearing a filter.
                           </div>
                         </div>
                       </td>

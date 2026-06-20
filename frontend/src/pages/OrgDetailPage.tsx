@@ -67,7 +67,7 @@ export function OrgDetailPage() {
   if (error || !org) {
     return (
       <div className="page-stack">
-        <Link to="/organizations" className="back-link">Back to Organizations</Link>
+        <Link to="/organizations" className="back-link">Back to Agencies</Link>
         <div className="form-error">{error ?? 'Organization not found.'}</div>
       </div>
     );
@@ -75,12 +75,12 @@ export function OrgDetailPage() {
 
   return (
     <div className="page-stack">
-      <Link to="/organizations" className="back-link">Back to Organizations</Link>
+      <Link to="/organizations" className="back-link">Back to Agencies</Link>
 
       <section className="case-hero record-highlights">
         <div className="object-icon record-icon">O</div>
         <div className="case-hero-main">
-          <div className="case-number">Org {org.organizationCode}</div>
+          <div className="case-number">Agency {org.organizationCode}</div>
           <h1 className="case-title-large">{org.name}</h1>
           <div className="case-badges">
             <span className={`badge ${org.active ? 'badge-status-ASSIGNED' : 'badge-neutral'}`}>
@@ -89,7 +89,7 @@ export function OrgDetailPage() {
           </div>
         </div>
         <div className="case-hero-meta highlights-fields">
-          <Metric label="Clients" value={org.clientCount.toLocaleString()} />
+          <Metric label="Recipients" value={org.clientCount.toLocaleString()} />
           <Metric label="Total Cases" value={org.caseCount.toLocaleString()} />
           <Metric label="Open" value={org.openCaseCount.toLocaleString()} />
           <Metric label="Escalated" value={org.escalatedCases.toLocaleString()} />
@@ -125,7 +125,7 @@ export function OrgDetailPage() {
             role="tab"
             aria-selected={activeTab === 'clients'}
           >
-            Clients
+            Recipients
             {org.clientCount > 0 && <span className="tab-count">{org.clientCount.toLocaleString()}</span>}
           </button>
           <button

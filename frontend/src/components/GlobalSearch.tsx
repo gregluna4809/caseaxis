@@ -121,7 +121,7 @@ export function GlobalSearch() {
 
           {results && results.clients.length > 0 && (
             <div className="search-group">
-              <div className="search-group-header">Clients</div>
+              <div className="search-group-header">Recipients</div>
               {results.clients.map(item => (
                 <div
                   key={item.id}
@@ -144,7 +144,7 @@ export function GlobalSearch() {
 
           {results && results.organizations.length > 0 && (
             <div className="search-group">
-              <div className="search-group-header">Organizations</div>
+              <div className="search-group-header">Agencies</div>
               {results.organizations.map(item => (
                 <div
                   key={item.id}
@@ -165,7 +165,7 @@ export function GlobalSearch() {
 
           {results && results.tasks.length > 0 && (
             <div className="search-group">
-              <div className="search-group-header">Tasks</div>
+              <div className="search-group-header">Review Actions</div>
               {results.tasks.map(item => (
                 <div
                   key={item.id}

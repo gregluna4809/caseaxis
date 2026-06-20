@@ -62,10 +62,10 @@ export function TaskListPage() {
         <div className="object-header-main">
           <span className="object-icon">T</span>
           <div>
-            <p className="page-kicker">Tasks</p>
-            <h1 className="page-title">Task Workspace</h1>
+            <p className="page-kicker">Review Actions</p>
+            <h1 className="page-title">Review Action Queue</h1>
             <p className="page-subtitle">
-              {loading ? 'Loading...' : `${totalElements.toLocaleString()} work items matching current filters`}
+              {loading ? 'Loading...' : `${totalElements.toLocaleString()} review actions matching current filters`}
             </p>
           </div>
         </div>

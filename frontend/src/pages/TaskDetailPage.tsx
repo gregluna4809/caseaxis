@@ -82,7 +82,7 @@ export function TaskDetailPage() {
   if (error || !task) {
     return (
       <div className="page-stack">
-        <Link to="/tasks" className="back-link">Back to Tasks</Link>
+        <Link to="/tasks" className="back-link">Back to Review Actions</Link>
         <div className="form-error">{error ?? 'Task not found.'}</div>
       </div>
     );
@@ -92,12 +92,12 @@ export function TaskDetailPage() {
 
   return (
     <div className="page-stack">
-      <Link to="/tasks" className="back-link">Back to Tasks</Link>
+      <Link to="/tasks" className="back-link">Back to Review Actions</Link>
 
       <section className={`case-hero record-highlights task-record-hero ${overdue ? 'task-record-overdue' : ''}`}>
         <div className="object-icon record-icon">T</div>
         <div className="case-hero-main">
-          <div className="case-number">Task record</div>
+          <div className="case-number">Review action record</div>
           <h1 className="case-title-large">{task.title}</h1>
           <div className="case-badges">
             <TaskStatusBadge code={task.statusCode} label={task.statusDisplayName} />
@@ -120,7 +120,7 @@ export function TaskDetailPage() {
         <div className="card-header task-action-header">
           <div>
             <span className="card-title">Task Details</span>
-            <p className="card-subtitle">Update work status and review case context</p>
+            <p className="card-subtitle">Update action status and review benefit context</p>
           </div>
           <div className="action-bar">
             <select

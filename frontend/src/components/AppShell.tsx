@@ -16,17 +16,17 @@ export function AppShell() {
     <div className="app-layout">
       <header className="global-header">
         <div className="sidebar-brand">
-          <div className="sidebar-brand-mark">CA</div>
+          <div className="sidebar-brand-mark">MBRA</div>
           <div>
-            <span className="sidebar-brand-name">CaseAxis</span>
-            <span className="sidebar-brand-subtitle">Operations Workspace</span>
+            <span className="sidebar-brand-name">MBRA</span>
+            <span className="sidebar-brand-subtitle">Benefits Review Operations</span>
           </div>
         </div>
 
         <GlobalSearch />
 
         <div className="global-header-right">
-          <span className="workspace-selector">Case Operations</span>
+          <span className="workspace-selector">Benefits Review</span>
           {isReadOnlyAuditor && <span className="username-chip">Read-only auditor</span>}
           <span className="username-chip">{username}</span>
           <button className="btn btn-secondary btn-sm" onClick={handleLogout}>
@@ -36,16 +36,16 @@ export function AppShell() {
       </header>
 
       <nav className="sidebar" aria-label="Primary navigation">
-        <span className="sidebar-section-label">Apps</span>
+        <span className="sidebar-section-label">Workspace</span>
         <div className="workspace-card">
           <span className="workspace-dot" />
           <div>
-            <strong>Service Console</strong>
-            <span>Case management</span>
+            <strong>Benefits Review Operations</strong>
+            <span>Human services portal</span>
           </div>
         </div>
 
-        <span className="sidebar-section-label">Objects</span>
+        <span className="sidebar-section-label">Review Work</span>
         <ul className="sidebar-nav">
           <li>
             <NavLink to="/dashboard" className={({ isActive }) => (isActive ? 'active' : '')}>
@@ -56,40 +56,40 @@ export function AppShell() {
           <li>
             <NavLink to="/cases" className={({ isActive }) => (isActive ? 'active' : '')}>
               <span className="nav-icon">C</span>
-              <span>Cases</span>
+              <span>Benefit Reviews</span>
             </NavLink>
           </li>
           <RoleGate allow={['ADMIN', 'SUPERVISOR', 'CASE_WORKER']}>
             <li>
               <NavLink to="/cases/new" className={({ isActive }) => (isActive ? 'active' : '')}>
                 <span className="nav-icon">+</span>
-                <span>New Case</span>
+                <span>New Review</span>
               </NavLink>
             </li>
           </RoleGate>
           <li>
             <NavLink to="/clients" className={({ isActive }) => (isActive ? 'active' : '')}>
               <span className="nav-icon">P</span>
-              <span>Clients</span>
+              <span>Recipients</span>
             </NavLink>
           </li>
           <li>
             <NavLink to="/organizations" className={({ isActive }) => (isActive ? 'active' : '')}>
               <span className="nav-icon">O</span>
-              <span>Organizations</span>
+              <span>Agencies</span>
             </NavLink>
           </li>
           <li>
             <NavLink to="/tasks" className={({ isActive }) => (isActive ? 'active' : '')}>
               <span className="nav-icon">T</span>
-              <span>Tasks</span>
+              <span>Review Actions</span>
             </NavLink>
           </li>
           <li>
             <RoleGate allow={['ADMIN', 'SUPERVISOR', 'AUDITOR']}>
               <NavLink to="/reports" className={({ isActive }) => (isActive ? 'active' : '')}>
                 <span className="nav-icon">R</span>
-                <span>Reports</span>
+                <span>Determinations</span>
               </NavLink>
             </RoleGate>
           </li>

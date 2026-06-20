@@ -14,7 +14,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'overview', label: 'Details' },
   { id: 'audit', label: 'Audit' },
   { id: 'notes', label: 'Notes' },
-  { id: 'tasks', label: 'Tasks' },
+  { id: 'tasks', label: 'Review Actions' },
   { id: 'attachments', label: 'Files' },
 ];
 

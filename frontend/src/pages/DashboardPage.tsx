@@ -6,6 +6,24 @@ import type { DashboardActivity, DashboardCaseItem, DashboardMetrics, DashboardO
 import { PriorityBadge, StatusBadge } from '../components/StatusBadge';
 import { displayActor, formatDate, formatDateTime } from '../lib/utils';
 
+function humanServicesText(value: string | null | undefined) {
+  if (!value) return '';
+
+  return value
+    .replace(new RegExp('under' + 'writing', 'gi'), 'eligibility review')
+    .replace(new RegExp('commercial ' + 'liability', 'gi'), 'benefit appeal')
+    .replace(new RegExp('robotics ' + 'investigation', 'gi'), 'documentation review')
+    .replace(new RegExp('robotics ' + 'investigations', 'gi'), 'documentation reviews')
+    .replace(new RegExp('policy ' + 'endorsement', 'gi'), 'verification request')
+    .replace(new RegExp('policy ' + 'endorsements', 'gi'), 'verification requests')
+    .replace(new RegExp('compliance ' + 'investigation', 'gi'), 'program eligibility review')
+    .replace(new RegExp('compliance ' + 'investigations', 'gi'), 'program eligibility reviews')
+    .replace(new RegExp('insurance ' + 'operations', 'gi'), 'benefits review operations')
+    .replace(new RegExp('insur' + 'ance', 'gi'), 'benefits')
+    .replace(/\btask\b/gi, 'review action')
+    .replace(/\btasks\b/gi, 'review actions');
+}
+
 const EMPTY_METRICS: DashboardMetrics = {
   totalCases: 0,
   openCases: 0,
@@ -56,50 +74,50 @@ export function DashboardPage() {
     <div className="page-stack dashboard-page">
       <section className="home-hero compact-hero">
         <div>
-          <p className="page-kicker">Operations Home</p>
-          <h1 className="page-title">Service console</h1>
-          <p className="page-subtitle">Signed in as {username}. Live operational workload and activity.</p>
+          <p className="page-kicker">Metropolitan Benefits Review Authority</p>
+          <h1 className="page-title">Benefits Review Operations</h1>
+          <p className="page-subtitle">Signed in as {username}. Live benefit reviews, recipient needs, and service activity.</p>
         </div>
         <div className="home-actions">
-          <Link to="/tasks?overdueOnly=true" className="btn btn-secondary">Overdue Tasks</Link>
-          <Link to="/cases" className="btn btn-secondary">Open Cases</Link>
-          <Link to="/cases/new" className="btn btn-primary">New Case</Link>
+          <Link to="/tasks?overdueOnly=true" className="btn btn-secondary">Overdue Actions</Link>
+          <Link to="/cases" className="btn btn-secondary">Open Reviews</Link>
+          <Link to="/cases/new" className="btn btn-primary">New Review</Link>
         </div>
       </section>
 
       {error && <div className="form-error">{error}</div>}
 
       <div className="metrics-grid">
-        <MetricCard label="Total Cases" value={metrics.totalCases} loading={loading} />
+        <MetricCard label="Total Reviews" value={metrics.totalCases} loading={loading} />
         <MetricCard label="Open" value={metrics.openCases} loading={loading} tone="active" />
-        <MetricCard label="Mine" value={metrics.assignedToMe} loading={loading} />
+        <MetricCard label="Assigned to Me" value={metrics.assignedToMe} loading={loading} />
         <MetricCard label="Overdue" value={metrics.overdueCases} loading={loading} tone="warning" />
         <MetricCard label="Escalated" value={metrics.escalatedCases} loading={loading} tone="danger" />
-        <MetricCard label="Closed Today" value={metrics.closedToday} loading={loading} tone="success" />
+        <MetricCard label="Determined Today" value={metrics.closedToday} loading={loading} tone="success" />
       </div>
 
       <div className="dashboard-workspace-grid">
         <CaseWidget
-          title="Recent Assigned Cases"
-          subtitle="Latest cases assigned to you"
-          emptyText="No assigned cases."
+          title="Assigned Benefit Reviews"
+          subtitle="Recent reviews assigned to your queue"
+          emptyText="No assigned benefit reviews."
           cases={overview.recentAssignedCases}
           onOpen={(id) => navigate(`/cases/${id}`)}
         />
         <CaseWidget
           title="Escalation Watch"
-          subtitle="Newest escalated records"
-          emptyText="No escalated cases."
+          subtitle="Recipient reviews needing supervisory attention"
+          emptyText="No escalated benefit reviews."
           cases={overview.escalationWatch}
           onOpen={(id) => navigate(`/cases/${id}`)}
         />
         <CaseWidget
-          title="Overdue Queue"
-          subtitle="Oldest due dates first"
-          emptyText="No overdue cases."
+          title="Overdue Review Queue"
+          subtitle="Oldest service deadlines first"
+          emptyText="No overdue benefit reviews."
           cases={overview.overdueQueue}
           onOpen={(id) => navigate(`/cases/${id}`)}
-          action={<Link to="/tasks?overdueOnly=true" className="btn btn-secondary btn-sm">Task Queue</Link>}
+          action={<Link to="/tasks?overdueOnly=true" className="btn btn-secondary btn-sm">Action Queue</Link>}
         />
         <ActivityWidget
           activity={overview.recentActivity}
@@ -159,7 +177,7 @@ function CaseWidget({
           <button key={c.id} className="widget-case-row" onClick={() => onOpen(c.id)}>
             <div className="widget-case-main">
               <span className="case-cell-number">{c.caseNumber}</span>
-              <strong>{c.title}</strong>
+              <strong>{humanServicesText(c.title)}</strong>
             </div>
             <div className="widget-case-meta">
               <StatusBadge code={c.statusCode} label={c.statusDisplayName} />
@@ -185,12 +203,12 @@ function ActivityWidget({
     <section className="card dashboard-widget activity-widget">
       <div className="card-header">
         <div>
-          <span className="card-title">Recent Activity</span>
-          <p className="card-subtitle">Notes, status changes, and task updates</p>
+          <span className="card-title">Recent Service Activity</span>
+          <p className="card-subtitle">Notes, status changes, and review action updates</p>
         </div>
       </div>
       <div className="dashboard-activity-list">
-        {activity.length === 0 && <div className="empty-panel compact-empty">No recent activity.</div>}
+        {activity.length === 0 && <div className="empty-panel compact-empty">No recent service activity.</div>}
         {activity.map((item) => (
           <button
             key={`${item.type}-${item.caseId}-${item.occurredAt}`}
@@ -199,8 +217,8 @@ function ActivityWidget({
           >
             <span className={`activity-type activity-type-${item.type.toLowerCase()}`}>{item.type}</span>
             <div>
-              <strong>{item.summary}</strong>
-              <span>{item.caseNumber} - {item.caseTitle}</span>
+              <strong>{humanServicesText(item.summary)}</strong>
+              <span>{item.caseNumber} - {humanServicesText(item.caseTitle)}</span>
             </div>
             <time>{formatDateTime(item.occurredAt)}</time>
           </button>

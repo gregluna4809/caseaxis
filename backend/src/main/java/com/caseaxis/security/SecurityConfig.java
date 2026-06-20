@@ -21,6 +21,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
@@ -75,7 +76,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(corsProperties.getAllowedOrigins());
+        configuration.setAllowedOrigins(normalizedAllowedOrigins());
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Content-Type", "Accept", "X-Requested-With"));
         configuration.setAllowCredentials(true);
@@ -84,5 +85,18 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", configuration);
         return source;
+    }
+
+    private List<String> normalizedAllowedOrigins() {
+        List<String> origins = new ArrayList<>();
+        for (String configuredOrigin : corsProperties.getAllowedOrigins()) {
+            for (String origin : configuredOrigin.split(",")) {
+                String trimmedOrigin = origin.trim();
+                if (!trimmedOrigin.isEmpty()) {
+                    origins.add(trimmedOrigin);
+                }
+            }
+        }
+        return origins;
     }
 }

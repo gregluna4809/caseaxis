@@ -49,8 +49,8 @@ export function ClientListPage() {
         <div className="object-header-main">
           <span className="object-icon">P</span>
           <div>
-            <p className="page-kicker">CRM</p>
-            <h1 className="page-title">Clients</h1>
+            <p className="page-kicker">Recipients</p>
+            <h1 className="page-title">Recipients</h1>
             <p className="page-subtitle">
               {loading ? 'Loading...' : `${totalElements.toLocaleString()} records matching current filters`}
             </p>
@@ -72,7 +72,7 @@ export function ClientListPage() {
                   value={draftQ}
                   onChange={(e) => setDraftQ(e.target.value)}
                   placeholder="Name or client number"
-                  aria-label="Search clients"
+                  aria-label="Search recipients"
                 />
               </div>
               <button type="submit" className="btn btn-secondary btn-sm">Search</button>
@@ -94,7 +94,7 @@ export function ClientListPage() {
         </div>
 
         {error && <div className="form-error surface-error">{error}</div>}
-        {loading && <div className="spinner">Loading clients...</div>}
+        {loading && <div className="spinner">Loading recipients...</div>}
 
         {!loading && !error && result && (
           <>
@@ -116,9 +116,9 @@ export function ClientListPage() {
                     <tr>
                       <td colSpan={7}>
                         <div className="empty-state-panel">
-                          <div className="empty-state-title">No clients found</div>
+                          <div className="empty-state-title">No recipients found</div>
                           <div className="empty-state-body">
-                            No clients match the current search or filter criteria. Try adjusting your search terms or clearing a filter.
+                            No recipients match the current search or filter criteria. Try adjusting your search terms or clearing a filter.
                           </div>
                         </div>
                       </td>

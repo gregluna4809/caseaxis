@@ -213,8 +213,8 @@ export function ReportsPage() {
           <span className="object-icon">R</span>
           <div>
             <p className="page-kicker">Analytics</p>
-            <h1 className="page-title">Reports</h1>
-            <p className="page-subtitle">Operational analytics and workload intelligence</p>
+            <h1 className="page-title">Determinations</h1>
+            <p className="page-subtitle">Benefit review outcomes, workload, and service timeliness</p>
           </div>
         </div>
         <div className="home-actions">
@@ -303,8 +303,8 @@ export function ReportsPage() {
         <MetricCard label="Overdue Cases" value={summary.overdueCases} loading={loading} tone="warning" />
         <MetricCard label="Escalated Cases" value={summary.escalatedCases} loading={loading} tone="danger" />
         <MetricCard label="Avg Resolution" value={formatDuration(summary.averageResolutionHours)} loading={loading} />
-        <MetricCard label="Open Tasks" value={summary.openTasks} loading={loading} tone="active" />
-        <MetricCard label="Completed Tasks" value={summary.completedTasks} loading={loading} tone="success" />
+        <MetricCard label="Open Actions" value={summary.openTasks} loading={loading} tone="active" />
+        <MetricCard label="Completed Actions" value={summary.completedTasks} loading={loading} tone="success" />
       </div>
 
       {loading && <div className="spinner">Loading report analytics...</div>}

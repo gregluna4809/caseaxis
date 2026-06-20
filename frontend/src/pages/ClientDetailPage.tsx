@@ -52,7 +52,7 @@ export function ClientDetailPage() {
   if (error || !client) {
     return (
       <div className="page-stack">
-        <Link to="/clients" className="back-link">Back to Clients</Link>
+        <Link to="/clients" className="back-link">Back to Recipients</Link>
         <div className="form-error">{error ?? 'Client not found.'}</div>
       </div>
     );
@@ -60,12 +60,12 @@ export function ClientDetailPage() {
 
   return (
     <div className="page-stack">
-      <Link to="/clients" className="back-link">Back to Clients</Link>
+      <Link to="/clients" className="back-link">Back to Recipients</Link>
 
       <section className="case-hero record-highlights">
         <div className="object-icon record-icon">P</div>
         <div className="case-hero-main">
-          <div className="case-number">Client {client.clientNumber}</div>
+          <div className="case-number">Recipient {client.clientNumber}</div>
           <h1 className="case-title-large">{client.displayName}</h1>
           <div className="case-badges">
             <span className={`badge ${client.active ? 'badge-status-ASSIGNED' : 'badge-neutral'}`}>
