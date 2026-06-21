@@ -72,18 +72,18 @@ export function CreateCasePage() {
 
   return (
     <div className="page-stack">
-      <Link to="/cases" className="back-link">Back to Cases</Link>
+      <Link to="/cases" className="back-link">Back to Benefit Reviews</Link>
 
       <div className="page-header">
-        <p className="page-kicker">Case intake</p>
-        <h1 className="page-title">New Case</h1>
+        <p className="page-kicker">Benefit review intake</p>
+        <h1 className="page-title">New Benefit Review</h1>
         <p className="page-subtitle">Capture the minimum operational record needed to start workflow.</p>
       </div>
 
       <div className="card form-card">
         <div className="card-header">
           <div>
-            <span className="card-title">Case details</span>
+            <span className="card-title">Benefit review details</span>
             <p className="card-subtitle">Required fields are marked with an asterisk.</p>
           </div>
         </div>
@@ -101,7 +101,7 @@ export function CreateCasePage() {
                 onChange={(e) => setTitle(e.target.value)}
                 required
                 maxLength={500}
-                placeholder="Brief title for the case"
+                placeholder="Brief title for the benefit review"
               />
               {fieldErrors.title && <span className="field-error">{fieldErrors.title}</span>}
             </div>
@@ -140,27 +140,27 @@ export function CreateCasePage() {
             ) : (
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label" htmlFor="cf-org">Organization {!clientId && <span className="required-star">*</span>}</label>
+                  <label className="form-label" htmlFor="cf-org">Agency {!clientId && <span className="required-star">*</span>}</label>
                   <select id="cf-org" className="form-select" value={organizationId} onChange={(e) => setOrganizationId(e.target.value)} disabled={lookupLoading}>
                     <option value="">None</option>
                     {organizations.map((o) => <option key={o.id} value={o.id}>{o.name} ({o.organizationCode})</option>)}
                   </select>
-                  {!lookupLoading && organizations.length === 0 && <span className="form-hint">No organizations in system yet.</span>}
+                  {!lookupLoading && organizations.length === 0 && <span className="form-hint">No agencies in system yet.</span>}
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label" htmlFor="cf-client">Client {!organizationId && <span className="required-star">*</span>}</label>
+                  <label className="form-label" htmlFor="cf-client">Recipient {!organizationId && <span className="required-star">*</span>}</label>
                   <select id="cf-client" className="form-select" value={clientId} onChange={(e) => setClientId(e.target.value)} disabled={lookupLoading}>
                     <option value="">None</option>
                     {clients.map((c) => <option key={c.id} value={c.id}>{c.displayName} ({c.clientNumber})</option>)}
                   </select>
-                  {!lookupLoading && clients.length === 0 && <span className="form-hint">No clients in system yet.</span>}
+                  {!lookupLoading && clients.length === 0 && <span className="form-hint">No recipients in system yet.</span>}
                 </div>
               </div>
             )}
 
             {subjectMissing && !lookupLoading && !lookupError && (
-              <div className="field-hint-warn">At least one of Organization or Client must be selected.</div>
+              <div className="field-hint-warn">At least one of Agency or Recipient must be selected.</div>
             )}
 
             <div className="form-group due-field">
@@ -171,7 +171,7 @@ export function CreateCasePage() {
             <div className="form-actions">
               <Link to="/cases" className="btn btn-secondary">Cancel</Link>
               <button type="submit" className="btn btn-primary" disabled={submitting || lookupLoading || subjectMissing}>
-                {submitting ? 'Creating...' : lookupLoading ? 'Loading...' : 'Create Case'}
+                {submitting ? 'Creating...' : lookupLoading ? 'Loading...' : 'Create Benefit Review'}
               </button>
             </div>
           </form>

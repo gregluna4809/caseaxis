@@ -47,13 +47,13 @@ export function ClientDetailPage() {
     return () => { cancelled = true; };
   }, [id, activeTab, casesPage]);
 
-  if (loading) return <div className="spinner">Loading client...</div>;
+  if (loading) return <div className="spinner">Loading recipient...</div>;
 
   if (error || !client) {
     return (
       <div className="page-stack">
         <Link to="/clients" className="back-link">Back to Recipients</Link>
-        <div className="form-error">{error ?? 'Client not found.'}</div>
+        <div className="form-error">{error ?? 'Recipient not found.'}</div>
       </div>
     );
   }
@@ -83,7 +83,7 @@ export function ClientDetailPage() {
           </div>
         </div>
         <div className="case-hero-meta highlights-fields">
-          <Metric label="Total Cases" value={String(client.totalCases)} />
+          <Metric label="Total Benefit Reviews" value={String(client.totalCases)} />
           <Metric label="Open" value={String(client.openCases)} />
           <Metric label="Escalated" value={String(client.escalatedCases)} />
           <Metric label="Overdue" value={String(client.overdueCases)} />
@@ -96,14 +96,14 @@ export function ClientDetailPage() {
           onClick={() => setConfirmDeactivate(true)}
           disabled={!client.active}
         >
-          Deactivate Client
+          Deactivate Recipient
         </button>
       </div>
 
       {actionError && <div className="form-error">{actionError}</div>}
 
       <section className="card detail-card">
-        <div className="tabs" role="tablist" aria-label="Client sections">
+        <div className="tabs" role="tablist" aria-label="Recipient sections">
           <button
             className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
             onClick={() => setActiveTab('overview')}
@@ -118,7 +118,7 @@ export function ClientDetailPage() {
             role="tab"
             aria-selected={activeTab === 'cases'}
           >
-            Cases
+            Benefit Reviews
             {client.totalCases > 0 && <span className="tab-count">{client.totalCases}</span>}
           </button>
         </div>
@@ -139,9 +139,9 @@ export function ClientDetailPage() {
 
       {confirmDeactivate && (
         <ConfirmActionModal
-          title="Deactivate Client"
-          message="This client will be removed from active client lists and lookup workflows. Existing cases and history will remain linked to the client record."
-          confirmLabel="Deactivate Client"
+          title="Deactivate Recipient"
+          message="This recipient will be removed from active recipient lists and lookup workflows. Existing benefit reviews and history will remain linked to the recipient record."
+          confirmLabel="Deactivate Recipient"
           submitting={submittingAction}
           onClose={() => setConfirmDeactivate(false)}
           onConfirm={async () => {
@@ -176,13 +176,13 @@ function Metric({ label, value }: { label: string; value: string }) {
 function OverviewTab({ client }: { client: ClientDetail }) {
   return (
     <div className="detail-grid">
-      <DetailField label="Client number" value={client.clientNumber} />
+      <DetailField label="Recipient number" value={client.clientNumber} />
       <DetailField label="First name" value={client.firstName} />
       <DetailField label="Last name" value={client.lastName} />
       <DetailField label="Email" value={client.email ?? '-'} />
       <DetailField label="Phone" value={formatPhoneNumber(client.phone)} />
       <DetailField
-        label="Organization"
+        label="Agency"
         value={
           client.organizationName && client.organizationId ? (
             <Link to={`/organizations/${client.organizationId}`}>
@@ -253,7 +253,7 @@ function CasesTab({
   setPage: (fn: (p: number) => number) => void;
   onCaseClick: (id: string) => void;
 }) {
-  if (loading) return <div className="spinner">Loading cases...</div>;
+  if (loading) return <div className="spinner">Loading benefit reviews...</div>;
 
   const rows = result?.content ?? [];
   const totalPages = result?.totalPages ?? 0;
@@ -265,7 +265,7 @@ function CasesTab({
         <table className="data-table">
           <thead>
             <tr>
-              <th>Case</th>
+              <th>Benefit Review</th>
               <th>Status</th>
               <th>Priority</th>
               <th>Type</th>
@@ -278,8 +278,8 @@ function CasesTab({
               <tr>
                 <td colSpan={6}>
                   <div className="empty-state-panel">
-                    <div className="empty-state-title">No cases</div>
-                    <div className="empty-state-body">This client has no cases on record.</div>
+                    <div className="empty-state-title">No benefit reviews</div>
+                    <div className="empty-state-body">This recipient has no benefit reviews on record.</div>
                   </div>
                 </td>
               </tr>
@@ -304,7 +304,7 @@ function CasesTab({
       </div>
       {totalPages > 1 && (
         <div className="pagination">
-          <span className="pagination-summary">{totalElements.toLocaleString()} case{totalElements !== 1 ? 's' : ''}</span>
+          <span className="pagination-summary">{totalElements.toLocaleString()} benefit review{totalElements !== 1 ? 's' : ''}</span>
           <div className="pagination-controls">
             <button className="btn btn-secondary btn-sm" onClick={() => setPage(() => 0)} disabled={result?.first} title="First page">«</button>
             <button className="btn btn-secondary btn-sm" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={result?.first} title="Previous page">‹</button>

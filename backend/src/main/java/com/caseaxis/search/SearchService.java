@@ -33,14 +33,14 @@ public class SearchService {
         List<CaseSearchItem> cases = caseSearchQuery == null
             ? List.of()
             : caseRepository
-                .searchActive(caseSearchQuery, caseNumber, null, null, null, pageable)
+                .searchActiveSummaries(caseSearchQuery, caseNumber, null, null, null, pageable)
                 .stream()
                 .map(c -> new CaseSearchItem(
                     c.getId(),
                     c.getCaseNumber(),
                     c.getTitle(),
-                    c.getStatus().getCode(),
-                    c.getStatus().getDisplayName()
+                    c.getStatusCode(),
+                    c.getStatusDisplayName()
                 ))
                 .toList();
 

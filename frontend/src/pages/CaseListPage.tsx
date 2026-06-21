@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type KeyboardEvent } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/apiClient';
 import type { CaseSummary, Page } from '../types/api';
 import { StatusBadge, PriorityBadge } from '../components/StatusBadge';
-import { displayActor, formatDate } from '../lib/utils';
-import { CASE_TYPES, PRIORITIES } from '../lib/lookups';
+import { formatDate } from '../lib/utils';
+import { CASE_TYPES, PRIORITIES, STATUS_LABEL } from '../lib/lookups';
 
 const STATUS_FILTERS = ['ALL', 'NEW', 'ASSIGNED', 'IN_REVIEW', 'PENDING_INFO', 'ESCALATED', 'APPROVED', 'DENIED', 'CLOSED', 'REOPENED'];
 const PAGE_SIZE = 50;
@@ -56,6 +56,16 @@ export function CaseListPage() {
     run();
   }
 
+  function openCase(caseId: string) {
+    navigate(`/cases/${caseId}`);
+  }
+
+  function handleRowKeyDown(event: KeyboardEvent<HTMLTableRowElement>, caseId: string) {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    openCase(caseId);
+  }
+
   const totalPages = result?.totalPages ?? 0;
   const totalElements = result?.totalElements ?? 0;
   const cases = result?.content ?? [];
@@ -66,8 +76,8 @@ export function CaseListPage() {
         <div className="object-header-main">
           <span className="object-icon">C</span>
           <div>
-            <p className="page-kicker">Cases</p>
-            <h1 className="page-title">All Cases</h1>
+            <p className="page-kicker">Benefit Reviews</p>
+            <h1 className="page-title">All Benefit Reviews</h1>
             <p className="page-subtitle">
               {loading ? 'Loading...' : `${totalElements.toLocaleString()} records matching current filters`}
             </p>
@@ -79,7 +89,7 @@ export function CaseListPage() {
       <div className="list-view-card">
         <div className="list-view-toolbar">
           <div>
-            <span className="list-view-title">Case List View</span>
+            <span className="list-view-title">Benefit Review List View</span>
             <span className="list-view-subtitle">Server-side search, filters, and pagination</span>
           </div>
           <div className="toolbar-controls">
@@ -88,7 +98,7 @@ export function CaseListPage() {
               <input
                 value={query}
                 onChange={(e) => resetPageAnd(() => setQuery(e.target.value))}
-                placeholder="Case #, title, or type"
+                placeholder="Benefit review #, title, or type"
                 aria-label="Search cases"
               />
             </div>
@@ -100,7 +110,7 @@ export function CaseListPage() {
             >
               {STATUS_FILTERS.map((status) => (
                 <option key={status} value={status}>
-                  {status === 'ALL' ? 'All statuses' : status.replace(/_/g, ' ')}
+                  {status === 'ALL' ? 'All statuses' : STATUS_LABEL[status]}
                 </option>
               ))}
             </select>
@@ -139,7 +149,7 @@ export function CaseListPage() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Case</th>
+                    <th>Benefit Review</th>
                     <th>Status</th>
                     <th>Priority</th>
                     <th>Type</th>
@@ -166,7 +176,11 @@ export function CaseListPage() {
                       key={c.id}
                       className="clickable"
                       title="Open case record"
-                      onClick={() => navigate(`/cases/${c.id}`)}
+                      tabIndex={0}
+                      role="link"
+                      aria-label={`Open case ${c.caseNumber}`}
+                      onClick={() => openCase(c.id)}
+                      onKeyDown={(event) => handleRowKeyDown(event, c.id)}
                     >
                       <td>
                         <div className="case-cell">
@@ -174,10 +188,10 @@ export function CaseListPage() {
                           <span className="case-cell-title">{c.title}</span>
                         </div>
                       </td>
-                      <td><StatusBadge code={c.statusCode} label={c.statusDisplayName} /></td>
+                      <td><StatusBadge code={c.statusCode} label={STATUS_LABEL[c.statusCode] ?? c.statusDisplayName} /></td>
                       <td><PriorityBadge code={c.priorityCode} label={c.priorityDisplayName} /></td>
                       <td className="td-muted">{c.typeDisplayName}</td>
-                      <td className="td-muted">{displayActor(c.assignedToId)}</td>
+                      <td className="td-muted">{c.assignedToName ?? 'Unassigned'}</td>
                       <td className="td-muted">{formatDate(c.dueDate)}</td>
                       <td className="td-muted">{formatDate(c.createdAt)}</td>
                     </tr>

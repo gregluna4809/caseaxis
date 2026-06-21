@@ -171,7 +171,7 @@ export function TaskDetailPage() {
                   label="Linked case"
                   value={
                     task.caseNumber ? (
-                      <Link to={`/cases/${task.caseId}`}>{task.caseNumber} - {task.caseTitle ?? 'Untitled case'}</Link>
+                      <Link to={`/cases/${task.caseId}`}>{task.caseNumber} - {task.caseTitle || 'Untitled benefit review'}</Link>
                     ) : '-'
                   }
                 />
@@ -185,7 +185,7 @@ export function TaskDetailPage() {
 
       <div className="action-bar">
         <button className="btn btn-secondary btn-sm" onClick={() => navigate(`/cases/${task.caseId}`)}>
-          Open Linked Case
+          Open Linked Benefit Review
         </button>
         <button className="btn btn-secondary btn-sm" onClick={() => void loadTask()} disabled={saving}>
           Refresh

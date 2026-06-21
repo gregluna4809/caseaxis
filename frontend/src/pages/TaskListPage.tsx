@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type KeyboardEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/apiClient';
 import type { Page, TaskSummary } from '../types/api';
@@ -8,6 +8,7 @@ import { formatDate, formatDateTime } from '../lib/utils';
 
 const PAGE_SIZE = 50;
 const STATUS_FILTERS = ['ALL', ...TASK_STATUSES.map((s) => s.code)];
+const TASK_STATUS_LABEL: Record<string, string> = Object.fromEntries(TASK_STATUSES.map((s) => [s.code, s.label]));
 
 export function TaskListPage() {
   const navigate = useNavigate();
@@ -50,6 +51,16 @@ export function TaskListPage() {
   function resetPageAnd(run: () => void) {
     setPage(0);
     run();
+  }
+
+  function openTask(taskId: string) {
+    navigate(`/tasks/${taskId}`);
+  }
+
+  function handleRowKeyDown(event: KeyboardEvent<HTMLTableRowElement>, taskId: string) {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    openTask(taskId);
   }
 
   const tasks = result?.content ?? [];
@@ -95,7 +106,7 @@ export function TaskListPage() {
             >
               {STATUS_FILTERS.map((status) => (
                 <option key={status} value={status}>
-                  {status === 'ALL' ? 'All statuses' : status.replace(/_/g, ' ')}
+                  {status === 'ALL' ? 'All statuses' : TASK_STATUS_LABEL[status]}
                 </option>
               ))}
             </select>
@@ -122,8 +133,8 @@ export function TaskListPage() {
                     <th>Task</th>
                     <th>Status</th>
                     <th>Due Date</th>
-                    <th>Case #</th>
-                    <th>Case Title</th>
+                    <th>Benefit Review #</th>
+                    <th>Benefit Review Title</th>
                     <th>Assignee</th>
                     <th>Updated</th>
                   </tr>
@@ -148,7 +159,11 @@ export function TaskListPage() {
                         key={task.id}
                         className={`clickable ${overdue ? 'task-row-overdue' : ''}`}
                         title="Open task record"
-                        onClick={() => navigate(`/tasks/${task.id}`)}
+                        tabIndex={0}
+                        role="link"
+                        aria-label={`Open task ${task.title}`}
+                        onClick={() => openTask(task.id)}
+                        onKeyDown={(event) => handleRowKeyDown(event, task.id)}
                       >
                         <td>
                           <div className="task-cell">
@@ -161,7 +176,7 @@ export function TaskListPage() {
                         <td>
                           {task.caseNumber ? <span className="case-cell-number">{task.caseNumber}</span> : <span className="td-muted">-</span>}
                         </td>
-                        <td className="td-muted task-case-title">{task.caseTitle ?? '-'}</td>
+                        <td className="td-muted task-case-title">{task.caseTitle || '-'}</td>
                         <td className="td-muted">{task.assigneeDisplayName ?? 'Unassigned'}</td>
                         <td className="td-muted">{formatDateTime(task.updatedAt)}</td>
                       </tr>

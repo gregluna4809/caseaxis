@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.matchesPattern;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -89,7 +90,9 @@ class CaseControllerTest {
             .andExpect(jsonPath("$.data.content[0].title").value(uniqueTitle))
             .andExpect(jsonPath("$.data.content[0].statusCode").value("NEW"))
             .andExpect(jsonPath("$.data.content[0].priorityCode").value("HIGH"))
-            .andExpect(jsonPath("$.data.content[0].typeCode").value("COMPLAINT"));
+            .andExpect(jsonPath("$.data.content[0].typeCode").value("COMPLAINT"))
+            .andExpect(jsonPath("$.data.content[0].assignedToId").value(nullValue()))
+            .andExpect(jsonPath("$.data.content[0].assignedToName").value(nullValue()));
     }
 
     @Test
@@ -152,7 +155,9 @@ class CaseControllerTest {
 
     @Test
     void assignCase_validAssignee_updatesAssignedToId() throws Exception {
-        String caseId = createTestCase("Assignment Test", "LOW", "GENERAL");
+        String uniqueToken = "assignsummary" + UUID.randomUUID().toString().replace("-", "");
+        String uniqueTitle = "Assignment Test " + uniqueToken;
+        String caseId = createTestCase(uniqueTitle, "LOW", "GENERAL");
 
         var assignReq = new AssignCaseRequest(adminId, "Initial assignment");
         mockMvc.perform(post("/api/cases/" + caseId + "/assign")
@@ -162,6 +167,13 @@ class CaseControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.assignedToId").value(adminId.toString()))
             .andExpect(jsonPath("$.data.assignedAt").isNotEmpty());
+
+        mockMvc.perform(get("/api/cases")
+                .param("q", uniqueToken)
+                .cookie(token))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.content[0].assignedToId").value(adminId.toString()))
+            .andExpect(jsonPath("$.data.content[0].assignedToName").value("Admin User"));
     }
 
     @Test

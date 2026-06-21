@@ -2,15 +2,15 @@ export const PRIORITIES = [
   { code: 'LOW', label: 'Low' },
   { code: 'MEDIUM', label: 'Medium' },
   { code: 'HIGH', label: 'High' },
-  { code: 'CRITICAL', label: 'Critical' },
+  { code: 'CRITICAL', label: 'Urgent' },
 ] as const;
 
 export const CASE_TYPES = [
-  { code: 'COMPLAINT', label: 'Complaint' },
-  { code: 'APPLICATION', label: 'Application' },
-  { code: 'INQUIRY', label: 'Inquiry' },
-  { code: 'INVESTIGATION', label: 'Investigation' },
-  { code: 'GENERAL', label: 'General' },
+  { code: 'COMPLAINT', label: 'Recipient Inquiry' },
+  { code: 'APPLICATION', label: 'Benefit Application' },
+  { code: 'INQUIRY', label: 'Documentation Request' },
+  { code: 'INVESTIGATION', label: 'Eligibility Review' },
+  { code: 'GENERAL', label: 'Program Reassessment' },
 ] as const;
 
 export const TASK_STATUSES = [
@@ -24,7 +24,7 @@ export const CASE_STATUSES = [
   { code: 'NEW', label: 'New' },
   { code: 'ASSIGNED', label: 'Assigned' },
   { code: 'IN_REVIEW', label: 'In Review' },
-  { code: 'PENDING_INFO', label: 'Pending Info' },
+  { code: 'PENDING_INFO', label: 'Pending Information' },
   { code: 'ESCALATED', label: 'Escalated' },
   { code: 'APPROVED', label: 'Approved' },
   { code: 'DENIED', label: 'Denied' },

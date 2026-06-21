@@ -15,6 +15,7 @@ public record CaseSummaryResponse(
     String typeCode,
     String typeDisplayName,
     UUID assignedToId,
+    String assignedToName,
     LocalDate dueDate,
     Instant createdAt,
     Instant updatedAt

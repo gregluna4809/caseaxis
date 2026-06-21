@@ -124,7 +124,7 @@ public class CaseService {
 
     @Transactional(readOnly = true)
     public Page<CaseSummaryResponse> listCases(Pageable pageable) {
-        return caseRepository.findAllActive(pageable).map(this::toSummaryResponse);
+        return caseRepository.findAllActiveSummaries(summaryPage(pageable)).map(CaseService::toSummaryResponse);
     }
 
     @Transactional(readOnly = true)
@@ -140,22 +140,22 @@ public class CaseService {
         String normalizedType = normalizeCode(type);
 
         if (normalizedQuery == null) {
-            return caseRepository.filterActive(
+            return caseRepository.filterActiveSummaries(
                 normalizedStatus,
                 normalizedPriority,
                 normalizedType,
-                pageable
-            ).map(this::toSummaryResponse);
+                summaryPage(pageable)
+            ).map(CaseService::toSummaryResponse);
         }
 
-        return caseRepository.searchActive(
+        return caseRepository.searchActiveSummaries(
             normalizedQuery,
             normalizeCaseNumber(q),
             normalizedStatus,
             normalizedPriority,
             normalizedType,
-            PageRequest.of(pageable.getPageNumber(), pageable.getPageSize())
-        ).map(this::toSummaryResponse);
+            summaryPage(pageable)
+        ).map(CaseService::toSummaryResponse);
     }
 
     @Transactional
@@ -386,18 +386,23 @@ public class CaseService {
         return value.trim().toUpperCase();
     }
 
-    private CaseSummaryResponse toSummaryResponse(Case c) {
+    private PageRequest summaryPage(Pageable pageable) {
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+    }
+
+    public static CaseSummaryResponse toSummaryResponse(CaseSummaryProjection c) {
         return new CaseSummaryResponse(
             c.getId(),
             c.getCaseNumber(),
             c.getTitle(),
-            c.getStatus().getCode(),
-            c.getStatus().getDisplayName(),
-            c.getPriority().getCode(),
-            c.getPriority().getDisplayName(),
-            c.getType().getCode(),
-            c.getType().getDisplayName(),
+            c.getStatusCode(),
+            c.getStatusDisplayName(),
+            c.getPriorityCode(),
+            c.getPriorityDisplayName(),
+            c.getTypeCode(),
+            c.getTypeDisplayName(),
             c.getAssignedToId(),
+            c.getAssignedToName(),
             c.getDueDate(),
             c.getCreatedAt(),
             c.getUpdatedAt()

@@ -4,25 +4,13 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/apiClient';
 import type { DashboardActivity, DashboardCaseItem, DashboardMetrics, DashboardOverview } from '../types/api';
 import { PriorityBadge, StatusBadge } from '../components/StatusBadge';
-import { displayActor, formatDate, formatDateTime } from '../lib/utils';
+import { formatDate, formatDateTime } from '../lib/utils';
 
-function humanServicesText(value: string | null | undefined) {
-  if (!value) return '';
-
-  return value
-    .replace(new RegExp('under' + 'writing', 'gi'), 'eligibility review')
-    .replace(new RegExp('commercial ' + 'liability', 'gi'), 'benefit appeal')
-    .replace(new RegExp('robotics ' + 'investigation', 'gi'), 'documentation review')
-    .replace(new RegExp('robotics ' + 'investigations', 'gi'), 'documentation reviews')
-    .replace(new RegExp('policy ' + 'endorsement', 'gi'), 'verification request')
-    .replace(new RegExp('policy ' + 'endorsements', 'gi'), 'verification requests')
-    .replace(new RegExp('compliance ' + 'investigation', 'gi'), 'program eligibility review')
-    .replace(new RegExp('compliance ' + 'investigations', 'gi'), 'program eligibility reviews')
-    .replace(new RegExp('insurance ' + 'operations', 'gi'), 'benefits review operations')
-    .replace(new RegExp('insur' + 'ance', 'gi'), 'benefits')
-    .replace(/\btask\b/gi, 'review action')
-    .replace(/\btasks\b/gi, 'review actions');
-}
+const ACTIVITY_TYPE_LABEL: Record<DashboardActivity['type'], string> = {
+  NOTE: 'NOTE',
+  TASK: 'ACTION',
+  STATUS: 'STATUS',
+};
 
 const EMPTY_METRICS: DashboardMetrics = {
   totalCases: 0,
@@ -87,13 +75,19 @@ export function DashboardPage() {
 
       {error && <div className="form-error">{error}</div>}
 
-      <div className="metrics-grid">
-        <MetricCard label="Total Reviews" value={metrics.totalCases} loading={loading} />
-        <MetricCard label="Open" value={metrics.openCases} loading={loading} tone="active" />
-        <MetricCard label="Assigned to Me" value={metrics.assignedToMe} loading={loading} />
-        <MetricCard label="Overdue" value={metrics.overdueCases} loading={loading} tone="warning" />
-        <MetricCard label="Escalated" value={metrics.escalatedCases} loading={loading} tone="danger" />
-        <MetricCard label="Determined Today" value={metrics.closedToday} loading={loading} tone="success" />
+      <div className="metrics-grid dashboard-metrics-grid" aria-label="Operations metrics">
+        <MetricCard label="Overdue" value={metrics.overdueCases} loading={loading} tone="warning" emphasis="primary" />
+        <MetricCard label="Escalated" value={metrics.escalatedCases} loading={loading} tone="danger" emphasis="primary" />
+        <div className="metric-group metric-group-status" aria-label="Status of work">
+          <span className="metric-group-label">Status of Work</span>
+          <MetricCard label="Open" value={metrics.openCases} loading={loading} tone="active" />
+          <MetricCard label="Determined Today" value={metrics.closedToday} loading={loading} tone="success" />
+          <MetricCard label="Total Reviews" value={metrics.totalCases} loading={loading} />
+        </div>
+        <div className="metric-group metric-group-queue" aria-label="My queue">
+          <span className="metric-group-label">My Queue</span>
+          <MetricCard label="Assigned to Me" value={metrics.assignedToMe} loading={loading} />
+        </div>
       </div>
 
       <div className="dashboard-workspace-grid">
@@ -133,14 +127,16 @@ function MetricCard({
   value,
   loading,
   tone = 'neutral',
+  emphasis = 'standard',
 }: {
   label: string;
   value: number;
   loading: boolean;
   tone?: 'neutral' | 'active' | 'warning' | 'danger' | 'success';
+  emphasis?: 'standard' | 'primary';
 }) {
   return (
-    <div className={`metric-card metric-card-${tone}`}>
+    <div className={`metric-card metric-card-${tone} metric-card-${emphasis}`}>
       <span>{label}</span>
       <strong>{loading ? '-' : value.toLocaleString()}</strong>
     </div>
@@ -177,13 +173,13 @@ function CaseWidget({
           <button key={c.id} className="widget-case-row" onClick={() => onOpen(c.id)}>
             <div className="widget-case-main">
               <span className="case-cell-number">{c.caseNumber}</span>
-              <strong>{humanServicesText(c.title)}</strong>
+              <strong>{c.title}</strong>
             </div>
             <div className="widget-case-meta">
               <StatusBadge code={c.statusCode} label={c.statusDisplayName} />
               <PriorityBadge code={c.priorityCode} label={c.priorityDisplayName} />
               <span>{formatDate(c.dueDate)}</span>
-              <span>{displayActor(c.assignedToId)}</span>
+              <span>{c.assignedToName ?? 'Unassigned'}</span>
             </div>
           </button>
         ))}
@@ -215,10 +211,10 @@ function ActivityWidget({
             className="dashboard-activity-row"
             onClick={() => onOpen(item.caseId)}
           >
-            <span className={`activity-type activity-type-${item.type.toLowerCase()}`}>{item.type}</span>
+            <span className={`activity-type activity-type-${item.type.toLowerCase()}`}>{ACTIVITY_TYPE_LABEL[item.type]}</span>
             <div>
-              <strong>{humanServicesText(item.summary)}</strong>
-              <span>{item.caseNumber} - {humanServicesText(item.caseTitle)}</span>
+              <strong>{item.summary}</strong>
+              <span>{item.caseNumber} - {item.caseTitle}</span>
             </div>
             <time>{formatDateTime(item.occurredAt)}</time>
           </button>

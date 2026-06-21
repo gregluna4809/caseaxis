@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/apiClient';
 import type { ClientSummary, Page } from '../types/api';
@@ -39,6 +39,16 @@ export function ClientListPage() {
     setPage(0);
   }
 
+  function openClient(clientId: string) {
+    navigate(`/clients/${clientId}`);
+  }
+
+  function handleRowKeyDown(event: KeyboardEvent<HTMLTableRowElement>, clientId: string) {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    openClient(clientId);
+  }
+
   const rows = result?.content ?? [];
   const totalElements = result?.totalElements ?? 0;
   const totalPages = result?.totalPages ?? 0;
@@ -61,7 +71,7 @@ export function ClientListPage() {
       <div className="list-view-card">
         <div className="list-view-toolbar">
           <div>
-            <span className="list-view-title">Client List View</span>
+            <span className="list-view-title">Recipient List View</span>
             <span className="list-view-subtitle">Search by name, client number, or email</span>
           </div>
           <div className="toolbar-controls">
@@ -102,9 +112,9 @@ export function ClientListPage() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Client #</th>
+                    <th>Recipient #</th>
                     <th>Name</th>
-                    <th>Organization</th>
+                    <th>Agency</th>
                     <th>Email</th>
                     <th>Phone</th>
                     <th>Status</th>
@@ -129,7 +139,11 @@ export function ClientListPage() {
                       key={c.id}
                       className="clickable"
                       title="Open client record"
-                      onClick={() => navigate(`/clients/${c.id}`)}
+                      tabIndex={0}
+                      role="link"
+                      aria-label={`Open recipient ${c.clientNumber}`}
+                      onClick={() => openClient(c.id)}
+                      onKeyDown={(event) => handleRowKeyDown(event, c.id)}
                     >
                       <td className="td-mono">{c.clientNumber}</td>
                       <td><strong>{c.displayName}</strong></td>

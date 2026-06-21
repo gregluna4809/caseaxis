@@ -100,25 +100,25 @@ export function CaseDetailPage() {
     if (tab) setActiveTab(tab);
   }
 
-  if (loadingCase) return <div className="spinner">Loading case...</div>;
+  if (loadingCase) return <div className="spinner">Loading benefit review...</div>;
 
   if (caseError || !caseDetail) {
     return (
       <div className="page-stack">
-        <Link to="/cases" className="back-link">Back to Cases</Link>
-        <div className="form-error">{caseError ?? 'Case not found.'}</div>
+        <Link to="/cases" className="back-link">Back to Benefit Reviews</Link>
+        <div className="form-error">{caseError ?? 'Benefit review not found.'}</div>
       </div>
     );
   }
 
   return (
     <div className="page-stack">
-      <Link to="/cases" className="back-link">Back to Cases</Link>
+      <Link to="/cases" className="back-link">Back to Benefit Reviews</Link>
 
       <section className="case-hero record-highlights">
         <div className="object-icon record-icon">C</div>
         <div className="case-hero-main">
-          <div className="case-number">Case {caseDetail.caseNumber}</div>
+          <div className="case-number">Benefit Review {caseDetail.caseNumber}</div>
           <h1 className="case-title-large">{caseDetail.title}</h1>
           <div className="case-badges">
             <StatusBadge code={caseDetail.statusCode} label={caseDetail.statusDisplayName} />
@@ -145,14 +145,14 @@ export function CaseDetailPage() {
           onClick={() => setActiveModal('archive')}
           disabled={caseDetail.statusCode === 'CLOSED'}
         >
-          Archive Case
+          Archive Benefit Review
         </button>
       </div>
 
       {actionError && <div className="form-error">{actionError}</div>}
 
       <section className="card detail-card">
-        <div className="tabs" role="tablist" aria-label="Case sections">
+        <div className="tabs" role="tablist" aria-label="Benefit review sections">
           {TABS.map((tab) => (
             <button
               key={tab.id}
@@ -196,7 +196,7 @@ export function CaseDetailPage() {
       )}
       {activeModal === 'archive' && (
         <Modal
-          title="Archive Case"
+          title="Archive Benefit Review"
           onClose={() => setActiveModal(null)}
           footer={(
             <>
@@ -218,13 +218,13 @@ export function CaseDetailPage() {
                   }
                 }}
               >
-                {submittingAction ? 'Archiving...' : 'Archive Case'}
+                {submittingAction ? 'Archiving...' : 'Archive Benefit Review'}
               </button>
             </>
           )}
         >
           <div className="field-hint-warn">
-            This will close the case through the archive workflow. The case record, notes, tasks, attachments, and status history remain preserved.
+            This will close the benefit review through the archive workflow. The review record, notes, tasks, attachments, and status history remain preserved.
           </div>
         </Modal>
       )}
@@ -248,16 +248,16 @@ function OverviewTab({ c }: { c: CaseDetail }) {
         <div className="section-heading">
           <span>Description</span>
         </div>
-        <p className="description-panel">{c.description || 'No description has been added to this case.'}</p>
+        <p className="description-panel">{c.description || 'No description has been added to this benefit review.'}</p>
       </div>
 
       <div className="detail-grid">
-        <DetailField label="Case number" value={c.caseNumber} />
+        <DetailField label="Benefit review number" value={c.caseNumber} />
         <DetailField label="Status" value={<StatusBadge code={c.statusCode} label={c.statusDisplayName} />} />
         <DetailField label="Priority" value={<PriorityBadge code={c.priorityCode} label={c.priorityDisplayName} />} />
         <DetailField label="Type" value={c.typeDisplayName} />
-        <DetailField label="Organization" value={c.organizationName && c.organizationCode ? `${c.organizationName} (${c.organizationCode})` : '-'} />
-        <DetailField label="Client" value={c.clientDisplayName && c.clientNumber ? `${c.clientDisplayName} (${c.clientNumber})` : '-'} />
+        <DetailField label="Agency" value={c.organizationName && c.organizationCode ? `${c.organizationName} (${c.organizationCode})` : '-'} />
+        <DetailField label="Recipient" value={c.clientDisplayName && c.clientNumber ? `${c.clientDisplayName} (${c.clientNumber})` : '-'} />
         <DetailField label="Assigned to" value={displayActor(c.assignedToId)} />
         <DetailField label="Assigned at" value={formatDateTime(c.assignedAt)} />
         <DetailField label="Due date" value={formatDate(c.dueDate)} />
@@ -287,7 +287,7 @@ function NotesTab({ notes, loading }: { notes: CaseNote[]; loading: boolean }) {
     <div className="empty-state-panel">
       <div className="empty-state-title">No activity recorded</div>
       <div className="empty-state-body">
-        This case has no notes yet. Add the first note to begin documenting case activity and decisions.
+        This benefit review has no notes yet. Add the first note to begin documenting review activity and decisions.
       </div>
     </div>
   );
@@ -318,7 +318,7 @@ function AuditTab({ events, loading }: { events: AuditEvent[]; loading: boolean 
     <div className="empty-state-panel">
       <div className="empty-state-title">No audit events recorded</div>
       <div className="empty-state-body">
-        Business actions on this case will appear here as an immutable timeline.
+        Business actions on this benefit review will appear here as an immutable timeline.
       </div>
     </div>
   );
@@ -348,7 +348,7 @@ function TasksTab({ tasks, loading }: { tasks: CaseTask[]; loading: boolean }) {
     <div className="empty-state-panel">
       <div className="empty-state-title">No tasks assigned</div>
       <div className="empty-state-body">
-        This case has no tasks yet. Use Add Task to create work items and track progress toward resolution.
+        This benefit review has no review actions yet. Use Add Task to create work items and track progress toward resolution.
       </div>
     </div>
   );
@@ -382,7 +382,7 @@ function AttachmentsTab({ attachments, loading }: { attachments: CaseAttachment[
     <div className="empty-state-panel">
       <div className="empty-state-title">No files attached</div>
       <div className="empty-state-body">
-        No file metadata has been registered for this case. Register attachment records via the API to track case documents.
+        No file metadata has been registered for this benefit review. Register attachment records via the API to track review documents.
       </div>
     </div>
   );
@@ -405,7 +405,7 @@ function AttachmentsTab({ attachments, loading }: { attachments: CaseAttachment[
               <td className="filename-cell">{att.originalFilename}</td>
               <td className="td-muted">{att.mimeType ?? '-'}</td>
               <td className="td-muted">{formatBytes(att.fileSizeBytes)}</td>
-              <td className="td-muted">{att.description ?? '-'}</td>
+              <td className="td-muted">{att.description || '-'}</td>
               <td className="td-muted">{formatDateTime(att.createdAt)}</td>
             </tr>
           ))}

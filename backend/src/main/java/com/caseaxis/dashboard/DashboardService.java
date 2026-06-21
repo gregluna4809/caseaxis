@@ -9,6 +9,7 @@ import com.caseaxis.cases.CaseStatusHistoryRepository;
 import com.caseaxis.cases.CaseTask;
 import com.caseaxis.cases.CaseTaskRepository;
 import com.caseaxis.common.exception.ResourceNotFoundException;
+import com.caseaxis.users.User;
 import com.caseaxis.users.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -20,6 +21,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -61,12 +63,16 @@ public class DashboardService {
         UUID userId = resolveUserId(username);
         LocalDate today = LocalDate.now(clock);
         PageRequest topFive = PageRequest.of(0, 5);
+        List<Case> recentAssigned = caseRepository.findRecentlyAssignedTo(userId, topFive);
+        List<Case> escalated = caseRepository.findLatestEscalated(topFive);
+        List<Case> overdue = caseRepository.findTopOverdue(today, topFive);
+        Map<UUID, String> assigneeNames = assigneeNames(recentAssigned, escalated, overdue);
 
         return new DashboardOverviewResponse(
             getMetrics(username),
-            caseRepository.findRecentlyAssignedTo(userId, topFive).stream().map(this::toCaseItem).toList(),
-            caseRepository.findLatestEscalated(topFive).stream().map(this::toCaseItem).toList(),
-            caseRepository.findTopOverdue(today, topFive).stream().map(this::toCaseItem).toList(),
+            recentAssigned.stream().map(c -> toCaseItem(c, assigneeNames)).toList(),
+            escalated.stream().map(c -> toCaseItem(c, assigneeNames)).toList(),
+            overdue.stream().map(c -> toCaseItem(c, assigneeNames)).toList(),
             recentActivity()
         );
     }
@@ -77,7 +83,25 @@ public class DashboardService {
             .getId();
     }
 
-    private DashboardCaseItemResponse toCaseItem(Case c) {
+    @SafeVarargs
+    private Map<UUID, String> assigneeNames(List<Case>... caseLists) {
+        List<UUID> assigneeIds = Arrays.stream(caseLists)
+            .flatMap(List::stream)
+            .map(Case::getAssignedToId)
+            .filter(id -> id != null)
+            .distinct()
+            .toList();
+
+        if (assigneeIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return userRepository.findAllById(assigneeIds).stream()
+            .filter(user -> !user.isDeleted())
+            .collect(Collectors.toMap(User::getId, DashboardService::displayName));
+    }
+
+    private DashboardCaseItemResponse toCaseItem(Case c, Map<UUID, String> assigneeNames) {
         return new DashboardCaseItemResponse(
             c.getId(),
             c.getCaseNumber(),
@@ -88,8 +112,13 @@ public class DashboardService {
             c.getPriority().getDisplayName(),
             c.getDueDate(),
             c.getAssignedToId(),
+            c.getAssignedToId() == null ? null : assigneeNames.get(c.getAssignedToId()),
             c.getUpdatedAt()
         );
+    }
+
+    private static String displayName(User user) {
+        return (user.getFirstName() + " " + user.getLastName()).trim();
     }
 
     private List<DashboardActivityResponse> recentActivity() {

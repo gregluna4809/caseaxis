@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/apiClient';
 import type { SearchResults } from '../types/api';
+import { STATUS_LABEL } from '../lib/lookups';
 
 export function GlobalSearch() {
   const [query, setQuery] = useState('');
@@ -78,7 +79,7 @@ export function GlobalSearch() {
           ref={inputRef}
           className="global-search-input"
           type="text"
-          placeholder="Cases, clients, organizations..."
+          placeholder="Benefit reviews, recipients, agencies..."
           value={query}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
@@ -99,7 +100,7 @@ export function GlobalSearch() {
 
           {results && results.cases.length > 0 && (
             <div className="search-group">
-              <div className="search-group-header">Cases</div>
+              <div className="search-group-header">Benefit Reviews</div>
               {results.cases.map(item => (
                 <div
                   key={item.id}
@@ -113,7 +114,7 @@ export function GlobalSearch() {
                     <div className="search-result-title">{item.title}</div>
                     <div className="search-result-sub">{item.caseNumber}</div>
                   </div>
-                  <span className="search-result-badge">{item.statusDisplayName}</span>
+                  <span className="search-result-badge">{STATUS_LABEL[item.statusCode] ?? item.statusDisplayName}</span>
                 </div>
               ))}
             </div>

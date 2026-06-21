@@ -56,17 +56,61 @@ public interface CaseRepository extends JpaRepository<Case, UUID> {
             """)
     Optional<CaseDetailProjection> findDetailByIdAndDeletedFalse(@Param("id") UUID id);
 
-    @Query(value = "SELECT c FROM CaseRecord c " +
-                   "JOIN FETCH c.status JOIN FETCH c.priority JOIN FETCH c.type " +
-                   "WHERE c.deleted = false",
-           countQuery = "SELECT COUNT(c) FROM CaseRecord c WHERE c.deleted = false")
-    Page<Case> findAllActive(Pageable pageable);
-
     @Query(value = """
-            SELECT c.* FROM cases c
+            SELECT
+              c.id AS "id",
+              c.case_number AS "caseNumber",
+              c.title AS "title",
+              s.code AS "statusCode",
+              s.display_name AS "statusDisplayName",
+              p.code AS "priorityCode",
+              p.display_name AS "priorityDisplayName",
+              t.code AS "typeCode",
+              t.display_name AS "typeDisplayName",
+              c.assigned_to_id AS "assignedToId",
+              CASE
+                WHEN u.id IS NULL THEN NULL
+                ELSE concat_ws(' ', u.first_name, u.last_name)
+              END AS "assignedToName",
+              c.due_date AS "dueDate",
+              c.created_at AS "createdAt",
+              c.updated_at AS "updatedAt"
+            FROM cases c
             JOIN case_statuses s ON s.id = c.status_id
             JOIN case_priorities p ON p.id = c.priority_id
             JOIN case_types t ON t.id = c.type_id
+            LEFT JOIN users u ON u.id = c.assigned_to_id AND u.is_deleted = FALSE
+            WHERE c.is_deleted = FALSE
+            ORDER BY c.created_at DESC
+            """,
+           countQuery = "SELECT COUNT(*) FROM cases c WHERE c.is_deleted = FALSE",
+           nativeQuery = true)
+    Page<CaseSummaryProjection> findAllActiveSummaries(Pageable pageable);
+
+    @Query(value = """
+            SELECT
+              c.id AS "id",
+              c.case_number AS "caseNumber",
+              c.title AS "title",
+              s.code AS "statusCode",
+              s.display_name AS "statusDisplayName",
+              p.code AS "priorityCode",
+              p.display_name AS "priorityDisplayName",
+              t.code AS "typeCode",
+              t.display_name AS "typeDisplayName",
+              c.assigned_to_id AS "assignedToId",
+              CASE
+                WHEN u.id IS NULL THEN NULL
+                ELSE concat_ws(' ', u.first_name, u.last_name)
+              END AS "assignedToName",
+              c.due_date AS "dueDate",
+              c.created_at AS "createdAt",
+              c.updated_at AS "updatedAt"
+            FROM cases c
+            JOIN case_statuses s ON s.id = c.status_id
+            JOIN case_priorities p ON p.id = c.priority_id
+            JOIN case_types t ON t.id = c.type_id
+            LEFT JOIN users u ON u.id = c.assigned_to_id AND u.is_deleted = FALSE
             WHERE c.is_deleted = FALSE
               AND (
                 (:searchQuery IS NULL AND :caseNumber IS NULL)
@@ -94,7 +138,7 @@ public interface CaseRepository extends JpaRepository<Case, UUID> {
               AND (:type IS NULL OR t.code = :type)
             """,
            nativeQuery = true)
-    Page<Case> searchActive(
+    Page<CaseSummaryProjection> searchActiveSummaries(
         @Param("searchQuery") String searchQuery,
         @Param("caseNumber") String caseNumber,
         @Param("status") String status,
@@ -104,26 +148,47 @@ public interface CaseRepository extends JpaRepository<Case, UUID> {
     );
 
     @Query(value = """
-            SELECT c FROM CaseRecord c
-            JOIN FETCH c.status s
-            JOIN FETCH c.priority p
-            JOIN FETCH c.type t
-            WHERE c.deleted = false
+            SELECT
+              c.id AS "id",
+              c.case_number AS "caseNumber",
+              c.title AS "title",
+              s.code AS "statusCode",
+              s.display_name AS "statusDisplayName",
+              p.code AS "priorityCode",
+              p.display_name AS "priorityDisplayName",
+              t.code AS "typeCode",
+              t.display_name AS "typeDisplayName",
+              c.assigned_to_id AS "assignedToId",
+              CASE
+                WHEN u.id IS NULL THEN NULL
+                ELSE concat_ws(' ', u.first_name, u.last_name)
+              END AS "assignedToName",
+              c.due_date AS "dueDate",
+              c.created_at AS "createdAt",
+              c.updated_at AS "updatedAt"
+            FROM cases c
+            JOIN case_statuses s ON s.id = c.status_id
+            JOIN case_priorities p ON p.id = c.priority_id
+            JOIN case_types t ON t.id = c.type_id
+            LEFT JOIN users u ON u.id = c.assigned_to_id AND u.is_deleted = FALSE
+            WHERE c.is_deleted = FALSE
+              AND (:status IS NULL OR s.code = :status)
+              AND (:priority IS NULL OR p.code = :priority)
+              AND (:type IS NULL OR t.code = :type)
+            ORDER BY c.created_at DESC
+            """,
+           countQuery = """
+            SELECT COUNT(*) FROM cases c
+            JOIN case_statuses s ON s.id = c.status_id
+            JOIN case_priorities p ON p.id = c.priority_id
+            JOIN case_types t ON t.id = c.type_id
+            WHERE c.is_deleted = FALSE
               AND (:status IS NULL OR s.code = :status)
               AND (:priority IS NULL OR p.code = :priority)
               AND (:type IS NULL OR t.code = :type)
             """,
-           countQuery = """
-            SELECT COUNT(c) FROM CaseRecord c
-            JOIN c.status s
-            JOIN c.priority p
-            JOIN c.type t
-            WHERE c.deleted = false
-              AND (:status IS NULL OR s.code = :status)
-              AND (:priority IS NULL OR p.code = :priority)
-              AND (:type IS NULL OR t.code = :type)
-            """)
-    Page<Case> filterActive(
+           nativeQuery = true)
+    Page<CaseSummaryProjection> filterActiveSummaries(
         @Param("status") String status,
         @Param("priority") String priority,
         @Param("type") String type,
@@ -208,18 +273,64 @@ public interface CaseRepository extends JpaRepository<Case, UUID> {
 
     // Paginated related cases
     @Query(value = """
-            SELECT c FROM CaseRecord c
-            JOIN FETCH c.status JOIN FETCH c.priority JOIN FETCH c.type
-            WHERE c.deleted = false AND c.clientId = :clientId
+            SELECT
+              c.id AS "id",
+              c.case_number AS "caseNumber",
+              c.title AS "title",
+              s.code AS "statusCode",
+              s.display_name AS "statusDisplayName",
+              p.code AS "priorityCode",
+              p.display_name AS "priorityDisplayName",
+              t.code AS "typeCode",
+              t.display_name AS "typeDisplayName",
+              c.assigned_to_id AS "assignedToId",
+              CASE
+                WHEN u.id IS NULL THEN NULL
+                ELSE concat_ws(' ', u.first_name, u.last_name)
+              END AS "assignedToName",
+              c.due_date AS "dueDate",
+              c.created_at AS "createdAt",
+              c.updated_at AS "updatedAt"
+            FROM cases c
+            JOIN case_statuses s ON s.id = c.status_id
+            JOIN case_priorities p ON p.id = c.priority_id
+            JOIN case_types t ON t.id = c.type_id
+            LEFT JOIN users u ON u.id = c.assigned_to_id AND u.is_deleted = FALSE
+            WHERE c.is_deleted = FALSE AND c.client_id = :clientId
+            ORDER BY c.created_at DESC
             """,
-           countQuery = "SELECT COUNT(c) FROM CaseRecord c WHERE c.deleted = false AND c.clientId = :clientId")
-    Page<Case> findByClientId(@Param("clientId") UUID clientId, Pageable pageable);
+           countQuery = "SELECT COUNT(*) FROM cases c WHERE c.is_deleted = FALSE AND c.client_id = :clientId",
+           nativeQuery = true)
+    Page<CaseSummaryProjection> findSummariesByClientId(@Param("clientId") UUID clientId, Pageable pageable);
 
     @Query(value = """
-            SELECT c FROM CaseRecord c
-            JOIN FETCH c.status JOIN FETCH c.priority JOIN FETCH c.type
-            WHERE c.deleted = false AND c.organizationId = :orgId
+            SELECT
+              c.id AS "id",
+              c.case_number AS "caseNumber",
+              c.title AS "title",
+              s.code AS "statusCode",
+              s.display_name AS "statusDisplayName",
+              p.code AS "priorityCode",
+              p.display_name AS "priorityDisplayName",
+              t.code AS "typeCode",
+              t.display_name AS "typeDisplayName",
+              c.assigned_to_id AS "assignedToId",
+              CASE
+                WHEN u.id IS NULL THEN NULL
+                ELSE concat_ws(' ', u.first_name, u.last_name)
+              END AS "assignedToName",
+              c.due_date AS "dueDate",
+              c.created_at AS "createdAt",
+              c.updated_at AS "updatedAt"
+            FROM cases c
+            JOIN case_statuses s ON s.id = c.status_id
+            JOIN case_priorities p ON p.id = c.priority_id
+            JOIN case_types t ON t.id = c.type_id
+            LEFT JOIN users u ON u.id = c.assigned_to_id AND u.is_deleted = FALSE
+            WHERE c.is_deleted = FALSE AND c.organization_id = :orgId
+            ORDER BY c.created_at DESC
             """,
-           countQuery = "SELECT COUNT(c) FROM CaseRecord c WHERE c.deleted = false AND c.organizationId = :orgId")
-    Page<Case> findByOrganizationId(@Param("orgId") UUID orgId, Pageable pageable);
+           countQuery = "SELECT COUNT(*) FROM cases c WHERE c.is_deleted = FALSE AND c.organization_id = :orgId",
+           nativeQuery = true)
+    Page<CaseSummaryProjection> findSummariesByOrganizationId(@Param("orgId") UUID orgId, Pageable pageable);
 }

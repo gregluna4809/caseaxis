@@ -44,11 +44,20 @@ Do not commit credentials, paste them into scripts, or write them to `.env` file
 
 ---
 
-## Brooklyn Insurance & Robotics Seed Data
+## Human-Services Seed Data
 
-`seed_bir_demo.py` populates CaseAxis with NYC-centric synthetic enterprise demo data for the fictional Brooklyn Insurance & Robotics theme.
+`seed_bir_demo.py` populates CaseAxis with NYC-centric synthetic human-services demo data for benefits review, recipient support, appeals, documentation, and determinations workflows. The file name and row prefixes remain stable for existing automation, but the generated values are domain-native and use `mbra-demo.example` email addresses.
 
-Default scale:
+The default scale is `small` for fast local verification:
+
+- 40 organizations
+- 1,000 clients
+- 2,200 cases
+- 4,400 notes
+- 3,300 tasks
+- 1,650 attachment metadata records
+
+Full scale remains available with `--scale full`:
 
 - 250 organizations
 - 25,000 clients
@@ -68,8 +77,10 @@ python -m pip install Faker psycopg[binary]
 The script connects with `DB_URL` if set, otherwise it uses:
 
 ```text
-postgresql://caseaxis:caseaxis@localhost:5432/caseaxis
+postgresql://greg:mypass123@localhost:5434/caseaxis_local
 ```
+
+You can also pass discrete connection fields with `--db-host`, `--db-port`, `--db-name`, `--db-user`, and `--db-password`, or their matching `POSTGRES_*` / `DB_*` environment variables. The resolved database target is logged at startup.
 
 ## Dry Run
 
@@ -88,16 +99,31 @@ python tools\seed_bir_demo.py --dry-run --organizations 5 --clients 50 --cases 1
 ## Insert Demo Data
 
 ```powershell
-python tools\seed_bir_demo.py --reset-demo
+python tools\seed_bir_demo.py --reset-demo --scale small
 ```
 
-`--reset-demo` removes prior BIR demo rows before inserting new rows. Demo rows are identified by:
+`--reset-demo` removes prior demo rows before inserting new rows. Demo rows are identified by:
 
 - `organizations.external_id LIKE 'BIR-DEMO-ORG-%'`
 - `clients.external_id LIKE 'BIR-DEMO-CLIENT-%'`
 - `cases.case_number LIKE 'BIR-%'`
 
 Dependent notes, tasks, attachments, and assignments for those demo cases are removed first.
+
+The reset also removes generated reviewer users whose usernames match `mbra-reviewer-%`.
+
+The seeding session sets a short PostgreSQL `lock_timeout` and a bounded `statement_timeout`. If the backend or another client holds conflicting locks, the script fails fast with an actionable message instead of hanging. Stop the backend first for normal reloads:
+
+```powershell
+docker compose stop backend
+python tools\seed_bir_demo.py --reset-demo --scale small
+```
+
+For local-only workflows where it is acceptable to disconnect other database clients, use:
+
+```powershell
+python tools\seed_bir_demo.py --reset-demo --scale small --terminate-sessions
+```
 
 ## Reset Only
 
@@ -108,13 +134,20 @@ python tools\seed_bir_demo.py --reset-only
 ## Configurable Scale
 
 ```powershell
+python tools\seed_bir_demo.py --reset-demo --scale full
+```
+
+Individual counts can still override either preset:
+
+```powershell
 python tools\seed_bir_demo.py `
-  --organizations 250 `
-  --clients 25000 `
-  --cases 75000 `
-  --notes 150000 `
-  --tasks 100000 `
-  --attachments 50000 `
+  --scale small `
+  --organizations 10 `
+  --clients 250 `
+  --cases 500 `
+  --notes 1000 `
+  --tasks 750 `
+  --attachments 300 `
   --reset-demo
 ```
 
@@ -128,5 +161,8 @@ After inserts or reset-only runs, the script logs validation counts for:
 - notes
 - tasks
 - attachments
+- reviewer/staff users
+
+After inserts, it also prints a data check with distinct organization names, distinct assignee names, assignee distribution, status distribution, and the unassigned case share.
 
 The script uses PostgreSQL `COPY` through `psycopg` and does not use an ORM or alter the schema.

@@ -47,6 +47,7 @@ export interface DashboardCaseItem {
   priorityDisplayName: string;
   dueDate: string | null;
   assignedToId: string | null;
+  assignedToName: string | null;
   updatedAt: string;
 }
 
@@ -147,6 +148,7 @@ export interface CaseSummary {
   typeCode: string;
   typeDisplayName: string;
   assignedToId: string | null;
+  assignedToName: string | null;
   dueDate: string | null;
   createdAt: string;
   updatedAt: string;

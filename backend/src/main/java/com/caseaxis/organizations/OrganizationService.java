@@ -2,8 +2,8 @@ package com.caseaxis.organizations;
 
 import com.caseaxis.audit.AuditAction;
 import com.caseaxis.audit.AuditService;
-import com.caseaxis.cases.Case;
 import com.caseaxis.cases.CaseRepository;
+import com.caseaxis.cases.CaseService;
 import com.caseaxis.cases.CaseSummaryResponse;
 import com.caseaxis.clients.Client;
 import com.caseaxis.clients.ClientRepository;
@@ -12,6 +12,7 @@ import com.caseaxis.common.exception.ResourceNotFoundException;
 import com.caseaxis.users.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -104,8 +105,8 @@ public class OrganizationService {
         orgRepository.findByIdAndDeletedFalse(orgId)
             .orElseThrow(() -> new ResourceNotFoundException("Organization", orgId));
 
-        return caseRepository.findByOrganizationId(orgId, pageable)
-            .map(this::toCaseSummaryResponse);
+        return caseRepository.findSummariesByOrganizationId(orgId, summaryPage(pageable))
+            .map(CaseService::toSummaryResponse);
     }
 
     private OrganizationSummaryResponse toSummaryResponse(Organization org) {
@@ -136,19 +137,13 @@ public class OrganizationService {
         );
     }
 
-    private CaseSummaryResponse toCaseSummaryResponse(Case c) {
-        return new CaseSummaryResponse(
-            c.getId(), c.getCaseNumber(), c.getTitle(),
-            c.getStatus().getCode(), c.getStatus().getDisplayName(),
-            c.getPriority().getCode(), c.getPriority().getDisplayName(),
-            c.getType().getCode(), c.getType().getDisplayName(),
-            c.getAssignedToId(), c.getDueDate(), c.getCreatedAt(), c.getUpdatedAt()
-        );
-    }
-
     private String normalizeText(String value) {
         if (value == null || value.isBlank()) return null;
         return value.trim();
+    }
+
+    private PageRequest summaryPage(Pageable pageable) {
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
     }
 
     private UUID resolveUserId(String username) {

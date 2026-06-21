@@ -14,6 +14,7 @@ public record DashboardCaseItemResponse(
     String priorityDisplayName,
     LocalDate dueDate,
     UUID assignedToId,
+    String assignedToName,
     Instant updatedAt
 ) {
 }

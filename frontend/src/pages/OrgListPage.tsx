@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/apiClient';
 import type { OrganizationSummary, Page } from '../types/api';
@@ -39,6 +39,16 @@ export function OrgListPage() {
     setPage(0);
   }
 
+  function openOrganization(organizationId: string) {
+    navigate(`/organizations/${organizationId}`);
+  }
+
+  function handleRowKeyDown(event: KeyboardEvent<HTMLTableRowElement>, organizationId: string) {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    openOrganization(organizationId);
+  }
+
   const rows = result?.content ?? [];
   const totalElements = result?.totalElements ?? 0;
   const totalPages = result?.totalPages ?? 0;
@@ -61,7 +71,7 @@ export function OrgListPage() {
       <div className="list-view-card">
         <div className="list-view-toolbar">
           <div>
-            <span className="list-view-title">Organization List View</span>
+            <span className="list-view-title">Agency List View</span>
             <span className="list-view-subtitle">Search by name or organization code</span>
           </div>
           <div className="toolbar-controls">
@@ -102,12 +112,12 @@ export function OrgListPage() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Org #</th>
+                    <th>Agency #</th>
                     <th>Name</th>
                     <th>Status</th>
                     <th>Recipients</th>
-                    <th>Cases</th>
-                    <th>Open Cases</th>
+                    <th>Benefit Reviews</th>
+                    <th>Open Benefit Reviews</th>
                     <th>Created</th>
                   </tr>
                 </thead>
@@ -129,7 +139,11 @@ export function OrgListPage() {
                       key={o.id}
                       className="clickable"
                       title="Open organization record"
-                      onClick={() => navigate(`/organizations/${o.id}`)}
+                      tabIndex={0}
+                      role="link"
+                      aria-label={`Open agency ${o.organizationCode}`}
+                      onClick={() => openOrganization(o.id)}
+                      onKeyDown={(event) => handleRowKeyDown(event, o.id)}
                     >
                       <td className="td-mono">{o.organizationCode}</td>
                       <td><strong>{o.name}</strong></td>

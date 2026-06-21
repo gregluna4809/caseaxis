@@ -12,7 +12,7 @@ describe('App', () => {
     render(<App />);
 
     expect(screen.getByText('Metropolitan Benefits Review Authority')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Every Case Matters.' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Every Benefit Review Matters.' })).toBeInTheDocument();
     expect(screen.getByText('Supporting fair, timely, and careful benefit reviews for residents and families across the metropolitan service area.')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Staff login' })).toBeInTheDocument();
 

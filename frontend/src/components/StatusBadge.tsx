@@ -1,3 +1,5 @@
+import { STATUS_LABEL } from '../lib/lookups';
+
 interface StatusBadgeProps {
   code: string;
   label: string;
@@ -6,7 +8,7 @@ interface StatusBadgeProps {
 export function StatusBadge({ code, label }: StatusBadgeProps) {
   return (
     <span className={`badge badge-status-${code}`}>
-      {label}
+      {STATUS_LABEL[code] ?? label}
     </span>
   );
 }

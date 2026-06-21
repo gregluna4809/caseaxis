@@ -54,7 +54,7 @@ export function LoginPage() {
         <section className="login-hero-panel" aria-labelledby="login-hero-title">
           <div className="login-hero-copy">
             <p className="page-kicker">MBRA</p>
-            <h1 id="login-hero-title" className="login-hero-title">Every Case Matters.</h1>
+            <h1 id="login-hero-title" className="login-hero-title">Every Benefit Review Matters.</h1>
             <p className="login-hero-subtitle">
               Supporting fair, timely, and careful benefit reviews for residents and families across the metropolitan service area.
             </p>
@@ -71,7 +71,7 @@ export function LoginPage() {
           <div className="login-header">
             <div className="login-logo">MBRA</div>
             <h2 className="login-title">Staff login</h2>
-            <p className="login-subtitle">Case Management System</p>
+            <p className="login-subtitle">Benefit Review Management System</p>
           </div>
 
           <form className="login-form" onSubmit={handleSubmit} noValidate>

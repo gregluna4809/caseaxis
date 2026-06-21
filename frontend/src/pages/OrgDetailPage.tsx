@@ -62,13 +62,13 @@ export function OrgDetailPage() {
     return () => { cancelled = true; };
   }, [id, activeTab, casesPage]);
 
-  if (loading) return <div className="spinner">Loading organization...</div>;
+  if (loading) return <div className="spinner">Loading agency...</div>;
 
   if (error || !org) {
     return (
       <div className="page-stack">
         <Link to="/organizations" className="back-link">Back to Agencies</Link>
-        <div className="form-error">{error ?? 'Organization not found.'}</div>
+        <div className="form-error">{error ?? 'Agency not found.'}</div>
       </div>
     );
   }
@@ -90,7 +90,7 @@ export function OrgDetailPage() {
         </div>
         <div className="case-hero-meta highlights-fields">
           <Metric label="Recipients" value={org.clientCount.toLocaleString()} />
-          <Metric label="Total Cases" value={org.caseCount.toLocaleString()} />
+          <Metric label="Total Benefit Reviews" value={org.caseCount.toLocaleString()} />
           <Metric label="Open" value={org.openCaseCount.toLocaleString()} />
           <Metric label="Escalated" value={org.escalatedCases.toLocaleString()} />
           <Metric label="Overdue" value={org.overdueCases.toLocaleString()} />
@@ -103,14 +103,14 @@ export function OrgDetailPage() {
           onClick={() => setConfirmDeactivate(true)}
           disabled={!org.active}
         >
-          Deactivate Organization
+          Deactivate Agency
         </button>
       </div>
 
       {actionError && <div className="form-error">{actionError}</div>}
 
       <section className="card detail-card">
-        <div className="tabs" role="tablist" aria-label="Organization sections">
+        <div className="tabs" role="tablist" aria-label="Agency sections">
           <button
             className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
             onClick={() => setActiveTab('overview')}
@@ -134,7 +134,7 @@ export function OrgDetailPage() {
             role="tab"
             aria-selected={activeTab === 'cases'}
           >
-            Cases
+            Benefit Reviews
             {org.caseCount > 0 && <span className="tab-count">{org.caseCount.toLocaleString()}</span>}
           </button>
         </div>
@@ -164,9 +164,9 @@ export function OrgDetailPage() {
 
       {confirmDeactivate && (
         <ConfirmActionModal
-          title="Deactivate Organization"
-          message="This organization will be removed from active organization lists and lookup workflows. Deactivation is blocked while active clients or open cases remain linked."
-          confirmLabel="Deactivate Organization"
+          title="Deactivate Agency"
+          message="This agency will be removed from active agency lists and lookup workflows. Deactivation is blocked while active recipients or open benefit reviews remain linked."
+          confirmLabel="Deactivate Agency"
           submitting={submittingAction}
           onClose={() => setConfirmDeactivate(false)}
           onConfirm={async () => {
@@ -201,7 +201,7 @@ function Metric({ label, value }: { label: string; value: string }) {
 function OverviewTab({ org }: { org: OrganizationDetail }) {
   return (
     <div className="detail-grid">
-      <DetailField label="Org code" value={org.organizationCode} />
+      <DetailField label="Agency code" value={org.organizationCode} />
       <DetailField label="Name" value={org.name} />
       <DetailField label="Phone" value={formatPhoneNumber(org.phone)} />
       <DetailField label="Email" value={org.email ?? '-'} />
@@ -268,7 +268,7 @@ function ClientsTab({
   setPage: (p: number) => void;
   onClientClick: (id: string) => void;
 }) {
-  if (loading) return <div className="spinner">Loading clients...</div>;
+  if (loading) return <div className="spinner">Loading recipients...</div>;
 
   const rows = result?.content ?? [];
   const totalPages = result?.totalPages ?? 0;
@@ -280,7 +280,7 @@ function ClientsTab({
         <table className="data-table">
           <thead>
             <tr>
-              <th>Client #</th>
+              <th>Recipient #</th>
               <th>Name</th>
               <th>Email</th>
               <th>Phone</th>
@@ -293,8 +293,8 @@ function ClientsTab({
               <tr>
                 <td colSpan={6}>
                   <div className="empty-state-panel">
-                    <div className="empty-state-title">No clients</div>
-                    <div className="empty-state-body">This organization has no clients on record.</div>
+                    <div className="empty-state-title">No recipients</div>
+                    <div className="empty-state-body">This agency has no recipients on record.</div>
                   </div>
                 </td>
               </tr>
@@ -318,7 +318,7 @@ function ClientsTab({
       </div>
       {totalPages > 1 && (
         <div className="pagination">
-          <span className="pagination-summary">{totalElements.toLocaleString()} client{totalElements !== 1 ? 's' : ''}</span>
+          <span className="pagination-summary">{totalElements.toLocaleString()} recipient{totalElements !== 1 ? 's' : ''}</span>
           <div className="pagination-controls">
             <button className="btn btn-secondary btn-sm" onClick={() => setPage(0)} disabled={result?.first} title="First page">«</button>
             <button className="btn btn-secondary btn-sm" onClick={() => setPage(Math.max(0, page - 1))} disabled={result?.first} title="Previous page">‹</button>
@@ -341,7 +341,7 @@ function CasesTab({
   setPage: (p: number) => void;
   onCaseClick: (id: string) => void;
 }) {
-  if (loading) return <div className="spinner">Loading cases...</div>;
+  if (loading) return <div className="spinner">Loading benefit reviews...</div>;
 
   const rows = result?.content ?? [];
   const totalPages = result?.totalPages ?? 0;
@@ -353,7 +353,7 @@ function CasesTab({
         <table className="data-table">
           <thead>
             <tr>
-              <th>Case</th>
+              <th>Benefit Review</th>
               <th>Status</th>
               <th>Priority</th>
               <th>Type</th>
@@ -366,8 +366,8 @@ function CasesTab({
               <tr>
                 <td colSpan={6}>
                   <div className="empty-state-panel">
-                    <div className="empty-state-title">No cases</div>
-                    <div className="empty-state-body">This organization has no cases on record.</div>
+                    <div className="empty-state-title">No benefit reviews</div>
+                    <div className="empty-state-body">This agency has no benefit reviews on record.</div>
                   </div>
                 </td>
               </tr>
@@ -392,7 +392,7 @@ function CasesTab({
       </div>
       {totalPages > 1 && (
         <div className="pagination">
-          <span className="pagination-summary">{totalElements.toLocaleString()} case{totalElements !== 1 ? 's' : ''}</span>
+          <span className="pagination-summary">{totalElements.toLocaleString()} benefit review{totalElements !== 1 ? 's' : ''}</span>
           <div className="pagination-controls">
             <button className="btn btn-secondary btn-sm" onClick={() => setPage(0)} disabled={result?.first} title="First page">«</button>
             <button className="btn btn-secondary btn-sm" onClick={() => setPage(Math.max(0, page - 1))} disabled={result?.first} title="Previous page">‹</button>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { api } from '../lib/apiClient';
-import { CASE_STATUSES, CASE_TYPES } from '../lib/lookups';
+import { CASE_STATUSES, CASE_TYPES, STATUS_LABEL } from '../lib/lookups';
 import { formatDate } from '../lib/utils';
 import type {
   AssigneeWorkload,
@@ -227,7 +227,7 @@ export function ReportsPage() {
         <div className="list-view-toolbar reports-filter-toolbar">
           <div>
             <span className="list-view-title">Report Filters</span>
-            <span className="list-view-subtitle">Server-driven aggregate filters across cases, tasks, and workload views</span>
+            <span className="list-view-subtitle">Server-driven aggregate filters across benefit reviews, review actions, and workload views</span>
           </div>
           <button className="btn btn-secondary btn-sm" onClick={resetFilters}>Reset filters</button>
         </div>
@@ -249,23 +249,23 @@ export function ReportsPage() {
               </Field>
             </>
           )}
-          <Field label="Organization">
+          <Field label="Agency">
             <select className="form-select" value={organizationId} onChange={(e) => setOrganizationId(e.target.value)} disabled={filterLoading}>
-              <option value="">All organizations</option>
+              <option value="">All agencies</option>
               {organizations.map((org) => (
                 <option key={org.id} value={org.id}>{org.name}</option>
               ))}
             </select>
           </Field>
-          <Field label="Client">
+          <Field label="Recipient">
             <select className="form-select" value={clientId} onChange={(e) => setClientId(e.target.value)} disabled={filterLoading}>
-              <option value="">All clients</option>
+              <option value="">All recipients</option>
               {clients.map((client) => (
                 <option key={client.id} value={client.id}>{client.displayName}</option>
               ))}
             </select>
           </Field>
-          <Field label="Case type">
+          <Field label="Benefit review type">
             <select className="form-select" value={caseType} onChange={(e) => setCaseType(e.target.value)}>
               <option value="">All types</option>
               {CASE_TYPES.map((type) => (
@@ -277,7 +277,7 @@ export function ReportsPage() {
             <select className="form-select" value={status} onChange={(e) => setStatus(e.target.value)}>
               <option value="">All statuses</option>
               {CASE_STATUSES.map((caseStatus) => (
-                <option key={caseStatus.code} value={caseStatus.code}>{caseStatus.label}</option>
+                <option key={caseStatus.code} value={caseStatus.code}>{STATUS_LABEL[caseStatus.code]}</option>
               ))}
             </select>
           </Field>
@@ -297,11 +297,11 @@ export function ReportsPage() {
       {error && <div className="form-error">{error}</div>}
 
       <div className="metrics-grid report-metrics-grid">
-        <MetricCard label="Total Cases" value={summary.totalCases} loading={loading} />
-        <MetricCard label="Open Cases" value={summary.openCases} loading={loading} tone="active" />
-        <MetricCard label="Closed Cases" value={summary.closedCases} loading={loading} tone="success" />
-        <MetricCard label="Overdue Cases" value={summary.overdueCases} loading={loading} tone="warning" />
-        <MetricCard label="Escalated Cases" value={summary.escalatedCases} loading={loading} tone="danger" />
+        <MetricCard label="Total Benefit Reviews" value={summary.totalCases} loading={loading} />
+        <MetricCard label="Open Benefit Reviews" value={summary.openCases} loading={loading} tone="active" />
+        <MetricCard label="Closed Benefit Reviews" value={summary.closedCases} loading={loading} tone="success" />
+        <MetricCard label="Overdue Benefit Reviews" value={summary.overdueCases} loading={loading} tone="warning" />
+        <MetricCard label="Escalated Benefit Reviews" value={summary.escalatedCases} loading={loading} tone="danger" />
         <MetricCard label="Avg Resolution" value={formatDuration(summary.averageResolutionHours)} loading={loading} />
         <MetricCard label="Open Actions" value={summary.openTasks} loading={loading} tone="active" />
         <MetricCard label="Completed Actions" value={summary.completedTasks} loading={loading} tone="success" />
@@ -313,14 +313,15 @@ export function ReportsPage() {
         <>
           <div className="reports-grid">
             <DistributionSection
-              title="Case Status Distribution"
-              subtitle="Case counts by workflow status"
+              title="Benefit Review Status Distribution"
+              subtitle="Benefit review counts by workflow status"
               rows={statusDistribution}
               codePrefix="badge-status-"
+              labels={STATUS_LABEL}
             />
             <DistributionSection
-              title="Case Type Distribution"
-              subtitle="Case counts by intake category"
+              title="Benefit Review Type Distribution"
+              subtitle="Benefit review counts by intake category"
               rows={typeDistribution}
             />
             <OverdueSection rows={overdueAging} />
@@ -371,17 +372,20 @@ function DistributionSection({
   subtitle,
   rows,
   codePrefix,
+  labels = {},
 }: {
   title: string;
   subtitle: string;
   rows: DistributionItem[];
   codePrefix?: string;
+  labels?: Record<string, string>;
 }) {
   const max = maxCount(rows);
+  const displayRows = rows.map((row) => ({ label: labels[row.code] ?? row.label, count: row.count }));
   return (
     <section className="card report-section-card">
       <ReportSectionHeader title={title} subtitle={subtitle} />
-      <BarChart rows={rows.map((row) => ({ label: row.label, count: row.count }))} max={max} />
+      <BarChart rows={displayRows} max={max} />
       <ReportTableEmpty rows={rows} colSpan={3} />
       {rows.length > 0 && (
         <div className="table-wrapper report-table-wrapper">
@@ -397,7 +401,7 @@ function DistributionSection({
               {rows.map((row) => (
                 <tr key={row.code}>
                   <td>
-                    <span className={`badge ${codePrefix ? `${codePrefix}${row.code}` : 'badge-neutral'}`}>{row.label}</span>
+                    <span className={`badge ${codePrefix ? `${codePrefix}${row.code}` : 'badge-neutral'}`}>{labels[row.code] ?? row.label}</span>
                   </td>
                   <td>{row.count.toLocaleString()}</td>
                   <td className="td-muted">{percentage(row.count, totalCount(rows))}</td>
@@ -415,7 +419,7 @@ function OverdueSection({ rows }: { rows: OverdueAgingBucket[] }) {
   const max = maxCount(rows);
   return (
     <section className="card report-section-card">
-      <ReportSectionHeader title="Overdue Aging Report" subtitle="Open overdue cases grouped by age" />
+      <ReportSectionHeader title="Overdue Aging Report" subtitle="Open overdue benefit reviews grouped by age" />
       <BarChart rows={rows.map((row) => ({ label: row.bucket, count: row.count }))} max={max} tone="warning" />
       <ReportTableEmpty rows={rows.filter((row) => row.count > 0)} colSpan={3} />
       <div className="table-wrapper report-table-wrapper">
@@ -453,15 +457,15 @@ function AssigneeWorkloadSection({
 }) {
   return (
     <section className="card report-section-card">
-      <ReportSectionHeader title="Assignee Workload" subtitle="Open, overdue, escalated, and closed cases by owner" />
+      <ReportSectionHeader title="Assignee Workload" subtitle="Open, overdue, escalated, and closed benefit reviews by owner" />
       <div className="table-wrapper report-workload-wrapper">
         <table className="data-table">
           <thead>
             <tr>
               <th>Assignee</th>
-              <SortableTh label="Open Cases" sortKey="openCases" activeSort={sort} onSort={onSort} />
-              <SortableTh label="Overdue Cases" sortKey="overdueCases" activeSort={sort} onSort={onSort} />
-              <SortableTh label="Escalated Cases" sortKey="escalatedCases" activeSort={sort} onSort={onSort} />
+              <SortableTh label="Open Benefit Reviews" sortKey="openCases" activeSort={sort} onSort={onSort} />
+              <SortableTh label="Overdue Benefit Reviews" sortKey="overdueCases" activeSort={sort} onSort={onSort} />
+              <SortableTh label="Escalated Benefit Reviews" sortKey="escalatedCases" activeSort={sort} onSort={onSort} />
               <SortableTh label="Closed This Period" sortKey="closedThisPeriod" activeSort={sort} onSort={onSort} />
             </tr>
           </thead>
@@ -494,19 +498,19 @@ function OrganizationWorkloadSection({
 }) {
   return (
     <section className="card report-section-card">
-      <ReportSectionHeader title="Organization Workload" subtitle="Case volume and escalation concentration by organization" />
+      <ReportSectionHeader title="Agency Workload" subtitle="Benefit review volume and escalation concentration by agency" />
       <div className="table-wrapper report-workload-wrapper">
         <table className="data-table">
           <thead>
             <tr>
-              <th>Organization</th>
-              <SortableTh label="Total Cases" sortKey="totalCases" activeSort={sort} onSort={onSort} />
-              <SortableTh label="Open Cases" sortKey="openCases" activeSort={sort} onSort={onSort} />
-              <SortableTh label="Escalated Cases" sortKey="escalatedCases" activeSort={sort} onSort={onSort} />
+              <th>Agency</th>
+              <SortableTh label="Total Benefit Reviews" sortKey="totalCases" activeSort={sort} onSort={onSort} />
+              <SortableTh label="Open Benefit Reviews" sortKey="openCases" activeSort={sort} onSort={onSort} />
+              <SortableTh label="Escalated Benefit Reviews" sortKey="escalatedCases" activeSort={sort} onSort={onSort} />
             </tr>
           </thead>
           <tbody>
-            {rows.length === 0 && <EmptyRow colSpan={4} message="No organization workload for the selected filters." />}
+            {rows.length === 0 && <EmptyRow colSpan={4} message="No agency workload for the selected filters." />}
             {rows.map((row) => (
               <tr key={row.organizationId ?? row.organizationName}>
                 <td>
